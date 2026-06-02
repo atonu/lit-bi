@@ -2,11 +2,23 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Database, Search } from "lucide-react";
+import { Database, Search, Sparkles } from "lucide-react";
 import { ConnectionStepper } from "@/components/connection/connection-stepper";
+import { useChatStore } from "@/lib/stores/chat-store";
+import { getConnections } from "@/app/actions/ai-chat";
 
 export function TopBar() {
   const [open, setOpen] = useState(false);
+  const { setActiveConnection, setChatOpen } = useChatStore();
+
+  async function handleSearchClick() {
+    const conns = await getConnections();
+    if (conns.length > 0) {
+      setActiveConnection(conns[0].id, conns[0].alias);
+    } else {
+      setChatOpen(true);
+    }
+  }
 
   return (
     <>
@@ -21,18 +33,21 @@ export function TopBar() {
           </span>
         </div>
 
-        {/* Right: Search + CTA */}
+        {/* Right: Search + CTAs */}
         <div className="flex items-center gap-3">
-          {/* Search (disabled in empty state) */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/50" />
-            <input
-              type="text"
-              placeholder="Ask a question..."
-              disabled
-              className="h-9 w-64 rounded-lg border border-border/50 bg-muted/30 pl-10 pr-4 text-sm text-muted-foreground placeholder:text-muted-foreground/40 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
-            />
-          </div>
+          {/* Search — clicks open AI chat */}
+          <button
+            onClick={handleSearchClick}
+            className="group relative flex h-9 w-64 cursor-pointer items-center rounded-lg border border-border/50 bg-muted/30 px-3 text-left transition-all hover:border-chart-1/40 hover:bg-chart-1/5"
+          >
+            <Search className="mr-2 size-4 text-muted-foreground/50 group-hover:text-chart-1/60" />
+            <span className="flex-1 text-sm text-muted-foreground/50 group-hover:text-muted-foreground">
+              Ask a question…
+            </span>
+            <span className="ml-2 hidden rounded border border-border/50 bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground/50 sm:block">
+              AI
+            </span>
+          </button>
 
           {/* Primary CTA */}
           <Button

@@ -2,6 +2,8 @@ import { Sidebar } from "@/components/dashboard/sidebar";
 import { TopBar } from "@/components/dashboard/top-bar";
 import { DashboardCharts } from "@/components/dashboard/dashboard-charts";
 import { EmptyStateOverlay } from "@/components/dashboard/empty-state-overlay";
+import { ChatPanel } from "@/components/chat/chat-panel";
+import { ChatTrigger } from "@/components/chat/chat-trigger";
 
 export const metadata = {
   title: "Dashboard — AURA BI",
@@ -28,6 +30,10 @@ export default function DashboardPage() {
           <EmptyStateOverlay />
         </main>
       </div>
+
+      {/* AI Chat — slide-in panel + floating trigger button */}
+      <ChatPanel />
+      <ChatTrigger />
     </div>
   );
 }
