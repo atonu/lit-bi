@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { X, Sparkles } from "lucide-react";
+import { toast } from "sonner";
 import { StepIndicator } from "./step-indicator";
 import { StepCredentials } from "./step-credentials";
 import { StepTest } from "./step-test";
@@ -13,6 +14,7 @@ import {
   type ConnectionCredentials,
   type TestConnectionResult,
   type IntrospectResult,
+  type ColumnMetadata,
 } from "@/app/actions/connection";
 
 // ---------------------------------------------------------------------------
@@ -109,13 +111,20 @@ export function ConnectionStepper({
   }
 
   // ── Step 2: Save ──────────────────────────────────────────────────────
-  function handleSave() {
+  function handleSave(selectedColumns: ColumnMetadata[]) {
     if (!introspectResult?.success) return;
 
     startSave(async () => {
-      const result = await saveConnection(creds, introspectResult.columns);
-      if (result.success && result.connectionId) {
-        onSuccess(result.connectionId);
+      try {
+        const result = await saveConnection(creds, selectedColumns);
+        if (result.success && result.connectionId) {
+          toast.success("Connection saved and activated successfully!");
+          onSuccess(result.connectionId);
+        } else {
+          toast.error(result.error || "Failed to save connection.");
+        }
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "An unexpected error occurred.");
       }
     });
   }
