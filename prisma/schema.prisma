@@ -1,0 +1,173 @@
+// =============================================================================
+// AURA BI — Internal Control Plane Schema
+// =============================================================================
+// This schema manages the platform itself (organizations, users, connections,
+// cached schema metadata, and report templates). It does NOT describe the
+// end-user's business database.
+// =============================================================================
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+enum DatabaseEngine {
+  POSTGRESQL
+  MYSQL
+}
+
+enum ConnectionStatus {
+  PENDING
+  CONNECTED
+  FAILED
+  REVOKED
+}
+
+enum ChartType {
+  LINE
+  BAR
+  DONUT
+  TABLE
+  AREA
+  SCATTER
+}
+
+// ---------------------------------------------------------------------------
+// Organization — multi-tenant root entity
+// ---------------------------------------------------------------------------
+
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  users       User[]
+  connections DatabaseConnection[]
+  reports     ReportTemplate[]
+
+  @@map("organizations")
+}
+
+// ---------------------------------------------------------------------------
+// User — belongs to an Organization
+// ---------------------------------------------------------------------------
+
+model User {
+  id             String   @id @default(uuid())
+  email          String   @unique
+  name           String
+  hashedPassword String   @map("hashed_password")
+  avatarUrl      String?  @map("avatar_url")
+  role           UserRole @default(MEMBER)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  organizationId String         @map("organization_id")
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  reports        ReportTemplate[]
+
+  @@index([organizationId])
+  @@map("users")
+}
+
+// ---------------------------------------------------------------------------
+// DatabaseConnection — stores encrypted credentials to the user's DB
+// ---------------------------------------------------------------------------
+
+model DatabaseConnection {
+  id                String           @id @default(uuid())
+  alias             String
+  engine            DatabaseEngine   @default(POSTGRESQL)
+  host              String
+  port              Int
+  dbName            String           @map("db_name")
+  dbUser            String           @map("db_user")
+  encryptedPassword String           @map("encrypted_password")
+  sslEnabled        Boolean          @default(false) @map("ssl_enabled")
+  status            ConnectionStatus @default(PENDING)
+  lastTestedAt      DateTime?        @map("last_tested_at")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  organizationId String           @map("organization_id")
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  schemaMetadata SchemaMetadata[]
+
+  @@index([organizationId])
+  @@index([status])
+  @@map("database_connections")
+}
+
+// ---------------------------------------------------------------------------
+// SchemaMetadata — cached introspection of the user's database columns
+// ---------------------------------------------------------------------------
+// One row per column. This is injected into AI system prompts so the LLM
+// can write accurate SQL without querying information_schema on every request.
+// ---------------------------------------------------------------------------
+
+model SchemaMetadata {
+  id             String   @id @default(uuid())
+  tableSchema    String   @default("public") @map("table_schema")
+  tableName      String   @map("table_name")
+  columnName     String   @map("column_name")
+  dataType       String   @map("data_type")
+  isNullable     Boolean  @default(true) @map("is_nullable")
+  isPrimaryKey   Boolean  @default(false) @map("is_primary_key")
+  columnDefault  String?  @map("column_default")
+  ordinalPosition Int     @map("ordinal_position")
+  introspectedAt DateTime @default(now()) @map("introspected_at")
+
+  // Relations
+  connectionId String             @map("connection_id")
+  connection   DatabaseConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@unique([connectionId, tableSchema, tableName, columnName])
+  @@index([connectionId])
+  @@map("schema_metadata")
+}
+
+// ---------------------------------------------------------------------------
+// ReportTemplate — saved/default report configurations
+// ---------------------------------------------------------------------------
+
+model ReportTemplate {
+  id                   String    @id @default(uuid())
+  title                String
+  description          String?
+  naturalLanguageQuery String    @map("natural_language_query")
+  chartType            ChartType @default(BAR) @map("chart_type")
+  defaultFilters       Json?     @map("default_filters")
+  isSystemTemplate     Boolean   @default(false) @map("is_system_template")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdById    String       @map("created_by_id")
+  createdBy      User         @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([createdById])
+  @@map("report_templates")
+}
