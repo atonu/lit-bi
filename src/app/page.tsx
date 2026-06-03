@@ -8,7 +8,7 @@ import { ChatTrigger } from "@/components/chat/chat-trigger";
 import { getConnections } from "@/app/actions/ai-chat";
 
 export const metadata = {
-  title: "Dashboard — AURA BI",
+  title: "Dashboard — LiteBI",
   description: "Your AI-powered business intelligence dashboard.",
 };
 

@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AURA BI — AI-Driven Business Intelligence",
+  title: "LiteBI — AI-Driven Business Intelligence",
   description:
-    "Connect your database and ask questions in plain English. AURA BI writes the SQL, picks the chart, and delivers instant insights.",
+    "Connect your database and ask questions in plain English. LiteBI writes the SQL, picks the chart, and delivers instant insights.",
   keywords: [
     "business intelligence",
     "AI analytics",

@@ -61,10 +61,10 @@ export function Sidebar() {
         {!collapsed && (
           <div className="flex flex-col overflow-hidden">
             <span className="text-sm font-bold tracking-tight text-foreground">
-              AURA BI
+              LiteBI
             </span>
             <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-              Intelligence
+              Lite Analytics
             </span>
           </div>
         )}
