@@ -10,11 +10,9 @@ import { cn } from "@/lib/utils";
 
 const SUGGESTIONS = [
   "Show me total revenue by month for this year",
-  "Which products have the highest sales volume?",
-  "List the top 10 customers by order value",
-  "How many new users signed up each week?",
-  "What's the average order value by region?",
-  "Show orders where status is 'pending'",
+  "List the top 2 employees with most sales",
+  "Generate a line chart comparing sales by emplyees",
+  "Generate a pie chart comparing salaries of emplyees",
 ];
 
 interface ChatInputProps {
