@@ -1,8 +1,8 @@
 "use server";
 
 import { generateObject } from "ai";
-import { anthropic } from "@ai-sdk/anthropic";
-import { z } from "zod";
+import { deepseek } from "@ai-sdk/deepseek";
+import * as z from 'zod';
 import { db } from "@/lib/db";
 
 // ---------------------------------------------------------------------------
@@ -110,7 +110,7 @@ function formatSchemaForPrompt(rows: SchemaRow[]): string {
 // ---------------------------------------------------------------------------
 // 1. Loads schema metadata for the connection from our Prisma DB (cached).
 // 2. Builds a detailed system prompt that injects the schema.
-// 3. Calls Claude 3.5 Sonnet via Vercel AI SDK generateObject with the strict
+// 3. Calls DeepSeek v3 via Vercel AI SDK generateObject with the strict
 //    AiResponseSchema so we always get back a typed, validated object.
 // 4. Returns the structured result to the client — no raw SQL visible to
 //    the user at this stage.
@@ -186,10 +186,10 @@ ${schemaBlock}
 
 When choosing xAxisKey and yAxisKey, use the EXACT column name (or alias) that will appear in the SQL result set.`;
 
-  // 3. Call Claude via Vercel AI SDK generateObject
+  // 3. Call DeepSeek via Vercel AI SDK generateObject
   try {
     const { object } = await generateObject({
-      model: anthropic("claude-3-5-sonnet-20241022"),
+      model: deepseek("deepseek-chat"),
       schema: AiResponseSchema,
       system: systemPrompt,
       prompt: naturalLanguageQuestion,
@@ -204,8 +204,7 @@ When choosing xAxisKey and yAxisKey, use the EXACT column name (or alias) that w
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     // Scrub potential internal details
-    const sanitized = msg.replace(/sk-ant-[^\s]+/g, "sk-ant-***");
-    return { success: false, error: `AI generation failed: ${sanitized}` };
+    return { success: false, error: `AI generation failed: ${msg}` };
   }
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Database, Play, Zap, Shield, BarChart3, CheckCircle2 } from "lucide-react";
 import { ConnectionStepper } from "@/components/connection/connection-stepper";
@@ -14,6 +14,17 @@ const features = [
 export function EmptyStateOverlay() {
   const [open, setOpen] = useState(false);
   const [connectedId, setConnectedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (connectedId) {
+      const timer = setTimeout(() => {
+        // Hard reload ensures the server component re-fetches connections
+        // and completely unmounts the empty state.
+        window.location.reload();
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [connectedId]);
 
   if (connectedId) {
     return (

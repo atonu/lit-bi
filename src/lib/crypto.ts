@@ -16,7 +16,7 @@ export function getEncryptionKey(): Buffer {
   if (!keyHex || keyHex.length !== KEY_HEX_LENGTH) {
     throw new Error(
       "DATABASE_ENCRYPTION_KEY must be a 64-character hex string (32 bytes). " +
-        "Generate with: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\""
+      "Generate with: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\""
     );
   }
   return Buffer.from(keyHex, "hex");

@@ -199,7 +199,7 @@ export async function introspectSchema(
 
       return { success: true, tables, columns };
     } catch (innerErr) {
-      await client.query("ROLLBACK").catch(() => {});
+      await client.query("ROLLBACK").catch(() => { });
       throw innerErr;
     } finally {
       client.release();
@@ -233,16 +233,20 @@ export async function saveConnection(
   try {
     const encryptedPassword = encryptPassword(creds.password);
 
-    // Upsert org placeholder (for pre-auth phase)
-    await db.organization.upsert({
+    // First ensure the organization exists
+    const org = await db.organization.findUnique({
       where: { id: PLACEHOLDER_ORG_ID },
-      update: {},
-      create: {
-        id: PLACEHOLDER_ORG_ID,
-        name: "Default Organization",
-        slug: "default",
-      },
     });
+
+    if (!org) {
+      await db.organization.create({
+        data: {
+          id: PLACEHOLDER_ORG_ID,
+          name: "Default Organization",
+          slug: "default",
+        },
+      });
+    }
 
     // Create the connection record
     const connection = await db.databaseConnection.create({
