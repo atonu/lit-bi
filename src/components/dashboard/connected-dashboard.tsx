@@ -53,6 +53,29 @@ export function ConnectedDashboard({ connections }: ConnectedDashboardProps) {
             <Plus className="size-3.5" />
             Add Connection
           </button>
+          
+          <button
+            onClick={async () => {
+              if (confirm(`Are you sure you want to disconnect ${activeConn.alias}?`)) {
+                try {
+                  const { deleteConnection } = await import("@/app/actions/connection");
+                  const { toast } = await import("sonner");
+                  const res = await deleteConnection(activeConn.id);
+                  if (res.success) {
+                    toast.success("Disconnected successfully.");
+                    window.location.reload();
+                  } else {
+                    toast.error(res.error || "Failed to disconnect.");
+                  }
+                } catch (e) {
+                  console.error(e);
+                }
+              }
+            }}
+            className="flex items-center gap-1.5 rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-1.5 text-xs text-destructive transition-all hover:bg-destructive/20"
+          >
+            Disconnect
+          </button>
         </div>
       </div>
 

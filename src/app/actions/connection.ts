@@ -289,3 +289,21 @@ export async function saveConnection(
     return { success: false, error: message };
   }
 }
+
+// ---------------------------------------------------------------------------
+// Action 4: deleteConnection
+// ---------------------------------------------------------------------------
+// Deletes a connection and its associated schema metadata from the database.
+// ---------------------------------------------------------------------------
+
+export async function deleteConnection(connectionId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    await db.databaseConnection.delete({
+      where: { id: connectionId },
+    });
+    return { success: true };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return { success: false, error: message };
+  }
+}
