@@ -140,9 +140,6 @@ export function ConnectionStepper({
     // Modal backdrop
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
     >
       {/* Modal panel */}
       <div className="animate-slide-up relative flex w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-white/10 bg-background shadow-2xl shadow-black/50">

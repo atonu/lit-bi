@@ -288,7 +288,9 @@ function collectFields(
       typeof value === "object" &&
       !Array.isArray(value) &&
       !(value instanceof Date) &&
-      !(value instanceof Buffer)
+      !(value instanceof Buffer) &&
+      // Detect BSON ObjectId (has toHexString method) — treat as string
+      !("toHexString" in (value as object))
     ) {
       // Recurse into nested documents (max 2 levels to avoid explosion)
       if (prefix.split(".").length < 2) {
@@ -297,12 +299,15 @@ function collectFields(
         fields.push({ path: fullPath, bsonType: "object" });
       }
     } else {
+      // Determine the BSON type
       const bsonType = Array.isArray(value)
         ? "array"
         : value === null
         ? "null"
         : value instanceof Date
         ? "date"
+        : typeof value === "object" && value !== null && "toHexString" in (value as object)
+        ? "objectId"
         : typeof value === "number"
         ? Number.isInteger(value)
           ? "int"
@@ -328,14 +333,32 @@ async function introspectMongoSchema(
     };
   }
 
-  // Extract the database name from the URI (last path segment)
+  // Parse and store the database name from the URI.
+  // This becomes creds.dbName so saveConnection can persist it.
   let dbName: string;
   try {
-    const url = new URL(creds.connectionUri.replace("mongodb+srv://", "https://").replace("mongodb://", "http://"));
-    dbName = url.pathname.replace(/^\//, "") || "test";
+    const url = new URL(
+      creds.connectionUri
+        .replace("mongodb+srv://", "https://")
+        .replace("mongodb://", "http://")
+    );
+    const pathDb = url.pathname.replace(/^\//, "").split("?")[0];
+    dbName = creds.dbName || pathDb || "";
   } catch {
-    dbName = "test";
+    dbName = creds.dbName || "";
   }
+
+  if (!dbName) {
+    return {
+      success: false,
+      tables: [],
+      columns: [],
+      error: "Could not determine the database name from the URI. Please include the database name in your connection URI (e.g. mongodb+srv://user:pass@host/myDatabase).",
+    };
+  }
+
+  // Write the resolved dbName back to creds so saveConnection can store it
+  creds.dbName = dbName;
 
   const client = new MongoClient(creds.connectionUri, {
     serverSelectionTimeoutMS: 8000,
@@ -343,66 +366,74 @@ async function introspectMongoSchema(
 
   try {
     await client.connect();
-    
-    let dbsToInspect: string[] = [];
+
+    // Only introspect the specific database named in the URI
+    const mdb = client.db(dbName);
+
+    let collectionInfos: Array<{ name: string }>;
     try {
-      const adminDb = client.db().admin();
-      const dbs = await adminDb.listDatabases();
-      dbsToInspect = dbs.databases
-        .map((d: any) => d.name)
-        .filter((n: string) => !["admin", "local", "config"].includes(n));
+      collectionInfos = await mdb.listCollections().toArray();
     } catch (e) {
-      // Fallback if listDatabases fails (e.g. lack of permissions)
-      dbsToInspect = [dbName];
+      const msg = e instanceof Error ? e.message : String(e);
+      return {
+        success: false,
+        tables: [],
+        columns: [],
+        error: `Could not list collections in database "${dbName}": ${msg}`,
+      };
     }
+
+    // Filter out the app's own internal Prisma/system collections
+    const INTERNAL_COLLECTIONS = new Set([
+      "organizations",
+      "users",
+      "database_connections",
+      "schema_metadata",
+      "report_templates",
+      "system.views",
+      "system.indexes",
+    ]);
+
+    const collectionNames = collectionInfos
+      .map((c) => c.name)
+      .filter((name) => !INTERNAL_COLLECTIONS.has(name));
+
+    console.log(`[MongoDB introspect] db="${dbName}" collections found:`, collectionNames);
 
     const columns: ColumnMetadata[] = [];
     const tables: string[] = [];
 
-    for (const targetDbName of dbsToInspect) {
-      const mdb = client.db(targetDbName);
-      
-      let collectionInfos;
-      try {
-        collectionInfos = await mdb.listCollections().toArray();
-      } catch (e) {
-        continue; // Skip DB if we can't list its collections
-      }
-      
-      const collectionNames = collectionInfos.map((c) => c.name);
+    for (const collName of collectionNames) {
+      // Table key format: "<dbName>.<collName>"
+      tables.push(`${dbName}.${collName}`);
+      const coll = mdb.collection(collName);
 
-      for (const collName of collectionNames) {
-        tables.push(`${targetDbName}.${collName}`);
-        const coll = mdb.collection(collName);
+      // Sample up to 100 documents to infer field types
+      const samples = await coll.find({}).limit(100).toArray();
 
-        // Sample up to 100 documents to infer field types
-        const samples = await coll.find({}).limit(100).toArray();
-
-        // Merge field paths from all sampled documents
-        const fieldMap = new Map<string, string>(); // path → bsonType
-        for (const doc of samples) {
-          const fields = collectFields(doc as Record<string, unknown>);
-          for (const f of fields) {
-            // Keep first observed type (or upgrade null → real type)
-            if (!fieldMap.has(f.path) || fieldMap.get(f.path) === "null") {
-              fieldMap.set(f.path, f.bsonType);
-            }
+      // Merge field paths from all sampled documents
+      const fieldMap = new Map<string, string>(); // path → bsonType
+      for (const doc of samples) {
+        const fields = collectFields(doc as Record<string, unknown>);
+        for (const f of fields) {
+          if (!fieldMap.has(f.path) || fieldMap.get(f.path) === "null") {
+            fieldMap.set(f.path, f.bsonType);
           }
         }
+      }
 
-        let ordinal = 1;
-        for (const [path, bsonType] of fieldMap) {
-          columns.push({
-            tableSchema: targetDbName,
-            tableName: collName,
-            columnName: path,
-            dataType: bsonType,
-            isNullable: true,
-            isPrimaryKey: path === "_id",
-            columnDefault: null,
-            ordinalPosition: ordinal++,
-          });
-        }
+      let ordinal = 1;
+      for (const [path, bsonType] of fieldMap) {
+        columns.push({
+          tableSchema: dbName,
+          tableName: collName,
+          columnName: path,
+          dataType: bsonType,
+          isNullable: true,
+          isPrimaryKey: path === "_id",
+          columnDefault: null,
+          ordinalPosition: ordinal++,
+        });
       }
     }
 
@@ -475,6 +506,22 @@ export async function saveConnection(
       });
     }
 
+    // For MongoDB, extract and persist dbName from the URI if not already set
+    let resolvedDbName = creds.dbName ?? null;
+    if (creds.engine === "MONGODB" && !resolvedDbName && creds.connectionUri) {
+      try {
+        const url = new URL(
+          creds.connectionUri
+            .replace("mongodb+srv://", "https://")
+            .replace("mongodb://", "http://")
+        );
+        const pathDb = url.pathname.replace(/^\//, "").split("?")[0];
+        if (pathDb) resolvedDbName = pathDb;
+      } catch {
+        // ignore parse errors
+      }
+    }
+
     // Create the connection record
     const connection = await db.databaseConnection.create({
       data: {
@@ -483,7 +530,7 @@ export async function saveConnection(
         // SQL fields
         host: creds.host ?? null,
         port: creds.port ?? null,
-        dbName: creds.dbName ?? null,
+        dbName: resolvedDbName,
         dbUser: creds.dbUser ?? null,
         encryptedPassword: encryptedPassword ?? null,
         sslEnabled: creds.sslEnabled ?? false,

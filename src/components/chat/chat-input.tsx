@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 
 const SUGGESTIONS = [
   "Show me total revenue by month for this year",
+  "show me the names of 10 employees",
   "List the top 2 employees with most sales",
   "Generate a line chart comparing sales by emplyees",
   "Generate a pie chart comparing salaries of emplyees",

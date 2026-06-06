@@ -258,8 +258,20 @@ async function executeMongoPipeline(
 ): Promise<ExecuteQueryOutcome> {
   // 1. Parse the query payload
   let payload: MongoQueryPayload;
+  
+  // Clean up any markdown fences the AI might have added
+  let cleanJson = queryJson.trim();
+  if (cleanJson.startsWith("```json")) {
+    cleanJson = cleanJson.replace(/^```json\n/, "").replace(/\n```$/, "");
+  } else if (cleanJson.startsWith("```")) {
+    cleanJson = cleanJson.replace(/^```\n/, "").replace(/\n```$/, "");
+  }
+
+  console.log("=== AI MONGO QUERY ===");
+  console.log(cleanJson);
+
   try {
-    payload = JSON.parse(queryJson);
+    payload = JSON.parse(cleanJson);
     if (!payload.collection || !Array.isArray(payload.pipeline)) {
       throw new Error("Invalid format. Expected { collection, pipeline[] }.");
     }
@@ -293,25 +305,44 @@ async function executeMongoPipeline(
     };
   }
 
-  // 4. Extract default database name from the URI or fall back to stored dbName
-  let defaultDbName: string;
-  try {
-    const url = new URL(
-      uri.replace("mongodb+srv://", "https://").replace("mongodb://", "http://")
-    );
-    defaultDbName = url.pathname.replace(/^\//, "") || connection.dbName || "test";
-  } catch {
-    defaultDbName = connection.dbName || "test";
+  // 4. Determine the target database name:
+  //    Priority: connection.dbName (saved at introspection) > URI path segment
+  let defaultDbName: string | null = connection.dbName;
+  if (!defaultDbName) {
+    try {
+      const url = new URL(
+        uri.replace("mongodb+srv://", "https://").replace("mongodb://", "http://")
+      );
+      const pathDb = url.pathname.replace(/^\//, "").split("?")[0];
+      if (pathDb) defaultDbName = pathDb;
+    } catch {
+      // ignore
+    }
   }
 
-  // Parse target DB and collection from payload if provided as "db.collection"
+  if (!defaultDbName) {
+    return {
+      success: false,
+      error:
+        "Cannot determine which MongoDB database to query. Please re-connect and make sure your connection URI includes the database name (e.g. mongodb+srv://user:pass@host/myDatabase).",
+    };
+  }
+
+  // Parse target DB and collection from payload if AI prefixed it as "db.collection"
   let targetDbName = defaultDbName;
   let targetCollection = payload.collection;
   if (payload.collection.includes(".")) {
     const parts = payload.collection.split(".");
-    targetDbName = parts[0];
-    targetCollection = parts.slice(1).join(".");
+    // Only accept the db prefix if it matches our known dbName (prevent injection)
+    if (parts[0] === defaultDbName) {
+      targetDbName = parts[0];
+      targetCollection = parts.slice(1).join(".");
+    }
+    // Otherwise treat the whole thing as the collection name in the default db
   }
+
+  console.log(`=== MONGO EXECUTE: db=${targetDbName} collection=${targetCollection} ===`);
+  console.log("Pipeline:", JSON.stringify(payload.pipeline));
 
   // 5. Run the aggregation pipeline (read-only by design — no write stages pass guard)
   const client = new MongoClient(uri, {

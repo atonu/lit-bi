@@ -14,6 +14,8 @@ export function ConnectedDashboard({ connections }: ConnectedDashboardProps) {
     connections[0]
   );
   const [addOpen, setAddOpen] = useState(false);
+  const [showConfirmDisconnect, setShowConfirmDisconnect] = useState(false);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
 
   return (
     <div className="flex min-h-full flex-col gap-6 p-6">
@@ -55,23 +57,7 @@ export function ConnectedDashboard({ connections }: ConnectedDashboardProps) {
           </button>
           
           <button
-            onClick={async () => {
-              if (confirm(`Are you sure you want to disconnect ${activeConn.alias}?`)) {
-                try {
-                  const { deleteConnection } = await import("@/app/actions/connection");
-                  const { toast } = await import("sonner");
-                  const res = await deleteConnection(activeConn.id);
-                  if (res.success) {
-                    toast.success("Disconnected successfully.");
-                    window.location.reload();
-                  } else {
-                    toast.error(res.error || "Failed to disconnect.");
-                  }
-                } catch (e) {
-                  console.error(e);
-                }
-              }
-            }}
+            onClick={() => setShowConfirmDisconnect(true)}
             className="flex items-center gap-1.5 rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-1.5 text-xs text-destructive transition-all hover:bg-destructive/20"
           >
             Disconnect
@@ -154,6 +140,51 @@ export function ConnectedDashboard({ connections }: ConnectedDashboardProps) {
             window.location.reload();
           }}
         />
+      )}
+
+      {/* Disconnect Confirmation Modal */}
+      {showConfirmDisconnect && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="animate-slide-up relative w-full max-w-sm overflow-hidden rounded-2xl border border-white/10 bg-background shadow-2xl shadow-black/50 p-6">
+            <h3 className="text-lg font-semibold text-foreground mb-2">Disconnect Database</h3>
+            <p className="text-sm text-muted-foreground mb-6">
+              Are you sure you want to disconnect <span className="font-medium text-foreground">{activeConn.alias}</span>? This will remove all associated schema metadata. This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowConfirmDisconnect(false)}
+                disabled={isDisconnecting}
+                className="rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  setIsDisconnecting(true);
+                  try {
+                    const { deleteConnection } = await import("@/app/actions/connection");
+                    const { toast } = await import("sonner");
+                    const res = await deleteConnection(activeConn.id);
+                    if (res.success) {
+                      toast.success("Disconnected successfully.");
+                      window.location.reload();
+                    } else {
+                      toast.error(res.error || "Failed to disconnect.");
+                      setIsDisconnecting(false);
+                    }
+                  } catch (e) {
+                    console.error(e);
+                    setIsDisconnecting(false);
+                  }
+                }}
+                disabled={isDisconnecting}
+                className="rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                {isDisconnecting ? "Disconnecting..." : "Disconnect"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

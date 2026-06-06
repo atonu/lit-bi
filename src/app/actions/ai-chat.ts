@@ -1,22 +1,20 @@
 "use server";
 
-import { generateObject } from "ai";
+import { generateObject, generateText } from "ai";
 import { deepseek } from "@ai-sdk/deepseek";
 import * as z from 'zod';
 import { db } from "@/lib/db";
 
 // ---------------------------------------------------------------------------
-// Output schema — strict shape the AI must conform to
+// Output schema — strict shape the AI must conform to (SQL engines only)
 // ---------------------------------------------------------------------------
 
-const AiResponseSchema = z.object({
-  // For SQL engines: a SELECT statement. For MongoDB: a JSON string
-  // with shape { "collection": "...", "pipeline": [...] }
+const SqlAiResponseSchema = z.object({
+  // A read-only SELECT statement with no trailing semicolon
   sql: z
     .string()
     .describe(
-      "For PostgreSQL/MySQL: a read-only SQL SELECT statement with no trailing semicolon. " +
-      "For MongoDB: a JSON string with shape { \"collection\": \"<name>\", \"pipeline\": [...aggregation stages] }."
+      "A read-only SQL SELECT statement with no trailing semicolon."
     ),
   chartType: z
     .enum(["LINE", "BAR", "DONUT", "TABLE", "AREA", "SCATTER"])
@@ -43,7 +41,14 @@ const AiResponseSchema = z.object({
     ),
 });
 
-export type AiQueryResponse = z.infer<typeof AiResponseSchema>;
+export type AiQueryResponse = {
+  sql: string;
+  chartType: "LINE" | "BAR" | "DONUT" | "TABLE" | "AREA" | "SCATTER";
+  chartTitle: string;
+  xAxisKey: string;
+  yAxisKey: string;
+  reasoning: string;
+};
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -64,9 +69,6 @@ export type AskQuestionOutcome = AskQuestionResult | AskQuestionError;
 
 // ---------------------------------------------------------------------------
 // SQL Schema formatter
-// ---------------------------------------------------------------------------
-// Converts raw SchemaMetadata rows into a compact CREATE TABLE–style prompt
-// block. Injected into the system prompt for SQL databases.
 // ---------------------------------------------------------------------------
 
 interface SchemaRow {
@@ -111,12 +113,8 @@ function formatSqlSchemaForPrompt(rows: SchemaRow[]): string {
 // ---------------------------------------------------------------------------
 // MongoDB Schema formatter
 // ---------------------------------------------------------------------------
-// Converts sampled field metadata into a collection schema block that the
-// AI can use to write accurate aggregation pipelines.
-// ---------------------------------------------------------------------------
 
 function formatMongoSchemaForPrompt(rows: SchemaRow[]): string {
-  // Group by collection (tableName)
   const collections = new Map<string, SchemaRow[]>();
   for (const row of rows) {
     const key = row.tableName;
@@ -175,35 +173,128 @@ When choosing xAxisKey and yAxisKey, use the EXACT column name (or alias) that w
 }
 
 function buildMongoSystemPrompt(schemaBlock: string): string {
-  return `You are an expert MongoDB analyst and data visualization specialist. Your job is to translate natural language business questions into safe, read-only MongoDB aggregation pipelines and choose the optimal chart type for the result.
+  return `You are an expert MongoDB analyst and data visualization specialist. Translate the user's question into a MongoDB aggregation pipeline and choose the best chart type.
 
-STRICT RULES — YOU MUST FOLLOW THESE OR THE RESPONSE WILL BE REJECTED:
-1. Output a JSON string ONLY — no markdown fences, no extra text.
-2. The JSON must have exactly this shape:
-   { "collection": "<collection_name>", "pipeline": [ ...aggregation stages... ] }
-3. NEVER use write stages: $out, $merge.
-4. NEVER use server-side JavaScript: $where, $function, $accumulator.
-5. Always add a $limit stage (max 500) unless the user explicitly asks for more.
-6. Use field names exactly as they appear in the schema below.
-7. For date grouping, use $dateToString or $dateTrunc in a $group stage.
+You MUST respond with ONLY a single valid JSON object — no markdown, no explanation, no extra text. The JSON must have exactly these keys:
 
-CHART SELECTION GUIDE:
-- LINE: Time-series data with a date x-axis. Best for trends over time.
-- BAR: Categorical comparisons (e.g. totals by category). Best for ranking.
-- DONUT: Part-of-whole relationships. Best when there are 2-8 distinct categories.
-- AREA: Cumulative or stacked time-series. Best for showing volume over time.
-- SCATTER: Correlation between two numeric fields.
-- TABLE: Raw document listing, or when data has many fields.
+{
+  "collection": "<collection name from schema>",
+  "pipeline": [ ...aggregation stages... ],
+  "chartType": "TABLE" | "BAR" | "LINE" | "DONUT" | "AREA" | "SCATTER",
+  "chartTitle": "<concise title, max 60 chars>",
+  "xAxisKey": "<field name that will appear in result documents>",
+  "yAxisKey": "<field name that will appear in result documents>",
+  "reasoning": "<1-2 sentence explanation>"
+}
 
-DATABASE SCHEMA (sampled field types):
+PIPELINE RULES:
+- NEVER use write stages: $out, $merge
+- NEVER use server-side JS: $where, $function, $accumulator
+- Always include a $limit stage (max 500) unless the user asks for more
+- Use field names EXACTLY as they appear in the schema
+
+CHART SELECTION:
+- TABLE: listing raw documents / many fields (use this for simple "show me" queries)
+- BAR: categorical comparisons
+- LINE: time-series trends
+- DONUT: part-of-whole (2-8 categories)
+- AREA: cumulative time-series
+- SCATTER: correlation between two numeric fields
+
+DATABASE SCHEMA:
 \`\`\`
 ${schemaBlock}
 \`\`\`
 
-When choosing xAxisKey and yAxisKey, use the EXACT field name (or alias) that will appear in the aggregation result documents.
+EXAMPLE — "show me 5 employees":
+{"collection":"employees","pipeline":[{"$limit":5}],"chartType":"TABLE","chartTitle":"Employees","xAxisKey":"name","yAxisKey":"name","reasoning":"Listing raw employee documents as a table."}`;
+}
 
-EXAMPLE OUTPUT:
-{"collection":"orders","pipeline":[{"$group":{"_id":"$status","count":{"$sum":1}}},{"$sort":{"count":-1}},{"$limit":10}]}`;
+// ---------------------------------------------------------------------------
+// MongoDB-specific AI call — uses generateText + manual parse
+// ---------------------------------------------------------------------------
+
+async function askMongoQuestion(
+  connectionId: string,
+  naturalLanguageQuestion: string,
+  schemaRows: SchemaRow[]
+): Promise<AskQuestionOutcome> {
+  const systemPrompt = buildMongoSystemPrompt(formatMongoSchemaForPrompt(schemaRows));
+
+  let rawText: string;
+  try {
+    const result = await generateText({
+      model: deepseek("deepseek-chat"),
+      system: systemPrompt,
+      prompt: naturalLanguageQuestion,
+      temperature: 0.1,
+    });
+    rawText = result.text.trim();
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { success: false, error: `AI generation failed: ${msg}` };
+  }
+
+  console.log("=== MONGO AI RAW RESPONSE ===");
+  console.log(rawText);
+
+  // Strip markdown fences if the model added them
+  let jsonStr = rawText;
+  const fenceMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (fenceMatch) {
+    jsonStr = fenceMatch[1].trim();
+  }
+
+  let parsed: {
+    collection: string;
+    pipeline: unknown[];
+    chartType: AiQueryResponse["chartType"];
+    chartTitle: string;
+    xAxisKey: string;
+    yAxisKey: string;
+    reasoning: string;
+  };
+  try {
+    parsed = JSON.parse(jsonStr);
+  } catch (e) {
+    console.error("Failed to parse Mongo AI response:", jsonStr);
+    return {
+      success: false,
+      error: `AI returned invalid JSON for MongoDB query: ${String(e)}. Raw: ${jsonStr.slice(0, 200)}`,
+    };
+  }
+
+  // Validate required fields
+  if (!parsed.collection || !Array.isArray(parsed.pipeline)) {
+    return {
+      success: false,
+      error: `AI response missing required fields (collection, pipeline). Got: ${jsonStr.slice(0, 200)}`,
+    };
+  }
+
+  // Build the sql field as the serialized payload that executeMongoPipeline expects
+  const mongoPayload = JSON.stringify({
+    collection: parsed.collection,
+    pipeline: parsed.pipeline,
+  });
+
+  const VALID_CHART_TYPES = ["LINE", "BAR", "DONUT", "TABLE", "AREA", "SCATTER"] as const;
+  const chartType = VALID_CHART_TYPES.includes(parsed.chartType as typeof VALID_CHART_TYPES[number])
+    ? parsed.chartType
+    : "TABLE";
+
+  return {
+    success: true,
+    response: {
+      sql: mongoPayload,
+      chartType,
+      chartTitle: parsed.chartTitle || "Query Result",
+      xAxisKey: parsed.xAxisKey || "_id",
+      yAxisKey: parsed.yAxisKey || "_id",
+      reasoning: parsed.reasoning || "",
+    },
+    connectionId,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -271,20 +362,20 @@ export async function askQuestion(
     };
   }
 
-  // 3. Build engine-appropriate system prompt
-  const isMongo = connectionEngine === "MONGODB";
-  const systemPrompt = isMongo
-    ? buildMongoSystemPrompt(formatMongoSchemaForPrompt(schemaRows))
-    : buildSqlSystemPrompt(formatSqlSchemaForPrompt(schemaRows));
+  // 3. Route to engine-specific handler
+  if (connectionEngine === "MONGODB") {
+    return askMongoQuestion(connectionId, naturalLanguageQuestion, schemaRows);
+  }
 
-  // 4. Call DeepSeek via Vercel AI SDK generateObject
+  // 4. SQL path — use generateObject (works well with structured schema)
+  const systemPrompt = buildSqlSystemPrompt(formatSqlSchemaForPrompt(schemaRows));
   try {
     const { object } = await generateObject({
       model: deepseek("deepseek-chat"),
-      schema: AiResponseSchema,
+      schema: SqlAiResponseSchema,
       system: systemPrompt,
       prompt: naturalLanguageQuestion,
-      temperature: 0.1, // Low temperature for deterministic query generation
+      temperature: 0.1,
     });
 
     return {

@@ -65,7 +65,7 @@ export function StepSchema({
   }, [result]);
 
   const handleSave = () => {
-    const selectedColumns = result?.columns?.filter((col) => 
+    const selectedColumns = result?.columns?.filter((col) =>
       selectedTables.has(`${col.tableSchema}.${col.tableName}`)
     ) ?? [];
     onSave(selectedColumns);
@@ -115,15 +115,15 @@ export function StepSchema({
       <div className="flex flex-col rounded-xl border border-border/40 bg-muted/10 overflow-hidden">
         {tableNames.length > 0 && (
           <div className="flex px-4 py-2 border-b border-border/30 bg-muted/20">
-            <button 
-              onClick={() => setSelectedTables(new Set(tableNames))} 
+            <button
+              onClick={() => setSelectedTables(new Set(tableNames))}
               className="text-[11px] font-medium text-chart-1 hover:underline transition-colors"
             >
               Select All
             </button>
           </div>
         )}
-        
+
         <div className="max-h-[320px] overflow-y-auto">
           {tableNames.length === 0 ? (
             <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
@@ -138,7 +138,7 @@ export function StepSchema({
               const cols = tableMap.get(tableFqn) ?? [];
               const [schema, table] = tableFqn.split(".");
               const isSelected = selectedTables.has(tableFqn);
-              
+
               return (
                 <details
                   key={tableFqn}
@@ -147,7 +147,7 @@ export function StepSchema({
                 >
                   <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3 hover:bg-muted/30">
                     <div className="flex items-center" onClick={(e) => e.stopPropagation()}>
-                      <input 
+                      <input
                         type="checkbox"
                         checked={isSelected}
                         onChange={(e) => {
@@ -208,11 +208,11 @@ export function StepSchema({
             })
           )}
         </div>
-        
+
         {tableNames.length > 0 && (
           <div className="flex px-4 py-2 border-t border-border/30 bg-muted/20">
-            <button 
-              onClick={() => setSelectedTables(new Set())} 
+            <button
+              onClick={() => setSelectedTables(new Set())}
               className="text-[11px] font-medium text-destructive hover:underline transition-colors"
             >
               Deselect All
