@@ -1,9 +1,10 @@
 "use server";
 
 import { Pool } from "pg";
+import { MongoClient } from "mongodb";
 import { db } from "@/lib/db";
-import { DatabaseEngine } from "@/generated/prisma/client";
-import { encryptPassword } from "@/lib/crypto";
+import { DatabaseEngine } from "@/generated/prisma";
+import { encryptPassword, decryptPassword } from "@/lib/crypto";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -11,13 +12,16 @@ import { encryptPassword } from "@/lib/crypto";
 
 export interface ConnectionCredentials {
   alias: string;
-  engine: "POSTGRESQL" | "MYSQL";
-  host: string;
-  port: number;
-  dbName: string;
-  dbUser: string;
-  password: string;
-  sslEnabled: boolean;
+  engine: "POSTGRESQL" | "MYSQL" | "MONGODB";
+  // SQL engines (PostgreSQL, MySQL)
+  host?: string;
+  port?: number;
+  dbName?: string;
+  dbUser?: string;
+  password?: string;
+  sslEnabled?: boolean;
+  // MongoDB — full connection URI (e.g. mongodb://... or mongodb+srv://...)
+  connectionUri?: string;
 }
 
 export interface TestConnectionResult {
@@ -55,23 +59,20 @@ export interface SaveConnectionResult {
 // Helper: build a pg connection string
 // ---------------------------------------------------------------------------
 
-function buildConnectionString(creds: ConnectionCredentials): string {
+function buildPgConnectionString(creds: ConnectionCredentials): string {
   const { host, port, dbName, dbUser, password, sslEnabled } = creds;
   const sslParam = sslEnabled ? "?sslmode=require" : "?sslmode=disable";
-  return `postgresql://${encodeURIComponent(dbUser)}:${encodeURIComponent(password)}@${host}:${port}/${encodeURIComponent(dbName)}${sslParam}`;
+  return `postgresql://${encodeURIComponent(dbUser!)}:${encodeURIComponent(password!)}@${host}:${port}/${encodeURIComponent(dbName!)}${sslParam}`;
 }
 
 // ---------------------------------------------------------------------------
-// Action 1: testConnection
-// ---------------------------------------------------------------------------
-// Creates a short-lived pg Pool, runs SELECT 1, measures latency, and returns
-// server version. Runs strictly read-only — no DDL or DML.
+// Action 1a: testConnection — PostgreSQL
 // ---------------------------------------------------------------------------
 
-export async function testConnection(
+async function testPostgresConnection(
   creds: ConnectionCredentials
 ): Promise<TestConnectionResult> {
-  const connStr = buildConnectionString(creds);
+  const connStr = buildPgConnectionString(creds);
   const pool = new Pool({
     connectionString: connStr,
     max: 1,
@@ -88,7 +89,6 @@ export async function testConnection(
       );
       const latencyMs = Date.now() - start;
       const version = result.rows[0]?.version ?? "Unknown";
-      // Extract e.g. "PostgreSQL 15.3" from the full version string
       const shortVersion = version.split(" ").slice(0, 2).join(" ");
       return { success: true, latencyMs, serverVersion: shortVersion };
     } finally {
@@ -96,7 +96,6 @@ export async function testConnection(
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    // Sanitize the error — never expose the raw connection string
     const sanitized = message
       .replace(/postgresql:\/\/[^@]+@/, "postgresql://***@")
       .replace(/password=[^\s&]+/gi, "password=***");
@@ -107,16 +106,68 @@ export async function testConnection(
 }
 
 // ---------------------------------------------------------------------------
-// Action 2: introspectSchema
-// ---------------------------------------------------------------------------
-// Queries information_schema.columns to reflect all user tables and columns.
-// Wrapped in a read-only transaction for maximum safety.
+// Action 1b: testConnection — MongoDB
 // ---------------------------------------------------------------------------
 
-export async function introspectSchema(
+async function testMongoConnection(
+  creds: ConnectionCredentials
+): Promise<TestConnectionResult> {
+  if (!creds.connectionUri) {
+    return { success: false, error: "MongoDB connection URI is required." };
+  }
+
+  const client = new MongoClient(creds.connectionUri, {
+    serverSelectionTimeoutMS: 8000,
+    connectTimeoutMS: 8000,
+  });
+
+  const start = Date.now();
+  try {
+    await client.connect();
+    const admin = client.db().admin();
+    const info = await admin.serverInfo();
+    const latencyMs = Date.now() - start;
+    return {
+      success: true,
+      latencyMs,
+      serverVersion: `MongoDB ${info.version}`,
+    };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    // Sanitize — strip credentials from URI in error messages
+    const sanitized = message.replace(
+      /mongodb(\+srv)?:\/\/[^@]+@/,
+      "mongodb$1://***@"
+    );
+    return { success: false, error: sanitized };
+  } finally {
+    await client.close();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Dispatcher: testConnection
+// ---------------------------------------------------------------------------
+
+export async function testConnection(
+  creds: ConnectionCredentials
+): Promise<TestConnectionResult> {
+  if (creds.engine === "MONGODB") {
+    return testMongoConnection(creds);
+  }
+  // PostgreSQL and MySQL both use pg-compatible connection strings for now
+  // (MySQL support can be added separately with the mysql2 driver)
+  return testPostgresConnection(creds);
+}
+
+// ---------------------------------------------------------------------------
+// Action 2a: introspectSchema — PostgreSQL
+// ---------------------------------------------------------------------------
+
+async function introspectPostgresSchema(
   creds: ConnectionCredentials
 ): Promise<IntrospectResult> {
-  const connStr = buildConnectionString(creds);
+  const connStr = buildPgConnectionString(creds);
   const pool = new Pool({
     connectionString: connStr,
     max: 1,
@@ -127,7 +178,6 @@ export async function introspectSchema(
   try {
     const client = await pool.connect();
     try {
-      // Enforce read-only at the transaction level
       await client.query("BEGIN READ ONLY");
 
       const result = await client.query<{
@@ -156,7 +206,6 @@ export async function introspectSchema(
         ORDER BY c.table_schema, c.table_name, c.ordinal_position
       `);
 
-      // Detect primary keys via key_column_usage
       const pkResult = await client.query<{
         table_schema: string;
         table_name: string;
@@ -218,22 +267,200 @@ export async function introspectSchema(
 }
 
 // ---------------------------------------------------------------------------
-// Action 3: saveConnection
+// Action 2b: introspectSchema — MongoDB
 // ---------------------------------------------------------------------------
-// Encrypts the password, persists the connection + schema metadata to Prisma.
-// Uses a hardcoded organizationId for now (auth wired in Phase 4+).
+// MongoDB has no fixed schema. We sample up to 100 documents per collection
+// and walk each document's keys to infer field names and BSON types.
+// The result is stored in SchemaMetadata exactly like SQL columns, where
+// tableName = collection name and columnName = field path (dot-notation).
 // ---------------------------------------------------------------------------
 
-const PLACEHOLDER_ORG_ID = "00000000-0000-0000-0000-000000000001";
+/** Recursively walk a sample document and collect all leaf field paths. */
+function collectFields(
+  obj: Record<string, unknown>,
+  prefix = ""
+): Array<{ path: string; bsonType: string }> {
+  const fields: Array<{ path: string; bsonType: string }> = [];
+  for (const [key, value] of Object.entries(obj)) {
+    const fullPath = prefix ? `${prefix}.${key}` : key;
+    if (
+      value !== null &&
+      typeof value === "object" &&
+      !Array.isArray(value) &&
+      !(value instanceof Date) &&
+      !(value instanceof Buffer)
+    ) {
+      // Recurse into nested documents (max 2 levels to avoid explosion)
+      if (prefix.split(".").length < 2) {
+        fields.push(...collectFields(value as Record<string, unknown>, fullPath));
+      } else {
+        fields.push({ path: fullPath, bsonType: "object" });
+      }
+    } else {
+      const bsonType = Array.isArray(value)
+        ? "array"
+        : value === null
+        ? "null"
+        : value instanceof Date
+        ? "date"
+        : typeof value === "number"
+        ? Number.isInteger(value)
+          ? "int"
+          : "double"
+        : typeof value === "boolean"
+        ? "bool"
+        : "string";
+      fields.push({ path: fullPath, bsonType });
+    }
+  }
+  return fields;
+}
+
+async function introspectMongoSchema(
+  creds: ConnectionCredentials
+): Promise<IntrospectResult> {
+  if (!creds.connectionUri) {
+    return {
+      success: false,
+      tables: [],
+      columns: [],
+      error: "MongoDB connection URI is required.",
+    };
+  }
+
+  // Extract the database name from the URI (last path segment)
+  let dbName: string;
+  try {
+    const url = new URL(creds.connectionUri.replace("mongodb+srv://", "https://").replace("mongodb://", "http://"));
+    dbName = url.pathname.replace(/^\//, "") || "test";
+  } catch {
+    dbName = "test";
+  }
+
+  const client = new MongoClient(creds.connectionUri, {
+    serverSelectionTimeoutMS: 8000,
+  });
+
+  try {
+    await client.connect();
+    
+    let dbsToInspect: string[] = [];
+    try {
+      const adminDb = client.db().admin();
+      const dbs = await adminDb.listDatabases();
+      dbsToInspect = dbs.databases
+        .map((d: any) => d.name)
+        .filter((n: string) => !["admin", "local", "config"].includes(n));
+    } catch (e) {
+      // Fallback if listDatabases fails (e.g. lack of permissions)
+      dbsToInspect = [dbName];
+    }
+
+    const columns: ColumnMetadata[] = [];
+    const tables: string[] = [];
+
+    for (const targetDbName of dbsToInspect) {
+      const mdb = client.db(targetDbName);
+      
+      let collectionInfos;
+      try {
+        collectionInfos = await mdb.listCollections().toArray();
+      } catch (e) {
+        continue; // Skip DB if we can't list its collections
+      }
+      
+      const collectionNames = collectionInfos.map((c) => c.name);
+
+      for (const collName of collectionNames) {
+        tables.push(`${targetDbName}.${collName}`);
+        const coll = mdb.collection(collName);
+
+        // Sample up to 100 documents to infer field types
+        const samples = await coll.find({}).limit(100).toArray();
+
+        // Merge field paths from all sampled documents
+        const fieldMap = new Map<string, string>(); // path → bsonType
+        for (const doc of samples) {
+          const fields = collectFields(doc as Record<string, unknown>);
+          for (const f of fields) {
+            // Keep first observed type (or upgrade null → real type)
+            if (!fieldMap.has(f.path) || fieldMap.get(f.path) === "null") {
+              fieldMap.set(f.path, f.bsonType);
+            }
+          }
+        }
+
+        let ordinal = 1;
+        for (const [path, bsonType] of fieldMap) {
+          columns.push({
+            tableSchema: targetDbName,
+            tableName: collName,
+            columnName: path,
+            dataType: bsonType,
+            isNullable: true,
+            isPrimaryKey: path === "_id",
+            columnDefault: null,
+            ordinalPosition: ordinal++,
+          });
+        }
+      }
+    }
+
+    return { success: true, tables, columns };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return {
+      success: false,
+      tables: [],
+      columns: [],
+      error: message.replace(/mongodb(\+srv)?:\/\/[^@]+@/, "mongodb$1://***@"),
+    };
+  } finally {
+    await client.close();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Dispatcher: introspectSchema
+// ---------------------------------------------------------------------------
+
+export async function introspectSchema(
+  creds: ConnectionCredentials
+): Promise<IntrospectResult> {
+  if (creds.engine === "MONGODB") {
+    return introspectMongoSchema(creds);
+  }
+  return introspectPostgresSchema(creds);
+}
+
+// ---------------------------------------------------------------------------
+// Action 3: saveConnection
+// ---------------------------------------------------------------------------
+
+const PLACEHOLDER_ORG_ID = "000000000000000000000001"; // 24-char hex ObjectId
 
 export async function saveConnection(
   creds: ConnectionCredentials,
   columns: ColumnMetadata[]
 ): Promise<SaveConnectionResult> {
   try {
-    const encryptedPassword = encryptPassword(creds.password);
+    // Encrypt the sensitive credential
+    let encryptedPassword: string | undefined;
+    let encryptedUri: string | undefined;
 
-    // First ensure the organization exists
+    if (creds.engine === "MONGODB") {
+      if (!creds.connectionUri) {
+        return { success: false, error: "MongoDB connection URI is required." };
+      }
+      encryptedUri = encryptPassword(creds.connectionUri);
+    } else {
+      if (!creds.password) {
+        return { success: false, error: "Password is required." };
+      }
+      encryptedPassword = encryptPassword(creds.password);
+    }
+
+    // Ensure the placeholder organization exists
     const org = await db.organization.findUnique({
       where: { id: PLACEHOLDER_ORG_ID },
     });
@@ -253,12 +480,15 @@ export async function saveConnection(
       data: {
         alias: creds.alias,
         engine: creds.engine as DatabaseEngine,
-        host: creds.host,
-        port: creds.port,
-        dbName: creds.dbName,
-        dbUser: creds.dbUser,
-        encryptedPassword,
-        sslEnabled: creds.sslEnabled,
+        // SQL fields
+        host: creds.host ?? null,
+        port: creds.port ?? null,
+        dbName: creds.dbName ?? null,
+        dbUser: creds.dbUser ?? null,
+        encryptedPassword: encryptedPassword ?? null,
+        sslEnabled: creds.sslEnabled ?? false,
+        // MongoDB field
+        encryptedUri: encryptedUri ?? null,
         status: "CONNECTED",
         lastTestedAt: new Date(),
         organizationId: PLACEHOLDER_ORG_ID,
@@ -279,7 +509,8 @@ export async function saveConnection(
           ordinalPosition: col.ordinalPosition,
           connectionId: connection.id,
         })),
-        skipDuplicates: true,
+        // Note: skipDuplicates is not supported by the MongoDB Prisma connector.
+        // Duplicate prevention is handled by the unique index on the collection.
       });
     }
 
@@ -293,10 +524,10 @@ export async function saveConnection(
 // ---------------------------------------------------------------------------
 // Action 4: deleteConnection
 // ---------------------------------------------------------------------------
-// Deletes a connection and its associated schema metadata from the database.
-// ---------------------------------------------------------------------------
 
-export async function deleteConnection(connectionId: string): Promise<{ success: boolean; error?: string }> {
+export async function deleteConnection(
+  connectionId: string
+): Promise<{ success: boolean; error?: string }> {
   try {
     await db.databaseConnection.delete({
       where: { id: connectionId },

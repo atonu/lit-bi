@@ -39,6 +39,7 @@ const DEFAULT_CREDS: ConnectionCredentials = {
   dbUser: "postgres",
   password: "",
   sslEnabled: false,
+  connectionUri: "",
 };
 
 // ---------------------------------------------------------------------------
@@ -50,12 +51,18 @@ function validateCreds(
 ): Partial<Record<keyof ConnectionCredentials, string>> {
   const errors: Partial<Record<keyof ConnectionCredentials, string>> = {};
   if (!creds.alias.trim()) errors.alias = "Connection name is required";
-  if (!creds.host.trim()) errors.host = "Host is required";
-  if (!creds.port || creds.port < 1 || creds.port > 65535)
-    errors.port = "Valid port required (1–65535)";
-  if (!creds.dbName.trim()) errors.dbName = "Database name is required";
-  if (!creds.dbUser.trim()) errors.dbUser = "Username is required";
-  if (!creds.password) errors.password = "Password is required";
+
+  if (creds.engine === "MONGODB") {
+    if (!creds.connectionUri?.trim())
+      errors.connectionUri = "MongoDB connection URI is required";
+  } else {
+    if (!creds.host?.trim()) errors.host = "Host is required";
+    if (!creds.port || creds.port < 1 || creds.port > 65535)
+      errors.port = "Valid port required (1–65535)";
+    if (!creds.dbName?.trim()) errors.dbName = "Database name is required";
+    if (!creds.dbUser?.trim()) errors.dbUser = "Username is required";
+    if (!creds.password) errors.password = "Password is required";
+  }
   return errors;
 }
 
