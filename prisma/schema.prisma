@@ -1,9 +1,5 @@
 // =============================================================================
-// AURA BI — Internal Control Plane Schema
-// =============================================================================
-// This schema manages the platform itself (organizations, users, connections,
-// cached schema metadata, and report templates). It does NOT describe the
-// end-user's business database.
+// LiteBI — Internal Control Plane Schema
 // =============================================================================
 
 generator client {
@@ -50,6 +46,12 @@ enum ChartType {
   SCATTER
 }
 
+enum MessageRole {
+  USER
+  ASSISTANT
+  ERROR
+}
+
 // ---------------------------------------------------------------------------
 // Organization — multi-tenant root entity
 // ---------------------------------------------------------------------------
@@ -65,6 +67,7 @@ model Organization {
   users       User[]
   connections DatabaseConnection[]
   reports     ReportTemplate[]
+  chatSessions ChatSession[]
 
   @@map("organizations")
 }
@@ -109,6 +112,8 @@ model DatabaseConnection {
   sslEnabled        Boolean          @default(false) @map("ssl_enabled")
   // MongoDB field — full encrypted connection URI
   encryptedUri      String?          @map("encrypted_uri")
+  // Unique fingerprint — SHA-256 hash of connection params to prevent duplicates
+  uniqueKey         String?          @unique @map("unique_key")
   status            ConnectionStatus @default(PENDING)
   lastTestedAt      DateTime?        @map("last_tested_at")
   createdAt         DateTime         @default(now()) @map("created_at")
@@ -118,6 +123,7 @@ model DatabaseConnection {
   organizationId String           @map("organization_id") @db.ObjectId
   organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   schemaMetadata SchemaMetadata[]
+  chatSessions   ChatSession[]
 
   @@index([organizationId])
   @@index([status])
@@ -127,21 +133,18 @@ model DatabaseConnection {
 // ---------------------------------------------------------------------------
 // SchemaMetadata — cached introspection of the user's database columns
 // ---------------------------------------------------------------------------
-// One row per column. This is injected into AI system prompts so the LLM
-// can write accurate SQL without querying information_schema on every request.
-// ---------------------------------------------------------------------------
 
 model SchemaMetadata {
-  id             String   @id @default(auto()) @map("_id") @db.ObjectId
-  tableSchema    String   @default("public") @map("table_schema")
-  tableName      String   @map("table_name")
-  columnName     String   @map("column_name")
-  dataType       String   @map("data_type")
-  isNullable     Boolean  @default(true) @map("is_nullable")
-  isPrimaryKey   Boolean  @default(false) @map("is_primary_key")
-  columnDefault  String?  @map("column_default")
-  ordinalPosition Int     @map("ordinal_position")
-  introspectedAt DateTime @default(now()) @map("introspected_at")
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  tableSchema     String   @default("public") @map("table_schema")
+  tableName       String   @map("table_name")
+  columnName      String   @map("column_name")
+  dataType        String   @map("data_type")
+  isNullable      Boolean  @default(true) @map("is_nullable")
+  isPrimaryKey    Boolean  @default(false) @map("is_primary_key")
+  columnDefault   String?  @map("column_default")
+  ordinalPosition Int      @map("ordinal_position")
+  introspectedAt  DateTime @default(now()) @map("introspected_at")
 
   // Relations
   connectionId String             @map("connection_id") @db.ObjectId
@@ -150,6 +153,48 @@ model SchemaMetadata {
   @@unique([connectionId, tableSchema, tableName, columnName])
   @@index([connectionId])
   @@map("schema_metadata")
+}
+
+// ---------------------------------------------------------------------------
+// ChatSession — a named conversation thread tied to a DB connection
+// ---------------------------------------------------------------------------
+
+model ChatSession {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  title        String   @default("New Chat")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  connectionId   String             @map("connection_id") @db.ObjectId
+  connection     DatabaseConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  organizationId String             @map("organization_id") @db.ObjectId
+  organization   Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  messages       ChatMessage[]
+
+  @@index([connectionId])
+  @@index([organizationId])
+  @@index([updatedAt])
+  @@map("chat_sessions")
+}
+
+// ---------------------------------------------------------------------------
+// ChatMessage — individual message within a ChatSession
+// ---------------------------------------------------------------------------
+
+model ChatMessage {
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
+  role        MessageRole
+  content     String
+  chartResult Json?       @map("chart_result")
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  // Relations
+  sessionId String      @map("session_id") @db.ObjectId
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@map("chat_messages")
 }
 
 // ---------------------------------------------------------------------------

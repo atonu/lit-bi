@@ -38,7 +38,7 @@ export default function RootLayout({
       className={`dark ${robotoSans.variable} ${robotoMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-background text-foreground">
+      <body className="min-h-full flex flex-col bg-[#131314] text-foreground">
         {children}
         <Toaster />
       </body>

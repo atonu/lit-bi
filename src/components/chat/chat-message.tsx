@@ -3,7 +3,6 @@
 import { cn } from "@/lib/utils";
 import { Sparkles, User, AlertCircle, Loader2 } from "lucide-react";
 import type { ChatMessage as ChatMessageType } from "@/lib/stores/chat-store";
-import { ChartRenderer } from "./chart-renderer";
 import dynamic from "next/dynamic";
 
 // ChartRenderer uses Recharts which requires browser-only APIs
@@ -13,20 +12,20 @@ const ChartRendererDynamic = dynamic(
 );
 
 // ---------------------------------------------------------------------------
-// Thinking indicator — animated dots
+// Thinking indicator
 // ---------------------------------------------------------------------------
 
 function ThinkingIndicator({ label }: { label: string }) {
   return (
-    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-      <Loader2 className="size-3 animate-spin text-chart-1" />
+    <div className="flex items-center gap-2.5 text-sm text-white/40">
+      <Loader2 className="size-4 animate-spin text-blue-400/80" />
       <span>{label}</span>
     </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// ChatMessage
+// ChatMessageBubble
 // ---------------------------------------------------------------------------
 
 interface ChatMessageProps {
@@ -41,12 +40,12 @@ export function ChatMessageBubble({ message }: ChatMessageProps) {
 
   if (isUser) {
     return (
-      <div className="flex items-start justify-end gap-2">
-        <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-gradient-to-br from-chart-1/80 to-chart-5/80 px-4 py-2.5 text-sm text-white shadow-sm">
+      <div className="flex items-end justify-end gap-3">
+        <div className="max-w-[75%] rounded-2xl rounded-br-sm bg-white/[0.08] px-5 py-3 text-sm text-white/90 ring-1 ring-white/[0.06]">
           {message.content}
         </div>
-        <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted">
-          <User className="size-3.5 text-muted-foreground" />
+        <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-violet-600 text-xs font-bold text-white">
+          A
         </div>
       </div>
     );
@@ -54,55 +53,63 @@ export function ChatMessageBubble({ message }: ChatMessageProps) {
 
   if (isError) {
     return (
-      <div className="flex items-start gap-2">
-        <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-destructive/10">
-          <AlertCircle className="size-3.5 text-destructive" />
+      <div className="flex items-start gap-3">
+        <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-red-500/10 ring-1 ring-red-500/20">
+          <AlertCircle className="size-4 text-red-400" />
         </div>
-        <div className="max-w-[90%] rounded-2xl rounded-tl-sm bg-destructive/10 px-4 py-2.5 text-sm text-destructive-foreground ring-1 ring-destructive/20">
-          <p className="font-medium text-destructive">Something went wrong</p>
-          <p className="mt-1 text-xs text-muted-foreground">{message.content}</p>
+        <div className="min-w-0 flex-1 rounded-2xl rounded-tl-sm bg-red-500/10 px-5 py-3 ring-1 ring-red-500/20">
+          <p className="text-sm font-medium text-red-400">Something went wrong</p>
+          <p className="mt-1 text-xs text-white/40">{message.content}</p>
         </div>
       </div>
     );
   }
 
-  // Assistant message (thinking / executing / done)
+  // Assistant message
   return (
-    <div className="flex items-start gap-2">
+    <div className="flex items-start gap-3">
+      {/* Avatar */}
       <div
         className={cn(
-          "flex size-7 shrink-0 items-center justify-center rounded-full ring-1",
+          "flex size-8 shrink-0 items-center justify-center rounded-full ring-1 transition-all",
           isThinking || isExecuting
-            ? "bg-chart-1/10 ring-chart-1/30"
-            : "bg-gradient-to-br from-chart-1/20 to-chart-5/20 ring-chart-1/20"
+            ? "bg-blue-500/10 ring-blue-500/20"
+            : "bg-gradient-to-br from-blue-500/20 to-violet-600/20 ring-white/10"
         )}
       >
         <Sparkles
           className={cn(
-            "size-3.5",
+            "size-4",
             isThinking || isExecuting
-              ? "animate-pulse text-chart-1"
-              : "text-chart-1"
+              ? "animate-pulse text-blue-400"
+              : "text-blue-400"
           )}
         />
       </div>
 
-      <div className="flex-1 min-w-0">
-        {isThinking && <ThinkingIndicator label="Analyzing schema and writing SQL…" />}
-        {isExecuting && <ThinkingIndicator label="Executing query on your database…" />}
+      {/* Content */}
+      <div className="min-w-0 flex-1">
+        {isThinking && (
+          <ThinkingIndicator label="Analyzing schema and generating query…" />
+        )}
+        {isExecuting && (
+          <ThinkingIndicator label="Executing query on your database…" />
+        )}
 
         {message.status === "done" && (
           <>
             {message.content && (
-              <p className="text-sm leading-relaxed text-foreground/90">
+              <p className="text-sm leading-relaxed text-white/70">
                 {message.content}
               </p>
             )}
             {message.chartResult && (
-              <ChartRendererDynamic
-                result={message.chartResult}
-                messageId={message.id}
-              />
+              <div className="mt-3">
+                <ChartRendererDynamic
+                  result={message.chartResult}
+                  messageId={message.id}
+                />
+              </div>
             )}
           </>
         )}

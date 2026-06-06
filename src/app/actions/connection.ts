@@ -5,7 +5,8 @@ import { MongoClient } from "mongodb";
 import { db } from "@/lib/db";
 import { DatabaseEngine } from "@/generated/prisma";
 import { encryptPassword, decryptPassword } from "@/lib/crypto";
-
+import crypto from "crypto";
+import { PLACEHOLDER_ORG_ID } from "@/lib/constants";
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -468,7 +469,19 @@ export async function introspectSchema(
 // Action 3: saveConnection
 // ---------------------------------------------------------------------------
 
-const PLACEHOLDER_ORG_ID = "000000000000000000000001"; // 24-char hex ObjectId
+// The placeholder org ID is imported from constants.ts
+
+/**
+ * Compute a fingerprint for a connection to enforce uniqueness.
+ * Uses SHA-256 of the canonical connection params.
+ */
+function computeConnectionUniqueKey(creds: ConnectionCredentials): string {
+  const raw =
+    creds.engine === "MONGODB"
+      ? `MONGODB::${creds.connectionUri ?? ""}`
+      : `${creds.engine}::${creds.host ?? ""}::${creds.port ?? ""}::${creds.dbName ?? ""}::${creds.dbUser ?? ""}`;
+  return crypto.createHash("sha256").update(raw).digest("hex");
+}
 
 export async function saveConnection(
   creds: ConnectionCredentials,
@@ -489,6 +502,20 @@ export async function saveConnection(
         return { success: false, error: "Password is required." };
       }
       encryptedPassword = encryptPassword(creds.password);
+    }
+
+    // Compute a unique fingerprint for this connection
+    const uniqueKey = computeConnectionUniqueKey(creds);
+
+    // Check if a connection with the same fingerprint already exists
+    const existing = await db.databaseConnection.findFirst({
+      where: { uniqueKey },
+    });
+    if (existing) {
+      return {
+        success: false,
+        error: `A connection to this database already exists: "${existing.alias}". Please edit the existing connection instead of creating a duplicate.`,
+      };
     }
 
     // Ensure the placeholder organization exists
@@ -536,6 +563,8 @@ export async function saveConnection(
         sslEnabled: creds.sslEnabled ?? false,
         // MongoDB field
         encryptedUri: encryptedUri ?? null,
+        // Uniqueness fingerprint
+        uniqueKey,
         status: "CONNECTED",
         lastTestedAt: new Date(),
         organizationId: PLACEHOLDER_ORG_ID,
@@ -585,3 +614,24 @@ export async function deleteConnection(
     return { success: false, error: message };
   }
 }
+
+// ---------------------------------------------------------------------------
+// Action 5: updateConnectionAlias
+// ---------------------------------------------------------------------------
+
+export async function updateConnectionAlias(
+  connectionId: string,
+  alias: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    await db.databaseConnection.update({
+      where: { id: connectionId },
+      data: { alias },
+    });
+    return { success: true };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return { success: false, error: message };
+  }
+}
+

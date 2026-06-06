@@ -1,50 +1,28 @@
-import { Sidebar } from "@/components/dashboard/sidebar";
-import { TopBar } from "@/components/dashboard/top-bar";
-import { DashboardCharts } from "@/components/dashboard/dashboard-charts";
-import { EmptyStateOverlay } from "@/components/dashboard/empty-state-overlay";
-import { ConnectedDashboard } from "@/components/dashboard/connected-dashboard";
-import { ChatPanel } from "@/components/chat/chat-panel";
-import { ChatTrigger } from "@/components/chat/chat-trigger";
+import { AppSidebar } from "@/components/dashboard/sidebar";
+import { ChatMain } from "@/components/chat/chat-main";
 import { getConnections } from "@/app/actions/ai-chat";
+import { getChatSessions } from "@/app/actions/chat-history";
 
 export const metadata = {
-  title: "Dashboard — LiteBI",
-  description: "Your AI-powered business intelligence dashboard.",
+  title: "LiteBI — AI Data Chat",
+  description: "Ask questions about your data in plain English.",
 };
 
-export default async function DashboardPage() {
-  // Server-side check: does at least one active connection exist?
-  const connections = await getConnections();
-  const hasConnections = connections.length > 0;
+export default async function HomePage() {
+  const [connections, sessions] = await Promise.all([
+    getConnections(),
+    getChatSessions(),
+  ]);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background bg-dot-pattern">
-      {/* Sidebar */}
-      <Sidebar />
+    <div className="flex h-screen overflow-hidden bg-[#131314]">
+      {/* Gemini-style sidebar */}
+      <AppSidebar initialSessions={sessions} />
 
-      {/* Main content area */}
-      <div className="flex min-w-0 flex-1 flex-col">
-        {/* Top bar */}
-        <TopBar />
-
-        {/* Scrollable dashboard body */}
-        <main className="relative flex-1 overflow-y-auto">
-          {hasConnections ? (
-            // Real dashboard once a connection is saved
-            <ConnectedDashboard connections={connections} />
-          ) : (
-            // Blurred placeholder + "Connect" CTA when no connections exist
-            <>
-              <DashboardCharts />
-              <EmptyStateOverlay />
-            </>
-          )}
-        </main>
-      </div>
-
-      {/* AI Chat — slide-in panel + floating trigger button */}
-      <ChatPanel />
-      <ChatTrigger />
+      {/* Main chat area */}
+      <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <ChatMain initialConnections={connections} />
+      </main>
     </div>
   );
 }

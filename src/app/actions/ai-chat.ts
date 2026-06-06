@@ -425,3 +425,78 @@ export async function getConnections(): Promise<ConnectionSummary[]> {
     return [];
   }
 }
+
+// ---------------------------------------------------------------------------
+// Server Action: getAllConnections (includes all statuses for management)
+// ---------------------------------------------------------------------------
+
+export interface ConnectionDetail {
+  id: string;
+  alias: string;
+  engine: "POSTGRESQL" | "MYSQL" | "MONGODB";
+  host: string | null;
+  port: number | null;
+  dbName: string | null;
+  dbUser: string | null;
+  sslEnabled: boolean;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+  lastTestedAt: Date | null;
+}
+
+export async function getAllConnections(): Promise<ConnectionDetail[]> {
+  try {
+    const connections = await db.databaseConnection.findMany({
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        alias: true,
+        engine: true,
+        host: true,
+        port: true,
+        dbName: true,
+        dbUser: true,
+        sslEnabled: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+        lastTestedAt: true,
+      },
+    });
+    return connections.map((c) => ({
+      ...c,
+      engine: c.engine as "POSTGRESQL" | "MYSQL" | "MONGODB",
+      status: c.status as string,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Server Action: generateChatTitle
+// ---------------------------------------------------------------------------
+// Uses DeepSeek to generate a concise 4-6 word title from the user's first message.
+// Falls back to a truncated version of the message on failure.
+// ---------------------------------------------------------------------------
+
+export async function generateChatTitle(
+  firstMessage: string
+): Promise<string> {
+  const fallback = firstMessage.slice(0, 40).trim() + (firstMessage.length > 40 ? "…" : "");
+  try {
+    const result = await generateText({
+      model: deepseek("deepseek-chat"),
+      system:
+        "Generate a concise 4-6 word title for a chat conversation based on the user's first message. Output ONLY the title — no quotes, no punctuation at the end, no explanation.",
+      prompt: firstMessage,
+      temperature: 0.3,
+    });
+    const title = result.text.trim().replace(/^["']|["']$/g, "").slice(0, 60);
+    return title || fallback;
+  } catch {
+    return fallback;
+  }
+}
+

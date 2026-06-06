@@ -9,14 +9,14 @@ import { getConnections } from "@/app/actions/ai-chat";
 
 export function TopBar() {
   const [open, setOpen] = useState(false);
-  const { setActiveConnection, setChatOpen } = useChatStore();
+  const { setActiveConnection } = useChatStore();
 
   async function handleSearchClick() {
     const conns = await getConnections();
     if (conns.length > 0) {
       setActiveConnection(conns[0].id, conns[0].alias);
     } else {
-      setChatOpen(true);
+      setOpen(true);
     }
   }
 

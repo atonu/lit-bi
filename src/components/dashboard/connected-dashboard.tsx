@@ -1,36 +1,61 @@
 "use client";
 
 import { useState } from "react";
-import { Database, Plus, RefreshCw, Activity } from "lucide-react";
-import type { ConnectionSummary } from "@/app/actions/ai-chat";
+import { Database, Plus, RefreshCw, Activity, ExternalLink } from "lucide-react";
+import type { ConnectionDetail } from "@/app/actions/ai-chat";
 import { ConnectionStepper } from "@/components/connection/connection-stepper";
 
 interface ConnectedDashboardProps {
-  connections: ConnectionSummary[];
+  connections: ConnectionDetail[];
 }
 
 export function ConnectedDashboard({ connections }: ConnectedDashboardProps) {
-  const [activeConn, setActiveConn] = useState<ConnectionSummary>(
-    connections[0]
+  const [activeConn, setActiveConn] = useState<ConnectionDetail | null>(
+    connections.length > 0 ? connections[0] : null
   );
   const [addOpen, setAddOpen] = useState(false);
-  const [showConfirmDisconnect, setShowConfirmDisconnect] = useState(false);
-  const [isDisconnecting, setIsDisconnecting] = useState(false);
+
+  if (connections.length === 0 || !activeConn) {
+    return (
+      <div className="flex min-h-full flex-col items-center justify-center p-6 text-center">
+        <div className="mb-4 flex size-16 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.02]">
+          <Database className="size-8 text-white/20" />
+        </div>
+        <h2 className="text-xl font-semibold text-white">No Database Connected</h2>
+        <p className="mt-2 text-sm text-white/40">
+          Connect your database to start analyzing your data.
+        </p>
+        <button
+          onClick={() => setAddOpen(true)}
+          className="mt-6 flex items-center gap-2 rounded-xl bg-blue-500/80 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-500"
+        >
+          <Plus className="size-4" />
+          Add Connection
+        </button>
+        {addOpen && (
+          <ConnectionStepper
+            onClose={() => setAddOpen(false)}
+            onSuccess={() => window.location.reload()}
+          />
+        )}
+      </div>
+    );
+  }
 
   return (
-    <div className="flex min-h-full flex-col gap-6 p-6">
+    <div className="flex min-h-full flex-col gap-6 p-8">
       {/* Header bar */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between">
         <div>
-          <h2 className="text-base font-semibold text-foreground">Dashboard</h2>
-          <p className="text-xs text-muted-foreground">
+          <h2 className="text-2xl font-semibold text-white">Dashboard Overview</h2>
+          <p className="mt-1 text-sm text-white/40">
             Connected to{" "}
-            <span className="font-medium text-chart-1">{activeConn.alias}</span>{" "}
-            · {activeConn.host}/{activeConn.dbName}
+            <span className="font-medium text-white/90">{activeConn.alias}</span>{" "}
+            · {activeConn.host ? `${activeConn.host}/${activeConn.dbName}` : 'MongoDB Atlas'}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          {/* Connection switcher when multiple connections exist */}
+        <div className="flex items-center gap-3">
+          {/* Connection switcher */}
           {connections.length > 1 && (
             <select
               value={activeConn.id}
@@ -38,10 +63,10 @@ export function ConnectedDashboard({ connections }: ConnectedDashboardProps) {
                 const found = connections.find((c) => c.id === e.target.value);
                 if (found) setActiveConn(found);
               }}
-              className="rounded-lg border border-border/40 bg-card/50 px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-chart-1/50"
+              className="rounded-xl border border-white/[0.06] bg-white/[0.04] px-4 py-2 text-sm text-white/80 outline-none transition-all hover:bg-white/[0.06] focus:border-blue-500/40 focus:ring-1 focus:ring-blue-500/20"
             >
               {connections.map((c) => (
-                <option key={c.id} value={c.id}>
+                <option key={c.id} value={c.id} className="bg-[#1e1e1e] text-white">
                   {c.alias}
                 </option>
               ))}
@@ -50,84 +75,70 @@ export function ConnectedDashboard({ connections }: ConnectedDashboardProps) {
 
           <button
             onClick={() => setAddOpen(true)}
-            className="flex items-center gap-1.5 rounded-lg border border-border/40 bg-card/50 px-3 py-1.5 text-xs text-muted-foreground transition-all hover:border-chart-1/30 hover:bg-chart-1/5 hover:text-foreground"
+            className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.05] px-4 py-2 text-sm font-medium text-white/80 transition-all hover:bg-white/[0.08] hover:text-white"
           >
-            <Plus className="size-3.5" />
+            <Plus className="size-4" />
             Add Connection
-          </button>
-          
-          <button
-            onClick={() => setShowConfirmDisconnect(true)}
-            className="flex items-center gap-1.5 rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-1.5 text-xs text-destructive transition-all hover:bg-destructive/20"
-          >
-            Disconnect
           </button>
         </div>
       </div>
 
       {/* Status cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="flex items-center gap-4 rounded-xl border border-chart-2/20 bg-chart-2/5 p-4">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-chart-2/10">
-            <Database className="size-5 text-chart-2" />
+        <div className="flex items-center gap-4 rounded-2xl border border-green-500/20 bg-green-500/5 p-5">
+          <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-green-500/10">
+            <Database className="size-6 text-green-400" />
           </div>
           <div>
-            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+            <p className="text-xs font-medium uppercase tracking-wider text-green-400/50">
               Status
             </p>
-            <p className="text-sm font-semibold text-chart-2">Connected</p>
+            <p className="mt-0.5 text-lg font-semibold text-green-400">Connected</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-4 rounded-xl border border-chart-1/20 bg-chart-1/5 p-4">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-chart-1/10">
-            <Activity className="size-5 text-chart-1" />
+        <div className="flex items-center gap-4 rounded-2xl border border-blue-500/20 bg-blue-500/5 p-5">
+          <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-blue-500/10">
+            <Activity className="size-6 text-blue-400" />
           </div>
           <div>
-            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+            <p className="text-xs font-medium uppercase tracking-wider text-blue-400/50">
               Engine
             </p>
-            <p className="text-sm font-semibold text-foreground">
-              {activeConn.engine === "POSTGRESQL" ? "PostgreSQL" : "MySQL"}
+            <p className="mt-0.5 text-lg font-semibold text-white/90">
+              {activeConn.engine === "POSTGRESQL" ? "PostgreSQL" : 
+               activeConn.engine === "MYSQL" ? "MySQL" : "MongoDB"}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-4 rounded-xl border border-chart-5/20 bg-chart-5/5 p-4">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-chart-5/10">
-            <RefreshCw className="size-5 text-chart-5" />
+        <div className="flex items-center gap-4 rounded-2xl border border-violet-500/20 bg-violet-500/5 p-5">
+          <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-violet-500/10">
+            <RefreshCw className="size-6 text-violet-400" />
           </div>
-          <div>
-            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
-              Database
+          <div className="min-w-0">
+            <p className="text-xs font-medium uppercase tracking-wider text-violet-400/50">
+              Database Name
             </p>
-            <p className="truncate text-sm font-semibold text-foreground">
-              {activeConn.dbName}
+            <p className="mt-0.5 truncate text-lg font-semibold text-white/90">
+              {activeConn.dbName || "Default"}
             </p>
           </div>
         </div>
       </div>
 
       {/* Call-to-action panel */}
-      <div className="flex flex-1 flex-col items-center justify-center gap-6 rounded-2xl border border-dashed border-border/40 bg-card/20 py-16 text-center">
-        <div className="flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-chart-1/10 to-chart-5/10 ring-1 ring-chart-1/20">
-          <span className="text-3xl">✨</span>
+      <div className="flex flex-1 flex-col items-center justify-center gap-6 rounded-3xl border border-white/[0.06] bg-white/[0.02] py-20 text-center">
+        <div className="flex size-20 items-center justify-center rounded-3xl bg-gradient-to-br from-blue-500/20 to-violet-600/20 ring-1 ring-white/10">
+          <span className="text-4xl">✨</span>
         </div>
-        <div className="max-w-sm">
-          <h3 className="text-lg font-semibold text-foreground">
-            Ask your data a question
+        <div className="max-w-md">
+          <h3 className="text-xl font-semibold text-white">
+            Ready to explore {activeConn.alias}?
           </h3>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Open the <span className="font-medium text-chart-1">AI Chat</span>{" "}
-            panel on the right to start querying{" "}
-            <span className="font-medium">{activeConn.alias}</span> in plain
-            English. The AI will write the SQL, run it securely, and render the
-            best chart automatically.
+          <p className="mt-3 text-sm text-white/50">
+            Head over to the <span className="font-medium text-blue-400">Chat</span> view to ask questions about your data in plain English. The AI will write the queries and build beautiful charts for you automatically.
           </p>
-        </div>
-        <div className="flex items-center gap-2 rounded-full border border-chart-1/20 bg-chart-1/5 px-4 py-2 text-xs text-chart-1">
-          <span className="size-1.5 rounded-full bg-chart-2 animate-pulse" />
-          Try: "Show me all records in my largest table"
         </div>
       </div>
 
@@ -140,51 +151,6 @@ export function ConnectedDashboard({ connections }: ConnectedDashboardProps) {
             window.location.reload();
           }}
         />
-      )}
-
-      {/* Disconnect Confirmation Modal */}
-      {showConfirmDisconnect && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="animate-slide-up relative w-full max-w-sm overflow-hidden rounded-2xl border border-white/10 bg-background shadow-2xl shadow-black/50 p-6">
-            <h3 className="text-lg font-semibold text-foreground mb-2">Disconnect Database</h3>
-            <p className="text-sm text-muted-foreground mb-6">
-              Are you sure you want to disconnect <span className="font-medium text-foreground">{activeConn.alias}</span>? This will remove all associated schema metadata. This action cannot be undone.
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowConfirmDisconnect(false)}
-                disabled={isDisconnecting}
-                className="rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted transition-colors disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={async () => {
-                  setIsDisconnecting(true);
-                  try {
-                    const { deleteConnection } = await import("@/app/actions/connection");
-                    const { toast } = await import("sonner");
-                    const res = await deleteConnection(activeConn.id);
-                    if (res.success) {
-                      toast.success("Disconnected successfully.");
-                      window.location.reload();
-                    } else {
-                      toast.error(res.error || "Failed to disconnect.");
-                      setIsDisconnecting(false);
-                    }
-                  } catch (e) {
-                    console.error(e);
-                    setIsDisconnecting(false);
-                  }
-                }}
-                disabled={isDisconnecting}
-                className="rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-50 flex items-center gap-2"
-              >
-                {isDisconnecting ? "Disconnecting..." : "Disconnect"}
-              </button>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );
