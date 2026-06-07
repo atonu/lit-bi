@@ -48,7 +48,7 @@ export function StepCredentials({
           Engine <span className="text-chart-4">*</span>
         </label>
         <div className="flex gap-3">
-          {(["MONGODB", "MYSQL", "POSTGRESQL"] as const).map((eng) => (
+          {(["MONGODB", "POSTGRESQL", "MYSQL"] as const).map((eng) => (
             <button
               key={eng}
               type="button"
