@@ -79,6 +79,7 @@ async function testPostgresConnection(
     max: 1,
     connectionTimeoutMillis: 8000,
     idleTimeoutMillis: 1000,
+    ssl: creds.sslEnabled ? { rejectUnauthorized: false } : undefined,
   });
 
   const start = Date.now();
@@ -174,6 +175,7 @@ async function introspectPostgresSchema(
     max: 1,
     connectionTimeoutMillis: 8000,
     idleTimeoutMillis: 1000,
+    ssl: creds.sslEnabled ? { rejectUnauthorized: false } : undefined,
   });
 
   try {

@@ -184,6 +184,7 @@ async function executePostgresQuery(
     max: 1,
     connectionTimeoutMillis: 10_000,
     idleTimeoutMillis: 1_000,
+    ssl: connection.sslEnabled ? { rejectUnauthorized: false } : undefined,
   });
 
   const start = Date.now();
