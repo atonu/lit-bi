@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Database, Plus, RefreshCw, Activity, ExternalLink } from "lucide-react";
+import { Database, Plus, RefreshCw, Activity, ExternalLink, CheckCircle } from "lucide-react";
 import type { ConnectionDetail } from "@/app/actions/ai-chat";
 import { ConnectionStepper } from "@/components/connection/connection-stepper";
 
@@ -14,6 +14,8 @@ export function ConnectedDashboard({ connections }: ConnectedDashboardProps) {
     connections.length > 0 ? connections[0] : null
   );
   const [addOpen, setAddOpen] = useState(false);
+  const [showConfirmDisconnect, setShowConfirmDisconnect] = useState(false);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
 
   if (connections.length === 0 || !activeConn) {
     return (
@@ -80,23 +82,33 @@ export function ConnectedDashboard({ connections }: ConnectedDashboardProps) {
             <Plus className="size-4" />
             Add Connection
           </button>
+          <button
+            onClick={() => setShowConfirmDisconnect(true)}
+            className="flex items-center gap-1.5 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-400 transition-all hover:bg-red-500/20"
+          >
+            Disconnect
+          </button>
         </div>
       </div>
 
       {/* Status cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="flex items-center gap-4 rounded-2xl border border-green-500/20 bg-green-500/5 p-5">
-          <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-green-500/10">
-            <Database className="size-6 text-green-400" />
+        {/* Database Name */}
+        <div className="flex items-center gap-4 rounded-2xl border border-violet-500/20 bg-violet-500/5 p-5">
+          <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-violet-500/10">
+            <Database className="size-6 text-violet-400" />
           </div>
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-green-400/50">
-              Status
+          <div className="min-w-0">
+            <p className="text-xs font-medium uppercase tracking-wider text-violet-400/50">
+              Database Name
             </p>
-            <p className="mt-0.5 text-lg font-semibold text-green-400">Connected</p>
+            <p className="mt-0.5 truncate text-lg font-semibold text-white/90">
+              {activeConn.dbName || "Default"}
+            </p>
           </div>
         </div>
 
+        {/* Engine */}
         <div className="flex items-center gap-4 rounded-2xl border border-blue-500/20 bg-blue-500/5 p-5">
           <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-blue-500/10">
             <Activity className="size-6 text-blue-400" />
@@ -112,17 +124,16 @@ export function ConnectedDashboard({ connections }: ConnectedDashboardProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-4 rounded-2xl border border-violet-500/20 bg-violet-500/5 p-5">
-          <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-violet-500/10">
-            <RefreshCw className="size-6 text-violet-400" />
+        {/* Status */}
+        <div className="flex items-center gap-4 rounded-2xl border border-green-500/20 bg-green-500/5 p-5">
+          <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-green-500/10">
+            <CheckCircle className="size-6 text-green-400" />
           </div>
-          <div className="min-w-0">
-            <p className="text-xs font-medium uppercase tracking-wider text-violet-400/50">
-              Database Name
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wider text-green-400/50">
+              Status
             </p>
-            <p className="mt-0.5 truncate text-lg font-semibold text-white/90">
-              {activeConn.dbName || "Default"}
-            </p>
+            <p className="mt-0.5 text-lg font-semibold text-green-400">Connected</p>
           </div>
         </div>
       </div>
@@ -151,6 +162,51 @@ export function ConnectedDashboard({ connections }: ConnectedDashboardProps) {
             window.location.reload();
           }}
         />
+      )}
+
+      {/* Disconnect Confirmation Modal */}
+      {showConfirmDisconnect && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <div className="animate-slide-up w-full max-w-sm rounded-2xl border border-white/10 bg-[#1e1e1e] p-6 shadow-2xl">
+            <h3 className="text-base font-semibold text-white">Disconnect Database?</h3>
+            <p className="mt-2 text-sm text-white/50">
+              Are you sure you want to disconnect <span className="font-medium text-white/80">{activeConn.alias}</span>? This will remove all associated schema metadata. This action cannot be undone.
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setShowConfirmDisconnect(false)}
+                disabled={isDisconnecting}
+                className="rounded-xl px-4 py-2 text-sm font-medium text-white/50 transition-colors hover:bg-white/[0.06] hover:text-white/80 disabled:opacity-40"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  setIsDisconnecting(true);
+                  try {
+                    const { deleteConnection } = await import("@/app/actions/connection");
+                    const { toast } = await import("sonner");
+                    const res = await deleteConnection(activeConn.id);
+                    if (res.success) {
+                      toast.success("Disconnected successfully.");
+                      window.location.reload();
+                    } else {
+                      toast.error(res.error || "Failed to disconnect.");
+                      setIsDisconnecting(false);
+                    }
+                  } catch (e) {
+                    console.error(e);
+                    setIsDisconnecting(false);
+                  }
+                }}
+                disabled={isDisconnecting}
+                className="flex items-center gap-2 rounded-xl bg-red-500/80 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-500 disabled:opacity-50"
+              >
+                {isDisconnecting ? "Disconnecting..." : "Disconnect"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

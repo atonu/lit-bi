@@ -1,5 +1,5 @@
 // =============================================================================
-// LiteBI — Internal Control Plane Schema
+// BI-Lite — Internal Control Plane Schema
 // =============================================================================
 
 generator client {
@@ -166,8 +166,9 @@ model ChatSession {
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   // Relations
-  connectionId   String             @map("connection_id") @db.ObjectId
-  connection     DatabaseConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  connectionId   String?            @map("connection_id") @db.ObjectId
+  connection     DatabaseConnection? @relation(fields: [connectionId], references: [id], onDelete: SetNull)
+  connectionAlias String?           @map("connection_alias")
   organizationId String             @map("organization_id") @db.ObjectId
   organization   Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   messages       ChatMessage[]

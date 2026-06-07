@@ -1,8 +1,8 @@
 // =============================================================================
-// AURA BI — MongoDB Control-Plane Bootstrap
+// BI-Lite — MongoDB Control-Plane Bootstrap
 // =============================================================================
 // Run this script with mongosh to create all collections, indexes, and
-// schema validators for the AURA BI control-plane database.
+// schema validators for the BI-Lite control-plane database.
 //
 // Usage:
 //   mongosh "mongodb://localhost:27017/aura_bi" mongodb_setup.js
@@ -19,7 +19,7 @@
 // The line below is a safety net in case you run this from a different db.
 use("aura_bi");
 
-print("=== AURA BI MongoDB Bootstrap ===\n");
+print("=== BI-Lite MongoDB Bootstrap ===\n");
 
 // ---------------------------------------------------------------------------
 // 1. organizations

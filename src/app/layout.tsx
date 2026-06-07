@@ -16,9 +16,9 @@ const robotoMono = Roboto_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LiteBI — AI-Driven Business Intelligence",
+  title: "BI-Lite — AI-Driven Business Intelligence",
   description:
-    "Connect your database and ask questions in plain English. LiteBI writes the SQL, picks the chart, and delivers instant insights.",
+    "Connect your database and ask questions in plain English. BI-Lite writes the SQL, picks the chart, and delivers instant insights.",
   keywords: [
     "business intelligence",
     "AI analytics",
@@ -38,7 +38,7 @@ export default function RootLayout({
       className={`dark ${robotoSans.variable} ${robotoMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-[#131314] text-foreground">
+      <body suppressHydrationWarning className="min-h-full flex flex-col bg-[#131314] text-foreground">
         {children}
         <Toaster />
       </body>

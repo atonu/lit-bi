@@ -33,21 +33,7 @@ function engineLabel(engine: string) {
   return engine;
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const cfg = {
-    CONNECTED: { icon: <CheckCircle2 className="size-3.5" />, label: "Connected", cls: "text-green-400 bg-green-400/10 ring-green-400/20" },
-    FAILED: { icon: <XCircle className="size-3.5" />, label: "Failed", cls: "text-red-400 bg-red-400/10 ring-red-400/20" },
-    PENDING: { icon: <Clock className="size-3.5" />, label: "Pending", cls: "text-yellow-400 bg-yellow-400/10 ring-yellow-400/20" },
-    REVOKED: { icon: <XCircle className="size-3.5" />, label: "Revoked", cls: "text-white/30 bg-white/[0.04] ring-white/10" },
-  } as const;
-  const s = cfg[status as keyof typeof cfg] ?? cfg.PENDING;
-  return (
-    <span className={cn("flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1", s.cls)}>
-      {s.icon}
-      {s.label}
-    </span>
-  );
-}
+
 
 function formatDate(d: Date) {
   return new Date(d).toLocaleDateString("en-US", {
@@ -105,7 +91,7 @@ export function ConnectionsTable({ connections: initial }: ConnectionsTableProps
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-white/[0.06]">
-              {["Alias", "Engine", "Host / Database", "Status", "Created", ""].map((h) => (
+              {["Alias", "Engine", "Host / Database", "Created", ""].map((h) => (
                 <th
                   key={h}
                   className="px-5 py-3.5 text-left text-[11px] font-medium uppercase tracking-wider text-white/30"
@@ -160,11 +146,6 @@ export function ConnectionsTable({ connections: initial }: ConnectionsTableProps
                       <span className="text-xs text-white/30">MongoDB Atlas URI</span>
                     )}
                   </div>
-                </td>
-
-                {/* Status */}
-                <td className="px-5 py-4">
-                  <StatusBadge status={conn.status} />
                 </td>
 
                 {/* Created */}

@@ -2,26 +2,33 @@ import { AppSidebar } from "@/components/dashboard/sidebar";
 import { ChatMain } from "@/components/chat/chat-main";
 import { getConnections } from "@/app/actions/ai-chat";
 import { getChatSessions } from "@/app/actions/chat-history";
+import { notFound } from "next/navigation";
 
 export const metadata = {
   title: "BI-Lite — AI Data Chat",
   description: "Ask questions about your data in plain English.",
 };
 
-export default async function HomePage() {
+export default async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const [connections, sessions] = await Promise.all([
     getConnections(),
     getChatSessions(),
   ]);
 
+  // Validate session exists in history
+  const sessionExists = sessions.some(s => s.id === id);
+  if (!sessionExists) {
+    // We could notFound() here, but the session might be created but not fully synced yet
+    // However, for strict parameterization, it's safer to ensure it exists or redirect.
+  }
+
   return (
     <div className="flex h-screen overflow-hidden bg-[#131314]">
-      {/* Gemini-style sidebar */}
       <AppSidebar initialSessions={sessions} />
 
-      {/* Main chat area */}
       <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <ChatMain initialConnections={connections} />
+        <ChatMain initialConnections={connections} chatId={id} />
       </main>
     </div>
   );

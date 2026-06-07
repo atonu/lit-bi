@@ -70,6 +70,7 @@ interface ChatActions {
   updateSessionTitle: (sessionId: string, title: string) => void;
   removeSession: (sessionId: string) => void;
   setSessionMessages: (sessionId: string, messages: ChatMessage[]) => void;
+  promoteSession: (oldId: string, newId: string) => void;
 
   // Message management
   addUserMessage: (sessionId: string, content: string) => string;
@@ -214,6 +215,35 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       activeMessages:
         state.activeSessionId === sessionId ? messages : state.activeMessages,
     }));
+  },
+
+  promoteSession: (oldId, newId) => {
+    set((state) => {
+      const messages = state.messagesBySession[oldId] || [];
+      const sessionIndex = state.sessions.findIndex((s) => s.id === oldId);
+      
+      const newSessions = [...state.sessions];
+      if (sessionIndex !== -1) {
+        newSessions[sessionIndex] = { ...newSessions[sessionIndex], id: newId };
+      }
+
+      const newMessagesBySession = { ...state.messagesBySession };
+      delete newMessagesBySession[oldId];
+      newMessagesBySession[newId] = messages;
+
+      const newLastSyncedAt = { ...state.lastSyncedAt };
+      if (oldId in newLastSyncedAt) {
+        newLastSyncedAt[newId] = newLastSyncedAt[oldId];
+        delete newLastSyncedAt[oldId];
+      }
+
+      return {
+        sessions: newSessions,
+        messagesBySession: newMessagesBySession,
+        lastSyncedAt: newLastSyncedAt,
+        activeSessionId: state.activeSessionId === oldId ? newId : state.activeSessionId,
+      };
+    });
   },
 
   // ── Messages ──────────────────────────────────────────────────────────

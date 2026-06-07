@@ -22,6 +22,7 @@ import {
   createChatSession,
   updateChatSessionTitle,
 } from "@/app/actions/chat-history";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { ConnectionStepper } from "@/components/connection/connection-stepper";
 
@@ -128,8 +129,12 @@ function ConnectionSelector({
 
 function WelcomeScreen({
   connectionAlias,
+  hasConnections,
+  onAddConnection,
 }: {
   connectionAlias: string | null;
+  hasConnections: boolean;
+  onAddConnection: () => void;
 }) {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-8 px-4 pb-32">
@@ -141,12 +146,26 @@ function WelcomeScreen({
           <h1 className="text-2xl font-semibold text-white">
             {connectionAlias
               ? `Ask about ${connectionAlias}`
-              : "LiteBI AI Chat"}
+              : "BI-Lite AI Chat"}
           </h1>
           <p className="mt-2 max-w-sm text-sm text-white/40">
             Ask questions in plain English. I'll write the query, run it
             securely, and render the best visualization automatically.
           </p>
+          {!hasConnections && (
+            <div className="mt-8 flex flex-col items-center">
+              <p className="mb-4 text-sm font-medium text-blue-300">
+                Unlock the power of AI on your own data.
+              </p>
+              <button
+                onClick={onAddConnection}
+                className="flex items-center gap-2 rounded-xl bg-blue-500/80 px-6 py-3 text-sm font-medium text-white transition-all hover:bg-blue-500 hover:scale-105"
+              >
+                <Plus className="size-4" />
+                Connect to a Database
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -159,9 +178,11 @@ function WelcomeScreen({
 
 interface ChatMainProps {
   initialConnections?: ConnectionSummary[];
+  chatId?: string;
 }
 
-export function ChatMain({ initialConnections = [] }: ChatMainProps) {
+export function ChatMain({ initialConnections = [], chatId }: ChatMainProps) {
+  const router = useRouter();
   const {
     activeConnectionId,
     activeConnectionAlias,
@@ -172,6 +193,7 @@ export function ChatMain({ initialConnections = [] }: ChatMainProps) {
     setActiveConnection,
     setActiveSession,
     createNewSession,
+    promoteSession,
     addUserMessage,
     addAssistantPlaceholder,
     updateMessageStatus,
@@ -222,8 +244,13 @@ export function ChatMain({ initialConnections = [] }: ChatMainProps) {
 
   // Ensure there's an active session when a connection is selected
   useEffect(() => {
-    if (activeConnectionId && activeConnectionAlias && !activeSessionId) {
-      // Check if there's an existing session for this connection
+    if (chatId) {
+      // If we're on a specific chat route, make sure it's set as active
+      if (activeSessionId !== chatId) {
+        setActiveSession(chatId);
+      }
+    } else if (activeConnectionId && activeConnectionAlias && !activeSessionId) {
+      // Check if there's an existing session for this connection (fallback for home page)
       const existingSession = sessions.find(
         (s) => s.connectionId === activeConnectionId
       );
@@ -254,44 +281,51 @@ export function ChatMain({ initialConnections = [] }: ChatMainProps) {
       setThinking(true);
 
       startTransition(async () => {
+        let currentSessionId = sessionId;
         try {
-          // If first message, create a real DB session and generate a title
           if (isFirstMessage && sessionId.startsWith("new-")) {
             // Persist session to DB
-            const sessionResult = await createChatSession(connectionId);
+            const sessionResult = await createChatSession(connectionId, activeConnectionAlias || "Deleted DB");
             if (sessionResult.success) {
-              // Update store with real session id (best effort — we continue with temp id)
-              // Title will be generated and applied async
+              const realSessionId = sessionResult.sessionId;
+              
+              // Promote the session locally so state matches the real DB ID
+              promoteSession(sessionId, realSessionId);
+              currentSessionId = realSessionId;
+
+              // Redirect to the new parameterized route
+              router.push(`/chat/${realSessionId}`);
+              
               generateChatTitle(question).then((title) => {
-                updateChatSessionTitle(sessionResult.sessionId, title);
-                updateSessionTitle(sessionId, title);
+                updateChatSessionTitle(realSessionId, title);
+                updateSessionTitle(realSessionId, title);
               });
             }
           }
 
           // Step 1: AI generates SQL + chart config
-          updateMessageStatus(sessionId, assistantMsgId, "thinking");
+          updateMessageStatus(currentSessionId, assistantMsgId, "thinking");
           const aiOutcome = await askQuestion(connectionId, question);
 
           if (!aiOutcome.success) {
-            resolveMessageWithError(sessionId, assistantMsgId, aiOutcome.error);
+            resolveMessageWithError(currentSessionId, assistantMsgId, aiOutcome.error);
             return;
           }
 
           // Step 2: Execute the query on the user's DB
-          updateMessageStatus(sessionId, assistantMsgId, "executing");
+          updateMessageStatus(currentSessionId, assistantMsgId, "executing");
           const execOutcome = await executeQuery(
             connectionId,
             aiOutcome.response.sql
           );
 
           if (!execOutcome.success) {
-            resolveMessageWithError(sessionId, assistantMsgId, execOutcome.error);
+            resolveMessageWithError(currentSessionId, assistantMsgId, execOutcome.error);
             return;
           }
 
           // Step 3: Resolve with chart result
-          resolveMessageWithChart(sessionId, assistantMsgId, {
+          resolveMessageWithChart(currentSessionId, assistantMsgId, {
             rows: execOutcome.rows,
             columns: execOutcome.columns,
             rowCount: execOutcome.rowCount,
@@ -300,7 +334,7 @@ export function ChatMain({ initialConnections = [] }: ChatMainProps) {
           });
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
-          resolveMessageWithError(sessionId, assistantMsgId, msg);
+          resolveMessageWithError(currentSessionId, assistantMsgId, msg);
         }
       });
     },
@@ -316,6 +350,7 @@ export function ChatMain({ initialConnections = [] }: ChatMainProps) {
       resolveMessageWithError,
       setThinking,
       updateSessionTitle,
+      promoteSession,
     ]
   );
 
@@ -324,7 +359,11 @@ export function ChatMain({ initialConnections = [] }: ChatMainProps) {
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto">
         {isEmpty ? (
-          <WelcomeScreen connectionAlias={activeConnectionAlias} />
+          <WelcomeScreen 
+            connectionAlias={activeConnectionAlias} 
+            hasConnections={connections.length > 0}
+            onAddConnection={() => setShowAddConnection(true)}
+          />
         ) : (
           <div className="mx-auto max-w-3xl px-4 py-8">
             <div className="flex flex-col gap-6">
@@ -370,7 +409,7 @@ export function ChatMain({ initialConnections = [] }: ChatMainProps) {
           />
 
           <p className="mt-2 text-center text-[10px] text-white/20">
-            LiteBI can make mistakes. Verify important data.
+            BI-Lite can make mistakes. Verify important data.
           </p>
         </div>
       </div>

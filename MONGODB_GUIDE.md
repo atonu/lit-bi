@@ -1,6 +1,6 @@
-# MongoDB Integration Guide — AURA BI
+# MongoDB Integration Guide — BI-Lite
 
-This guide walks you through everything needed to migrate AURA BI's control-plane database to MongoDB and add MongoDB as a user-connectable data source.
+This guide walks you through everything needed to migrate BI-Lite's control-plane database to MongoDB and add MongoDB as a user-connectable data source.
 
 ---
 
@@ -37,7 +37,7 @@ Start-Service -Name "MongoDB"   # if stopped
 
 ---
 
-## Part 2 — Bootstrap the AURA BI Database
+## Part 2 — Bootstrap the BI-Lite Database
 
 ### Step 3 — Run the Setup Script
 
@@ -55,7 +55,7 @@ This creates all 5 collections with validators and indexes, and seeds the defaul
 
 Expected output:
 ```
-=== AURA BI MongoDB Bootstrap ===
+=== BI-Lite MongoDB Bootstrap ===
 ✓ Collection 'organizations' created
 ✓ Collection 'users' created
 ✓ Collection 'database_connections' created

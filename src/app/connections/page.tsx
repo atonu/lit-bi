@@ -4,7 +4,7 @@ import { getChatSessions } from "@/app/actions/chat-history";
 import { ConnectionsPageClient } from "./page-client";
 
 export const metadata = {
-  title: "Connections — LiteBI",
+  title: "Connections — BI-Lite",
   description: "Manage your database connections.",
 };
 

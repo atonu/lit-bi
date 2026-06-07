@@ -10,8 +10,8 @@ import { PLACEHOLDER_ORG_ID } from "@/lib/constants";
 export interface ChatSessionSummary {
   id: string;
   title: string;
-  connectionId: string;
-  connectionAlias?: string;
+  connectionId: string | null;
+  connectionAlias: string | null;
   updatedAt: Date;
   createdAt: Date;
   messageCount?: number;
@@ -31,6 +31,7 @@ export interface StoredChatMessage {
 
 export async function createChatSession(
   connectionId: string,
+  connectionAlias: string,
   title = "New Chat"
 ): Promise<{ success: true; sessionId: string } | { success: false; error: string }> {
   try {
@@ -38,6 +39,7 @@ export async function createChatSession(
       data: {
         title,
         connectionId,
+        connectionAlias,
         organizationId: PLACEHOLDER_ORG_ID,
       },
     });
@@ -88,7 +90,7 @@ export async function getChatSessions(connectionId?: string): Promise<ChatSessio
       id: s.id,
       title: s.title,
       connectionId: s.connectionId,
-      connectionAlias: s.connection.alias,
+      connectionAlias: s.connectionAlias || s.connection?.alias || "Deleted DB",
       updatedAt: s.updatedAt,
       createdAt: s.createdAt,
       messageCount: s._count.messages,
@@ -121,7 +123,7 @@ export async function searchChatSessions(query: string): Promise<ChatSessionSumm
       id: s.id,
       title: s.title,
       connectionId: s.connectionId,
-      connectionAlias: s.connection.alias,
+      connectionAlias: s.connectionAlias || s.connection?.alias || "Deleted DB",
       updatedAt: s.updatedAt,
       createdAt: s.createdAt,
       messageCount: s._count.messages,
@@ -131,7 +133,7 @@ export async function searchChatSessions(query: string): Promise<ChatSessionSumm
   }
 }
 
-// ---------------------------------------------------------------------------
+
 // Bulk-save messages for a session (upsert-style sync)
 // ---------------------------------------------------------------------------
 

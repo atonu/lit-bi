@@ -9,7 +9,9 @@ import {
   Search,
   MessageSquare,
   Trash2,
-  PanelLeft,
+  Menu,
+  PanelLeftClose,
+  PanelRightClose,
   Sparkles,
   Clock,
   ChevronRight,
@@ -59,8 +61,9 @@ interface AppSidebarProps {
 export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { isPinned, isHovered, isExpanded, togglePin, setHovered } = useSidebarStore();
-  const expanded = isExpanded();
+  const [mounted, setMounted] = useState(false);
+  const { isPinned, isHovered, isExpanded, togglePin, setHovered, setExpanded } = useSidebarStore();
+  const expanded = mounted ? isExpanded() : false; // Default to false on SSR
 
   const {
     sessions,
@@ -78,14 +81,21 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
 
   const searchRef = useRef<HTMLInputElement>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [sessionToDelete, setSessionToDelete] = useState<{ id: string; title: string } | null>(null);
   const [filteredSessions, setFilteredSessions] = useState<ChatSessionSummary[]>(sessions);
 
   // Load initial sessions into store
   useEffect(() => {
+    setMounted(true);
     if (initialSessions.length > 0 && sessions.length === 0) {
       setSessions(initialSessions);
     }
   }, [initialSessions, sessions.length, setSessions]);
+
+  // Reset hover state on navigation to prevent sidebar staying open
+  useEffect(() => {
+    setHovered(false);
+  }, [pathname, setHovered]);
 
   // Filter sessions by search query
   useEffect(() => {
@@ -104,13 +114,15 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
   }, [sessions, searchQuery]);
 
   const handleNewChat = useCallback(() => {
+    setExpanded(true);
     if (activeConnectionId && activeConnectionAlias) {
       createNewSession(activeConnectionId, activeConnectionAlias);
+      router.push("/");
     } else {
       // Redirect to home so user can select a connection
       router.push("/");
     }
-  }, [activeConnectionId, activeConnectionAlias, createNewSession, router]);
+  }, [activeConnectionId, activeConnectionAlias, createNewSession, router, setExpanded]);
 
   const handleDeleteSession = useCallback(
     async (sessionId: string, e: React.MouseEvent) => {
@@ -127,7 +139,7 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
     [removeSession]
   );
 
-  const grouped = groupSessionsByDate(filteredSessions);
+  const grouped = groupSessionsByDate(filteredSessions.filter(s => !s.id.startsWith("new-")));
   const COLLAPSED_W = "w-16";
   const EXPANDED_W = "w-[280px]";
 
@@ -141,25 +153,34 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
       onMouseLeave={() => !isPinned && setHovered(false)}
     >
       {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div className="flex h-16 shrink-0 items-center gap-3 px-3">
+      <div className={cn("flex h-16 shrink-0 items-center px-3", expanded ? "justify-between" : "justify-center")}>
+        {/* Logo */}
+        {expanded && (
+          <div className="flex items-center gap-2 pl-4 overflow-hidden">
+            <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-violet-600">
+              <Sparkles className="size-3.5 text-white" />
+            </div>
+            <span className="truncate text-sm font-semibold text-white">BI-Lite</span>
+          </div>
+        )}
+
         {/* Hamburger / pin toggle */}
         <button
           id="sidebar-pin-btn"
           onClick={togglePin}
           className="flex size-10 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-white/10"
-          title={isPinned ? "Collapse sidebar" : "Pin sidebar"}
+          title={mounted && isPinned ? "Collapse sidebar" : "Pin sidebar"}
         >
-          <PanelLeft className="size-5 text-white/70" />
+          {!mounted ? (
+            <Menu className="size-5 text-white/70" />
+          ) : isPinned ? (
+            <PanelLeftClose className="size-5 text-white/70" />
+          ) : isHovered ? (
+            <PanelRightClose className="size-5 text-white/70" />
+          ) : (
+            <Menu className="size-5 text-white/70" />
+          )}
         </button>
-
-        {expanded && (
-          <div className="flex items-center gap-2 overflow-hidden">
-            <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-violet-600">
-              <Sparkles className="size-3.5 text-white" />
-            </div>
-            <span className="truncate text-sm font-semibold text-white">LiteBI</span>
-          </div>
-        )}
       </div>
 
       {/* ── New Chat Button ─────────────────────────────────────────────── */}
@@ -239,14 +260,17 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
                       key={session.id}
                       id={`chat-session-${session.id}`}
                       onClick={() => {
+                        setExpanded(true);
                         setActiveSession(session.id);
-                        if (activeConnectionId !== session.connectionId) {
+                        if (session.connectionId && activeConnectionId !== session.connectionId) {
                           useChatStore.getState().setActiveConnection(
                             session.connectionId,
-                            session.connectionAlias ?? ""
+                            session.connectionAlias ?? "Deleted DB"
                           );
+                        } else if (!session.connectionId) {
+                          useChatStore.getState().clearActiveConnection();
                         }
-                        router.push("/");
+                        router.push(`/chat/${session.id}`);
                       }}
                       className={cn(
                         "group relative mx-2 flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2.5 transition-all",
@@ -269,8 +293,10 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
                       )}
                       <button
                         id={`delete-session-${session.id}`}
-                        onClick={(e) => handleDeleteSession(session.id, e)}
-                        disabled={deletingId === session.id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSessionToDelete({ id: session.id, title: session.title });
+                        }}
                         className="absolute right-2 hidden shrink-0 rounded p-0.5 text-white/30 hover:text-red-400 group-hover:flex"
                       >
                         <Trash2 className="size-3.5" />
@@ -291,41 +317,79 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
         ) : (
           // Collapsed: show icon-only session dots
           <div className="flex flex-col items-center gap-1 py-2">
-            {sessions.slice(0, 8).map((session) => (
-              <button
-                key={session.id}
-                onClick={() => {
-                  setActiveSession(session.id);
-                  router.push("/");
-                }}
-                title={session.title}
-                className={cn(
-                  "flex size-10 items-center justify-center rounded-full transition-colors",
-                  session.id === activeSessionId
-                    ? "bg-white/20 text-white"
-                    : "text-white/40 hover:bg-white/10 hover:text-white"
-                )}
-              >
-                <MessageSquare className="size-4" />
-              </button>
-            ))}
+            {sessions.filter(s => !s.id.startsWith("new-")).slice(0, 8).map((session) => {
+              const isActive = session.id === activeSessionId;
+              return (
+                <button
+                  key={session.id}
+                  onClick={() => {
+                    setExpanded(true);
+                    setActiveSession(session.id);
+                    router.push(`/chat/${session.id}`);
+                  }}
+                  title={session.title}
+                  className={cn(
+                    "flex size-10 shrink-0 items-center justify-center rounded-full transition-colors",
+                    isActive ? "bg-white/[0.12] text-white" : "text-white/50 hover:bg-white/10"
+                  )}
+                >
+                  <MessageSquare className="size-5" />
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {sessionToDelete && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm animate-in fade-in zoom-in-95 rounded-2xl border border-white/10 bg-[#1e1e1e] p-6 shadow-2xl">
+            <h3 className="text-base font-semibold text-white">Delete Chat?</h3>
+            <p className="mt-2 text-sm text-white/50">
+              Are you sure you want to delete <span className="font-medium text-white/80">"{sessionToDelete.title}"</span>? This action cannot be undone.
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setSessionToDelete(null)}
+                disabled={deletingId !== null}
+                className="rounded-xl px-4 py-2 text-sm font-medium text-white/50 transition-colors hover:bg-white/[0.06] hover:text-white/80 disabled:opacity-40"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={(e) => {
+                  handleDeleteSession(sessionToDelete.id, e as any);
+                  setSessionToDelete(null);
+                }}
+                disabled={deletingId !== null}
+                className="flex items-center gap-2 rounded-xl bg-red-500/80 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-500 disabled:opacity-50"
+              >
+                {deletingId === sessionToDelete.id ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Bottom Nav ──────────────────────────────────────────────────── */}
       <div className="mt-auto shrink-0 border-t border-white/[0.06] px-3 py-3">
         {[
           { label: "Dashboard", icon: <LayoutDashboard className="size-5" />, href: "/dashboard" },
           { label: "Connections", icon: <Database className="size-5" />, href: "/connections" },
-          { label: "Settings", icon: <Settings className="size-5" />, href: "/settings" },
+          { label: "Settings", icon: <Settings className="size-5" />, href: "" },
         ].map((item) => {
           const isActive = pathname === item.href;
           return (
             <button
               key={item.href}
               id={`nav-${item.label.toLowerCase()}`}
-              onClick={() => router.push(item.href)}
+              onClick={() => {
+                if (item.href) {
+                  setExpanded(true);
+                  router.push(item.href);
+                }
+              }}
               className={cn(
                 "flex w-full items-center gap-3 rounded-xl py-2.5 transition-colors",
                 expanded ? "px-3" : "justify-center px-0",

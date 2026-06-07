@@ -32,7 +32,7 @@ const STEP_LABELS = ["Credentials", "Test Connection", "Schema Preview"];
 
 const DEFAULT_CREDS: ConnectionCredentials = {
   alias: "",
-  engine: "POSTGRESQL",
+  engine: "MONGODB",
   host: "",
   port: 5432,
   dbName: "",

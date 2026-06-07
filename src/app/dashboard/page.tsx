@@ -4,7 +4,7 @@ import { getChatSessions } from "@/app/actions/chat-history";
 import { ConnectedDashboard } from "@/components/dashboard/connected-dashboard";
 
 export const metadata = {
-  title: "Dashboard — LiteBI",
+  title: "Dashboard — BI-Lite",
   description: "View your database connections and status.",
 };
 
