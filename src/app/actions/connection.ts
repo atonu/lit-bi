@@ -627,9 +627,26 @@ export async function deleteConnection(
   connectionId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await db.databaseConnection.delete({
+    // 1. Manually clean up schema metadata (Cascade equivalent)
+    await db.schemaMetadata.deleteMany({
+      where: { connectionId },
+    });
+
+    // 2. Manually nullify connection reference in chat sessions (SetNull equivalent)
+    await db.chatSession.updateMany({
+      where: { connectionId },
+      data: { connectionId: null },
+    });
+
+    // 3. Safe delete the connection record itself
+    const exists = await db.databaseConnection.findUnique({
       where: { id: connectionId },
     });
+    if (exists) {
+      await db.databaseConnection.delete({
+        where: { id: connectionId },
+      });
+    }
     return { success: true };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
