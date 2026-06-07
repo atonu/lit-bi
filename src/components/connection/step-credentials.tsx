@@ -29,8 +29,9 @@ export function StepCredentials({
   const isMongo = creds.engine === "MONGODB";
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Header */}
+    <div className="flex flex-col h-full overflow-hidden">
+      <div className="flex-1 overflow-y-auto scrollbar-thin p-6 flex flex-col gap-6">
+        {/* Header */}
       <div className="flex flex-col gap-1">
         <h3 className="text-base font-semibold text-foreground">
           Database Credentials
@@ -186,26 +187,29 @@ export function StepCredentials({
           </div>
         </>
       )}
+      </div>
 
       {/* Next button */}
-      <Button
-        id="step-credentials-next"
-        onClick={onNext}
-        disabled={isPending}
-        className="w-full gap-2 bg-gradient-to-r from-chart-1 to-chart-5 text-white shadow-lg hover:brightness-110"
-      >
-        {isPending ? (
-          <>
-            <Loader2 className="size-4 animate-spin" />
-            Testing Connection…
-          </>
-        ) : (
-          <>
-            Test Connection
-            <ArrowRight className="size-4" />
-          </>
-        )}
-      </Button>
+      <div className="border-t border-border/50 p-6 bg-background shrink-0">
+        <Button
+          id="step-credentials-next"
+          onClick={onNext}
+          disabled={isPending}
+          className="w-full gap-2 bg-gradient-to-r from-chart-1 to-chart-5 text-white shadow-lg hover:brightness-110"
+        >
+          {isPending ? (
+            <>
+              <Loader2 className="size-4 animate-spin" />
+              Testing Connection…
+            </>
+          ) : (
+            <>
+              Test Connection
+              <ArrowRight className="size-4" />
+            </>
+          )}
+        </Button>
+      </div>
     </div>
   );
 }

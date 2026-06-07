@@ -1,7 +1,36 @@
 "use client";
 
 import { useState } from "react";
-import { X, Save } from "lucide-react";
+import { X, Save, Copy, Check } from "lucide-react";
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy text:", err);
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      className="text-white/30 hover:text-white/70 transition-colors focus:outline-none shrink-0"
+      title="Copy to clipboard"
+    >
+      {copied ? (
+        <Check className="size-3 text-green-400" />
+      ) : (
+        <Copy className="size-3" />
+      )}
+    </button>
+  );
+}
 import { cn } from "@/lib/utils";
 import type { ConnectionDetail } from "@/app/actions/ai-chat";
 
@@ -66,28 +95,46 @@ export function ConnectionEditModal({
         {/* Connection info (read-only) */}
         <div className="mb-5 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
           <div className="grid grid-cols-2 gap-3 text-xs">
-            <div>
+            <div className="min-w-0">
               <p className="text-white/30">Engine</p>
-              <p className="mt-0.5 font-medium text-white/70">{connection.engine}</p>
+              <div className="mt-0.5 flex items-center gap-1.5">
+                <span className="font-medium text-white/70 truncate flex-1 block">
+                  {connection.engine}
+                </span>
+                <CopyButton text={connection.engine} />
+              </div>
             </div>
             {connection.host && (
-              <div>
+              <div className="min-w-0">
                 <p className="text-white/30">Host</p>
-                <p className="mt-0.5 font-medium text-white/70">
-                  {connection.host}{connection.port ? `:${connection.port}` : ""}
-                </p>
+                <div className="mt-0.5 flex items-center gap-1.5">
+                  <span className="font-medium text-white/70 truncate flex-1 block">
+                    {connection.host}{connection.port ? `:${connection.port}` : ""}
+                  </span>
+                  <CopyButton text={`${connection.host}${connection.port ? `:${connection.port}` : ""}`} />
+                </div>
               </div>
             )}
             {connection.dbName && (
-              <div>
+              <div className="min-w-0">
                 <p className="text-white/30">Database</p>
-                <p className="mt-0.5 font-medium text-white/70">{connection.dbName}</p>
+                <div className="mt-0.5 flex items-center gap-1.5">
+                  <span className="font-medium text-white/70 truncate flex-1 block">
+                    {connection.dbName}
+                  </span>
+                  <CopyButton text={connection.dbName} />
+                </div>
               </div>
             )}
             {connection.dbUser && (
-              <div>
+              <div className="min-w-0">
                 <p className="text-white/30">User</p>
-                <p className="mt-0.5 font-medium text-white/70">{connection.dbUser}</p>
+                <div className="mt-0.5 flex items-center gap-1.5">
+                  <span className="font-medium text-white/70 truncate flex-1 block">
+                    {connection.dbUser}
+                  </span>
+                  <CopyButton text={connection.dbUser} />
+                </div>
               </div>
             )}
           </div>

@@ -111,6 +111,23 @@ async function testPostgresConnection(
 // Action 1b: testConnection — MongoDB
 // ---------------------------------------------------------------------------
 
+function formatMongoError(err: unknown): string {
+  const message = err instanceof Error ? err.message : String(err);
+  let sanitized = message.replace(
+    /mongodb(\+srv)?:\/\/[^@]+@/g,
+    "mongodb$1://***@"
+  );
+  if (
+    sanitized.toLowerCase().includes("tlsv1 alert") ||
+    sanitized.toLowerCase().includes("ssl alert") ||
+    sanitized.toLowerCase().includes("alert number") ||
+    sanitized.toLowerCase().includes("handshake failure")
+  ) {
+    sanitized += "\n\n💡 Tip: This SSL/TLS error typically indicates that your database's firewall or IP whitelist is blocking the connection. If you are using MongoDB Atlas, make sure you have allowed access from all IP addresses (0.0.0.0/0) in your Atlas Network Access settings, as Vercel uses dynamic IP addresses.";
+  }
+  return sanitized;
+}
+
 async function testMongoConnection(
   creds: ConnectionCredentials
 ): Promise<TestConnectionResult> {
@@ -136,13 +153,8 @@ async function testMongoConnection(
       serverVersion: `MongoDB ${info.version}`,
     };
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    // Sanitize — strip credentials from URI in error messages
-    const sanitized = message.replace(
-      /mongodb(\+srv)?:\/\/[^@]+@/,
-      "mongodb$1://***@"
-    );
-    return { success: false, error: sanitized };
+    const errorMsg = formatMongoError(err);
+    return { success: false, error: errorMsg };
   } finally {
     await client.close();
   }
@@ -444,12 +456,11 @@ async function introspectMongoSchema(
 
     return { success: true, tables, columns };
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
     return {
       success: false,
       tables: [],
       columns: [],
-      error: message.replace(/mongodb(\+srv)?:\/\/[^@]+@/, "mongodb$1://***@"),
+      error: formatMongoError(err),
     };
   } finally {
     await client.close();
@@ -516,10 +527,17 @@ export async function saveConnection(
       where: { uniqueKey },
     });
     if (existing) {
-      return {
-        success: false,
-        error: `A connection to this database already exists: "${existing.alias}". Please edit the existing connection instead of creating a duplicate.`,
-      };
+      if (existing.status === "CONNECTED") {
+        return {
+          success: false,
+          error: `A connection to this database already exists: "${existing.alias}". Please edit the existing connection instead of creating a duplicate.`,
+        };
+      } else {
+        // Delete the inactive/failed connection so we can create a clean new one
+        await db.databaseConnection.delete({
+          where: { id: existing.id },
+        });
+      }
     }
 
     // Ensure the placeholder organization exists

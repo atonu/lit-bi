@@ -72,8 +72,9 @@ export function StepSchema({
   };
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Header */}
+    <div className="flex flex-col h-full overflow-hidden">
+      <div className="flex-1 overflow-y-auto scrollbar-thin p-6 flex flex-col gap-6">
+        {/* Header */}
       <div className="flex flex-col gap-1">
         <h3 className="text-base font-semibold text-foreground">
           Schema Preview
@@ -129,7 +130,7 @@ export function StepSchema({
           </div>
         )}
 
-        <div className="max-h-[320px] overflow-y-auto">
+        <div className="max-h-[320px] overflow-y-auto scrollbar-thin">
           {tableNames.length === 0 ? (
             <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
               {result === null ? (
@@ -233,8 +234,10 @@ export function StepSchema({
         </div>
       )}
 
+      </div>
+
       {/* Actions */}
-      <div className="flex gap-3">
+      <div className="border-t border-border/50 p-6 bg-background flex gap-3 shrink-0">
         <Button
           variant="outline"
           onClick={onBack}

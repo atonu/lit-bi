@@ -142,7 +142,7 @@ export function ConnectionStepper({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
     >
       {/* Modal panel */}
-      <div className="animate-slide-up relative flex w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-white/10 bg-background shadow-2xl shadow-black/50">
+      <div className="animate-slide-up relative flex w-full max-w-lg h-[80vh] max-h-[80vh] flex-col overflow-hidden rounded-2xl border border-white/10 bg-background shadow-2xl shadow-black/50">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border/50 px-6 py-4">
           <div className="flex items-center gap-3">
@@ -173,7 +173,7 @@ export function ConnectionStepper({
         </div>
 
         {/* Step content */}
-        <div className="overflow-y-auto p-6">
+        <div className="flex-1 flex flex-col overflow-hidden">
           {step === 0 && (
             <StepCredentials
               creds={creds}

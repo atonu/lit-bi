@@ -254,6 +254,7 @@ async function executeMongoPipeline(
   connection: {
     encryptedUri: string | null;
     dbName: string | null;
+    sslEnabled: boolean;
   },
   queryJson: string
 ): Promise<ExecuteQueryOutcome> {
@@ -418,10 +419,18 @@ async function executeMongoPipeline(
     };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    const sanitized = msg.replace(
+    let sanitized = msg.replace(
       /mongodb(\+srv)?:\/\/[^@]+@/g,
       "mongodb$1://***@"
     );
+    if (
+      sanitized.toLowerCase().includes("tlsv1 alert") ||
+      sanitized.toLowerCase().includes("ssl alert") ||
+      sanitized.toLowerCase().includes("alert number") ||
+      sanitized.toLowerCase().includes("handshake failure")
+    ) {
+      sanitized += "\n\n💡 Tip: This SSL/TLS error typically indicates that your database's firewall or IP whitelist is blocking the connection. If you are using MongoDB Atlas, make sure you have allowed access from all IP addresses (0.0.0.0/0) in your Atlas Network Access settings, as Vercel uses dynamic IP addresses.";
+    }
     return {
       success: false,
       error: `MongoDB query failed: ${sanitized}`,

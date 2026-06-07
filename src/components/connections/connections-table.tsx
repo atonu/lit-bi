@@ -33,6 +33,14 @@ function engineLabel(engine: string) {
   return engine;
 }
 
+function statusLabel(status: string) {
+  if (status === "CONNECTED") return "Successful";
+  if (status === "FAILED") return "Failed";
+  if (status === "REVOKED") return "Revoked";
+  if (status === "PENDING") return "Pending";
+  return status;
+}
+
 
 
 function formatDate(d: Date) {
@@ -91,7 +99,7 @@ export function ConnectionsTable({ connections: initial }: ConnectionsTableProps
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-white/[0.06]">
-              {["Alias", "Engine", "Host / Database", "Created", ""].map((h) => (
+              {["Alias", "Engine", "Host / Database", "Status", "Created", ""].map((h) => (
                 <th
                   key={h}
                   className="px-5 py-3.5 text-left text-[11px] font-medium uppercase tracking-wider text-white/30"
@@ -146,6 +154,11 @@ export function ConnectionsTable({ connections: initial }: ConnectionsTableProps
                       <span className="text-xs text-white/30">MongoDB Atlas URI</span>
                     )}
                   </div>
+                </td>
+
+                {/* Status */}
+                <td className="px-5 py-4 text-white/50">
+                  {statusLabel(conn.status)}
                 </td>
 
                 {/* Created */}
