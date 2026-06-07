@@ -114,13 +114,18 @@ export function StepSchema({
       {/* Table explorer */}
       <div className="flex flex-col rounded-xl border border-border/40 bg-muted/10 overflow-hidden">
         {tableNames.length > 0 && (
-          <div className="flex px-4 py-2 border-b border-border/30 bg-muted/20">
+          <div className="flex items-center justify-between px-4 py-2 border-b border-border/30 bg-muted/20">
             <button
               onClick={() => setSelectedTables(new Set(tableNames))}
               className="text-[11px] font-medium text-chart-1 hover:underline transition-colors"
             >
               Select All
             </button>
+            {selectedTables.size > 0 && (
+              <span className="text-[11px] text-muted-foreground">
+                {selectedTables.size} table{selectedTables.size === 1 ? "" : "s"} selected
+              </span>
+            )}
           </div>
         )}
 

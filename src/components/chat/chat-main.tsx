@@ -142,7 +142,7 @@ function WelcomeScreen({
       <div className="flex flex-col items-center gap-4 text-center">
         <div className="flex size-20 items-center justify-center rounded-3xl overflow-hidden">
           <Image
-            src="/bilite-ai.PNG"
+            src="/bilite-ai.png"
             alt="BI-Lite AI Logo"
             width={180}
             height={180}

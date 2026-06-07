@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { X, Sparkles } from "lucide-react";
+import { X, Database } from "lucide-react";
 import { toast } from "sonner";
 import { StepIndicator } from "./step-indicator";
 import { StepCredentials } from "./step-credentials";
@@ -147,7 +147,7 @@ export function ConnectionStepper({
         <div className="flex items-center justify-between border-b border-border/50 px-6 py-4">
           <div className="flex items-center gap-3">
             <div className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-chart-1 to-chart-5">
-              <Sparkles className="size-4 text-white" />
+              <Database className="size-4 text-white" />
             </div>
             <div>
               <h2 className="text-sm font-bold text-foreground">
