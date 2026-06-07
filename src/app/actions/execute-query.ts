@@ -349,6 +349,7 @@ async function executeMongoPipeline(
   const client = new MongoClient(uri, {
     serverSelectionTimeoutMS: 10_000,
     connectTimeoutMS: 10_000,
+    ...(connection.sslEnabled && { tls: true, tlsAllowInvalidCertificates: true }),
   });
 
   const start = Date.now();

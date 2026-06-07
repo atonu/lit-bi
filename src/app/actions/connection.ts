@@ -121,6 +121,7 @@ async function testMongoConnection(
   const client = new MongoClient(creds.connectionUri, {
     serverSelectionTimeoutMS: 8000,
     connectTimeoutMS: 8000,
+    ...(creds.sslEnabled && { tls: true, tlsAllowInvalidCertificates: true }),
   });
 
   const start = Date.now();
@@ -365,6 +366,7 @@ async function introspectMongoSchema(
 
   const client = new MongoClient(creds.connectionUri, {
     serverSelectionTimeoutMS: 8000,
+    ...(creds.sslEnabled && { tls: true, tlsAllowInvalidCertificates: true }),
   });
 
   try {
