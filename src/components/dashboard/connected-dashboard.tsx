@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Database, Plus, RefreshCw, Activity, ExternalLink, CheckCircle } from "lucide-react";
+import Image from "next/image";
 import type { ConnectionDetail } from "@/app/actions/ai-chat";
 import { ConnectionStepper } from "@/components/connection/connection-stepper";
 
@@ -140,8 +141,14 @@ export function ConnectedDashboard({ connections }: ConnectedDashboardProps) {
 
       {/* Call-to-action panel */}
       <div className="flex flex-1 flex-col items-center justify-center gap-6 rounded-3xl border border-white/[0.06] bg-white/[0.02] py-20 text-center">
-        <div className="flex size-20 items-center justify-center rounded-3xl bg-gradient-to-br from-blue-500/20 to-violet-600/20 ring-1 ring-white/10">
-          <span className="text-4xl">✨</span>
+        <div className="flex size-20 items-center justify-center rounded-3xl overflow-hidden ring-1 ring-white/10">
+          <Image 
+            src="/favicon.png" 
+            alt="BI-Lite Logo" 
+            width={80} 
+            height={80} 
+            className="object-cover"
+          />
         </div>
         <div className="max-w-md">
           <h3 className="text-xl font-semibold text-white">

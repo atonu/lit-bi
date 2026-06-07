@@ -7,6 +7,7 @@ import {
   useCallback,
   useState,
 } from "react";
+import Image from "next/image";
 import { Database, ChevronDown, Sparkles, Plus } from "lucide-react";
 import { useChatStore } from "@/lib/stores/chat-store";
 import { ChatMessageBubble } from "./chat-message";
@@ -139,8 +140,14 @@ function WelcomeScreen({
   return (
     <div className="flex h-full flex-col items-center justify-center gap-8 px-4 pb-32">
       <div className="flex flex-col items-center gap-4 text-center">
-        <div className="flex size-20 items-center justify-center rounded-3xl bg-gradient-to-br from-blue-500/20 to-violet-600/20 ring-1 ring-white/10">
-          <Sparkles className="size-8 text-blue-400" />
+        <div className="flex size-20 items-center justify-center rounded-3xl overflow-hidden">
+          <Image
+            src="/bilite-ai.PNG"
+            alt="BI-Lite AI Logo"
+            width={180}
+            height={180}
+            className="object-cover"
+          />
         </div>
         <div>
           <h1 className="text-2xl font-semibold text-white">
@@ -288,14 +295,14 @@ export function ChatMain({ initialConnections = [], chatId }: ChatMainProps) {
             const sessionResult = await createChatSession(connectionId, activeConnectionAlias || "Deleted DB");
             if (sessionResult.success) {
               const realSessionId = sessionResult.sessionId;
-              
+
               // Promote the session locally so state matches the real DB ID
               promoteSession(sessionId, realSessionId);
               currentSessionId = realSessionId;
 
               // Redirect to the new parameterized route
               router.push(`/chat/${realSessionId}`);
-              
+
               generateChatTitle(question).then((title) => {
                 updateChatSessionTitle(realSessionId, title);
                 updateSessionTitle(realSessionId, title);
@@ -359,8 +366,8 @@ export function ChatMain({ initialConnections = [], chatId }: ChatMainProps) {
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto">
         {isEmpty ? (
-          <WelcomeScreen 
-            connectionAlias={activeConnectionAlias} 
+          <WelcomeScreen
+            connectionAlias={activeConnectionAlias}
             hasConnections={connections.length > 0}
             onAddConnection={() => setShowAddConnection(true)}
           />

@@ -19,6 +19,9 @@ export const metadata: Metadata = {
   title: "BI-Lite — AI-Driven Business Intelligence",
   description:
     "Connect your database and ask questions in plain English. BI-Lite writes the SQL, picks the chart, and delivers instant insights.",
+  icons: {
+    icon: "/favicon.png",
+  },
   keywords: [
     "business intelligence",
     "AI analytics",

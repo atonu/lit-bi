@@ -21,6 +21,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useSidebarStore } from "@/lib/stores/sidebar-store";
 import { useChatStore } from "@/lib/stores/chat-store";
 import type { ChatSessionSummary } from "@/app/actions/chat-history";
+import Image from "next/image";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -157,8 +158,14 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
         {/* Logo */}
         {expanded && (
           <div className="flex items-center gap-2 pl-4 overflow-hidden">
-            <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-violet-600">
-              <Sparkles className="size-3.5 text-white" />
+            <div className="flex size-7 shrink-0 items-center justify-center rounded-lg overflow-hidden">
+              <Image 
+                src="/favicon.png" 
+                alt="BI-Lite Logo" 
+                width={28} 
+                height={28} 
+                className="object-cover"
+              />
             </div>
             <span className="truncate text-sm font-semibold text-white">BI-Lite</span>
           </div>
