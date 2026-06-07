@@ -15,7 +15,6 @@ import { ChatInput } from "./chat-input";
 import {
   askQuestion,
   getConnections,
-  generateChatTitle,
   type ConnectionSummary,
 } from "@/app/actions/ai-chat";
 import { executeQuery } from "@/app/actions/execute-query";
@@ -276,7 +275,7 @@ export function ChatMain({ initialConnections = [], chatId }: ChatMainProps) {
         createNewSession(activeConnectionId, activeConnectionAlias);
       }
     }
-  }, [activeConnectionId, activeConnectionAlias, activeSessionId]);
+  }, [chatId, activeConnectionId, activeConnectionAlias, activeSessionId, sessions, setActiveSession, createNewSession]);
 
   // ── Main chat handler ──────────────────────────────────────────────────
 
@@ -302,24 +301,27 @@ export function ChatMain({ initialConnections = [], chatId }: ChatMainProps) {
 
       startTransition(async () => {
         let currentSessionId = sessionId;
+        let realSessionId: string | null = null;
         try {
+          const derivedTitle = question.slice(0, 20).trim() + (question.length > 20 ? "..." : "");
+
           if (isFirstMessage && sessionId.startsWith("new-")) {
             // Persist session to DB
-            const sessionResult = await createChatSession(connectionId, activeConnectionAlias || "Deleted DB");
+            const sessionResult = await createChatSession(connectionId, activeConnectionAlias || "Deleted DB", derivedTitle);
             if (sessionResult.success) {
-              const realSessionId = sessionResult.sessionId;
+              realSessionId = sessionResult.sessionId;
 
               // Promote the session locally so state matches the real DB ID
               promoteSession(sessionId, realSessionId);
               currentSessionId = realSessionId;
-
-              // Redirect to the new parameterized route
-              router.push(`/chat/${realSessionId}`);
-
-              generateChatTitle(question).then((title) => {
-                updateChatSessionTitle(realSessionId, title);
-                updateSessionTitle(realSessionId, title);
-              });
+              updateSessionTitle(realSessionId, derivedTitle);
+            }
+          } else {
+            // Update title for existing session if it's currently 'New Chat'
+            const currentSession = sessions.find((s) => s.id === sessionId);
+            if (currentSession && currentSession.title === "New Chat") {
+              await updateChatSessionTitle(sessionId, derivedTitle);
+              updateSessionTitle(sessionId, derivedTitle);
             }
           }
 
@@ -332,6 +334,9 @@ export function ChatMain({ initialConnections = [], chatId }: ChatMainProps) {
 
           if (!aiOutcome.success) {
             resolveMessageWithError(currentSessionId, assistantMsgId, aiOutcome.error);
+            if (realSessionId) {
+              router.push(`/chat/${realSessionId}`);
+            }
             return;
           }
 
@@ -346,6 +351,9 @@ export function ChatMain({ initialConnections = [], chatId }: ChatMainProps) {
 
           if (!execOutcome.success) {
             resolveMessageWithError(currentSessionId, assistantMsgId, execOutcome.error);
+            if (realSessionId) {
+              router.push(`/chat/${realSessionId}`);
+            }
             return;
           }
 
@@ -357,10 +365,19 @@ export function ChatMain({ initialConnections = [], chatId }: ChatMainProps) {
             executionMs: execOutcome.executionMs,
             aiResponse: aiOutcome.response,
           });
+
+          // Redirect to the new parameterized route AFTER everything has completed successfully!
+          if (realSessionId) {
+            router.push(`/chat/${realSessionId}`);
+          }
         } catch (err) {
           if (useChatStore.getState().activeRequestId !== requestId) return;
           const msg = err instanceof Error ? err.message : String(err);
           resolveMessageWithError(currentSessionId, assistantMsgId, msg);
+
+          if (realSessionId) {
+            router.push(`/chat/${realSessionId}`);
+          }
         }
       });
     },

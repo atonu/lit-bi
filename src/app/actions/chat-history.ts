@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/db";
 import { PLACEHOLDER_ORG_ID } from "@/lib/constants";
+import { revalidatePath } from "next/cache";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -43,6 +44,7 @@ export async function createChatSession(
         organizationId: PLACEHOLDER_ORG_ID,
       },
     });
+    revalidatePath("/", "layout");
     return { success: true, sessionId: session.id };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -63,6 +65,7 @@ export async function updateChatSessionTitle(
       where: { id: sessionId },
       data: { title },
     });
+    revalidatePath("/", "layout");
     return { success: true };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -83,18 +86,36 @@ export async function getChatSessions(connectionId?: string): Promise<ChatSessio
       include: {
         connection: { select: { alias: true } },
         _count: { select: { messages: true } },
+        messages: {
+          orderBy: { createdAt: "asc" },
+          take: 1,
+        },
       },
     });
 
-    return sessions.map((s) => ({
-      id: s.id,
-      title: s.title,
-      connectionId: s.connectionId,
-      connectionAlias: s.connectionAlias || s.connection?.alias || "Deleted DB",
-      updatedAt: s.updatedAt,
-      createdAt: s.createdAt,
-      messageCount: s._count.messages,
-    }));
+    return sessions.map((s) => {
+      let title = s.title;
+      if (title === "New Chat" && s.messages.length > 0) {
+        const firstMsg = s.messages[0];
+        if (firstMsg.content) {
+          title = firstMsg.content.slice(0, 20).trim() + (firstMsg.content.length > 20 ? "..." : "");
+          db.chatSession.update({
+            where: { id: s.id },
+            data: { title },
+          }).catch(() => {});
+        }
+      }
+
+      return {
+        id: s.id,
+        title,
+        connectionId: s.connectionId,
+        connectionAlias: s.connectionAlias || s.connection?.alias || "Deleted DB",
+        updatedAt: s.updatedAt,
+        createdAt: s.createdAt,
+        messageCount: s._count.messages,
+      };
+    });
   } catch {
     return [];
   }
@@ -116,18 +137,36 @@ export async function searchChatSessions(query: string): Promise<ChatSessionSumm
       include: {
         connection: { select: { alias: true } },
         _count: { select: { messages: true } },
+        messages: {
+          orderBy: { createdAt: "asc" },
+          take: 1,
+        },
       },
     });
 
-    return sessions.map((s) => ({
-      id: s.id,
-      title: s.title,
-      connectionId: s.connectionId,
-      connectionAlias: s.connectionAlias || s.connection?.alias || "Deleted DB",
-      updatedAt: s.updatedAt,
-      createdAt: s.createdAt,
-      messageCount: s._count.messages,
-    }));
+    return sessions.map((s) => {
+      let title = s.title;
+      if (title === "New Chat" && s.messages.length > 0) {
+        const firstMsg = s.messages[0];
+        if (firstMsg.content) {
+          title = firstMsg.content.slice(0, 20).trim() + (firstMsg.content.length > 20 ? "..." : "");
+          db.chatSession.update({
+            where: { id: s.id },
+            data: { title },
+          }).catch(() => {});
+        }
+      }
+
+      return {
+        id: s.id,
+        title,
+        connectionId: s.connectionId,
+        connectionAlias: s.connectionAlias || s.connection?.alias || "Deleted DB",
+        updatedAt: s.updatedAt,
+        createdAt: s.createdAt,
+        messageCount: s._count.messages,
+      };
+    });
   } catch {
     return [];
   }
@@ -205,6 +244,7 @@ export async function deleteChatSession(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     await db.chatSession.delete({ where: { id: sessionId } });
+    revalidatePath("/", "layout");
     return { success: true };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
