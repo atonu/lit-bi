@@ -57,10 +57,15 @@ function formatDate(d: Date) {
 
 interface ConnectionsTableProps {
   connections: ConnectionDetail[];
+  onDeleted?: (id: string) => void;
+  onSaved?: (updated: any) => void;
 }
 
-export function ConnectionsTable({ connections: initial }: ConnectionsTableProps) {
-  const [connections, setConnections] = useState(initial);
+export function ConnectionsTable({
+  connections,
+  onDeleted,
+  onSaved,
+}: ConnectionsTableProps) {
   const [editingConn, setEditingConn] = useState<ConnectionDetail | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
@@ -72,7 +77,7 @@ export function ConnectionsTable({ connections: initial }: ConnectionsTableProps
       const { toast } = await import("sonner");
       const res = await deleteConnection(id);
       if (res.success) {
-        setConnections((prev) => prev.filter((c) => c.id !== id));
+        onDeleted?.(id);
         toast.success("Connection deleted.");
       } else {
         toast.error(res.error || "Failed to delete connection.");
@@ -228,9 +233,7 @@ export function ConnectionsTable({ connections: initial }: ConnectionsTableProps
           connection={editingConn}
           onClose={() => setEditingConn(null)}
           onSaved={(updated) => {
-            setConnections((prev) =>
-              prev.map((c) => (c.id === updated.id ? { ...c, ...updated } : c))
-            );
+            onSaved?.(updated);
             setEditingConn(null);
           }}
         />

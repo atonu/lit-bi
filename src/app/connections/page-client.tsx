@@ -14,6 +14,16 @@ export function ConnectionsPageClient({ connections: initial }: Props) {
   const [connections, setConnections] = useState(initial);
   const [showAdd, setShowAdd] = useState(false);
 
+  const handleDeleted = (id: string) => {
+    setConnections((prev) => prev.filter((c) => c.id !== id));
+  };
+
+  const handleSaved = (updated: any) => {
+    setConnections((prev) =>
+      prev.map((c) => (c.id === updated.id ? { ...c, ...updated } : c))
+    );
+  };
+
   return (
     <div className="min-h-full p-8">
       {/* Page header */}
@@ -52,7 +62,11 @@ export function ConnectionsPageClient({ connections: initial }: Props) {
       </div>
 
       {/* Table */}
-      <ConnectionsTable connections={connections} />
+      <ConnectionsTable
+        connections={connections}
+        onDeleted={handleDeleted}
+        onSaved={handleSaved}
+      />
 
       {/* Add connection modal */}
       {showAdd && (

@@ -7,6 +7,7 @@ import { DatabaseEngine } from "@/generated/prisma";
 import { encryptPassword, decryptPassword } from "@/lib/crypto";
 import crypto from "crypto";
 import { PLACEHOLDER_ORG_ID } from "@/lib/constants";
+import { revalidatePath } from "next/cache";
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -612,6 +613,7 @@ export async function saveConnection(
       });
     }
 
+    revalidatePath("/", "layout");
     return { success: true, connectionId: connection.id };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -647,6 +649,7 @@ export async function deleteConnection(
         where: { id: connectionId },
       });
     }
+    revalidatePath("/", "layout");
     return { success: true };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -667,6 +670,7 @@ export async function updateConnectionAlias(
       where: { id: connectionId },
       data: { alias },
     });
+    revalidatePath("/", "layout");
     return { success: true };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
