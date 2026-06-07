@@ -196,6 +196,10 @@ export function ChatMain({ initialConnections = [], chatId }: ChatMainProps) {
     activeSessionId,
     activeMessages,
     isThinking,
+    activeRequestId,
+    activeRequestSessionId,
+    setActiveRequest,
+    cancelActiveRequest,
     sessions,
     setActiveConnection,
     setActiveSession,
@@ -218,6 +222,11 @@ export function ChatMain({ initialConnections = [], chatId }: ChatMainProps) {
   const [showAddConnection, setShowAddConnection] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isEmpty = activeMessages.length === 0;
+  const isCurrentSessionThinking = isThinking && activeRequestSessionId === activeSessionId;
+
+  const handleStop = useCallback(() => {
+    cancelActiveRequest(activeSessionId || undefined);
+  }, [cancelActiveRequest, activeSessionId]);
 
   // Load connections on mount
   useEffect(() => {
@@ -273,11 +282,15 @@ export function ChatMain({ initialConnections = [], chatId }: ChatMainProps) {
 
   const handleQuestion = useCallback(
     (question: string) => {
-      if (!activeConnectionId || !activeSessionId || isThinking) return;
+      if (!activeConnectionId || !activeSessionId || isCurrentSessionThinking) return;
 
       const connectionId = activeConnectionId;
       const sessionId = activeSessionId;
       const isFirstMessage = activeMessages.length === 0;
+
+      // Generate a unique request ID
+      const requestId = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+      setActiveRequest(requestId, sessionId);
 
       // Optimistically add user message
       addUserMessage(sessionId, question);
@@ -311,8 +324,11 @@ export function ChatMain({ initialConnections = [], chatId }: ChatMainProps) {
           }
 
           // Step 1: AI generates SQL + chart config
+          if (useChatStore.getState().activeRequestId !== requestId) return;
           updateMessageStatus(currentSessionId, assistantMsgId, "thinking");
           const aiOutcome = await askQuestion(connectionId, question);
+
+          if (useChatStore.getState().activeRequestId !== requestId) return;
 
           if (!aiOutcome.success) {
             resolveMessageWithError(currentSessionId, assistantMsgId, aiOutcome.error);
@@ -325,6 +341,8 @@ export function ChatMain({ initialConnections = [], chatId }: ChatMainProps) {
             connectionId,
             aiOutcome.response.sql
           );
+
+          if (useChatStore.getState().activeRequestId !== requestId) return;
 
           if (!execOutcome.success) {
             resolveMessageWithError(currentSessionId, assistantMsgId, execOutcome.error);
@@ -340,6 +358,7 @@ export function ChatMain({ initialConnections = [], chatId }: ChatMainProps) {
             aiResponse: aiOutcome.response,
           });
         } catch (err) {
+          if (useChatStore.getState().activeRequestId !== requestId) return;
           const msg = err instanceof Error ? err.message : String(err);
           resolveMessageWithError(currentSessionId, assistantMsgId, msg);
         }
@@ -349,7 +368,7 @@ export function ChatMain({ initialConnections = [], chatId }: ChatMainProps) {
       activeConnectionId,
       activeSessionId,
       activeMessages.length,
-      isThinking,
+      isCurrentSessionThinking,
       addUserMessage,
       addAssistantPlaceholder,
       updateMessageStatus,
@@ -358,6 +377,9 @@ export function ChatMain({ initialConnections = [], chatId }: ChatMainProps) {
       setThinking,
       updateSessionTitle,
       promoteSession,
+      setActiveRequest,
+      activeConnectionAlias,
+      router,
     ]
   );
 
@@ -411,7 +433,9 @@ export function ChatMain({ initialConnections = [], chatId }: ChatMainProps) {
           {/* Chat input */}
           <ChatInput
             onSubmit={handleQuestion}
-            disabled={!activeConnectionId || isThinking}
+            disabled={!activeConnectionId || isCurrentSessionThinking}
+            isThinking={isCurrentSessionThinking}
+            onStop={handleStop}
             isEmpty={isEmpty}
           />
 

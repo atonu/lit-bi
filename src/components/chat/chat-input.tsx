@@ -20,9 +20,17 @@ interface ChatInputProps {
   onSubmit: (question: string) => void;
   disabled?: boolean;
   isEmpty?: boolean;
+  isThinking?: boolean;
+  onStop?: () => void;
 }
 
-export function ChatInput({ onSubmit, disabled = false, isEmpty = false }: ChatInputProps) {
+export function ChatInput({
+  onSubmit,
+  disabled = false,
+  isEmpty = false,
+  isThinking = false,
+  onStop,
+}: ChatInputProps) {
   const [value, setValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -72,7 +80,7 @@ export function ChatInput({ onSubmit, disabled = false, isEmpty = false }: ChatI
       <div
         className={cn(
           "relative flex items-end gap-3 rounded-2xl border px-4 py-3 transition-all duration-200",
-          disabled
+          disabled && !isThinking
             ? "border-white/[0.06] bg-white/[0.02] opacity-60"
             : "border-white/10 bg-white/[0.05] focus-within:border-blue-500/40 focus-within:bg-white/[0.07] focus-within:ring-1 focus-within:ring-blue-500/20"
         )}
@@ -87,26 +95,40 @@ export function ChatInput({ onSubmit, disabled = false, isEmpty = false }: ChatI
           disabled={disabled}
           rows={1}
           placeholder={
-            disabled
+            isThinking
+              ? "BI-Lite is thinking..."
+              : disabled
               ? "Thinking…"
               : "Ask a question about your data…"
           }
           className="min-w-0 flex-1 resize-none bg-transparent text-sm text-white/90 placeholder-white/25 outline-none disabled:cursor-not-allowed"
           style={{ minHeight: "24px", maxHeight: "180px" }}
         />
-        <button
-          id="chat-send-btn"
-          onClick={handleSubmit}
-          disabled={!value.trim() || disabled}
-          className={cn(
-            "mb-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl transition-all active:scale-95",
-            value.trim() && !disabled
-              ? "bg-gradient-to-br from-blue-500 to-violet-600 text-white shadow-lg shadow-blue-500/20 hover:brightness-110"
-              : "bg-white/[0.06] text-white/20 cursor-not-allowed"
-          )}
-        >
-          <Send className="size-3.5" />
-        </button>
+        {isThinking ? (
+          <button
+            id="chat-stop-btn"
+            type="button"
+            onClick={onStop}
+            className="mb-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 hover:text-red-300 transition-all active:scale-95 cursor-pointer"
+          >
+            <div className="bg-white size-2.5 rounded-[2px]" />
+          </button>
+        ) : (
+          <button
+            id="chat-send-btn"
+            type="button"
+            onClick={handleSubmit}
+            disabled={!value.trim() || disabled}
+            className={cn(
+              "mb-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl transition-all active:scale-95",
+              value.trim() && !disabled
+                ? "bg-gradient-to-br from-blue-500 to-violet-600 text-white shadow-lg shadow-blue-500/20 hover:brightness-110"
+                : "bg-white/[0.06] text-white/20 cursor-not-allowed"
+            )}
+          >
+            <Send className="size-3.5" />
+          </button>
+        )}
       </div>
 
       <p className="text-center text-[10px] text-white/20">

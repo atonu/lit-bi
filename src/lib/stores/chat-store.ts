@@ -49,6 +49,8 @@ interface ChatState {
 
   // UI state
   isThinking: boolean;
+  activeRequestId: string | null;
+  activeRequestSessionId: string | null;
 
   // Derived: messages for the active session
   activeMessages: ChatMessage[];
@@ -84,6 +86,8 @@ interface ChatActions {
 
   // UI
   setThinking: (thinking: boolean) => void;
+  setActiveRequest: (requestId: string | null, sessionId: string | null) => void;
+  cancelActiveRequest: (sessionId?: string) => void;
   clearHistory: (sessionId: string) => void;
 
   // Sync
@@ -121,6 +125,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   sessionsLoaded: false,
   searchQuery: "",
   isThinking: false,
+  activeRequestId: null,
+  activeRequestSessionId: null,
   activeMessages: [],
   lastSyncedAt: {},
   syncTimerId: null,
@@ -190,6 +196,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
 
   removeSession: (sessionId) => {
+    if (get().activeRequestSessionId === sessionId) {
+      get().cancelActiveRequest(sessionId);
+    }
     set((state) => {
       const { [sessionId]: _removed, ...rest } = state.messagesBySession;
       const sessions = state.sessions.filter((s) => s.id !== sessionId);
@@ -242,6 +251,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         messagesBySession: newMessagesBySession,
         lastSyncedAt: newLastSyncedAt,
         activeSessionId: state.activeSessionId === oldId ? newId : state.activeSessionId,
+        activeRequestSessionId: state.activeRequestSessionId === oldId ? newId : state.activeRequestSessionId,
       };
     });
   },
@@ -359,6 +369,45 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   // ── UI ─────────────────────────────────────────────────────────────────
 
   setThinking: (thinking) => set({ isThinking: thinking }),
+
+  setActiveRequest: (requestId, sessionId) => {
+    set({ activeRequestId: requestId, activeRequestSessionId: sessionId });
+  },
+
+  cancelActiveRequest: (sessionId) => {
+    const targetSessionId = sessionId || get().activeSessionId;
+    if (!targetSessionId) return;
+
+    set((state) => {
+      const prev = state.messagesBySession[targetSessionId] ?? [];
+      const updated = prev.map((m) => {
+        if (
+          m.role === "assistant" &&
+          (m.status === "thinking" || m.status === "executing" || m.status === "pending")
+        ) {
+          return {
+            ...m,
+            role: "error" as MessageRole,
+            status: "error" as MessageStatus,
+            content: "Request cancelled by user.",
+          };
+        }
+        return m;
+      });
+
+      return {
+        activeRequestId: null,
+        activeRequestSessionId: null,
+        isThinking: false,
+        messagesBySession: {
+          ...state.messagesBySession,
+          [targetSessionId]: updated,
+        },
+        activeMessages:
+          state.activeSessionId === targetSessionId ? updated : state.activeMessages,
+      };
+    });
+  },
 
   clearHistory: (sessionId) => {
     set((state) => {
