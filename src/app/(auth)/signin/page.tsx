@@ -39,8 +39,7 @@ export default function SignInPage() {
         const res = await apiClient.post("/auth/login", { email, password });
         if (res.data.success) {
           setAuth(res.data.user, res.data.accessToken);
-          router.push("/");
-          router.refresh();
+          window.location.href = "/";
         }
       } catch (err: any) {
         console.error("Sign-in error:", err);

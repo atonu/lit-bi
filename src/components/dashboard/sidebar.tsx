@@ -73,6 +73,7 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
   const {
     sessions,
     setSessions,
+    sessionsLoaded,
     activeSessionId,
     activeConnectionId,
     activeConnectionAlias,
@@ -99,13 +100,19 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
   const accessToken = useAuthStore((state) => state.accessToken);
   const logout = useAuthStore((state) => state.logout);
 
-  // Load initial sessions into store
+  // Load initial sessions or fetch them client-side if not loaded
   useEffect(() => {
     setMounted(true);
     if (initialSessions.length > 0 && sessions.length === 0) {
       setSessions(initialSessions);
+    } else if (!sessionsLoaded) {
+      import("@/app/actions/chat-history").then(({ getChatSessions }) => {
+        getChatSessions().then((data) => {
+          setSessions(data);
+        });
+      });
     }
-  }, [initialSessions, sessions.length, setSessions]);
+  }, [initialSessions, sessions.length, sessionsLoaded, setSessions]);
 
   useEffect(() => {
     setHovered(false);
@@ -191,7 +198,7 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
       // ignore
     } finally {
       logout();
-      router.push("/signin");
+      window.location.href = "/signin";
     }
   };
 

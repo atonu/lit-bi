@@ -271,6 +271,13 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
       if (activeSessionId !== chatId) {
         setActiveSession(chatId);
       }
+
+      // Also restore the active connection of this session
+      const session = sessions.find((s) => s.id === chatId);
+      if (session && session.connectionId && activeConnectionId !== session.connectionId) {
+        setActiveConnection(session.connectionId, session.connectionAlias || "Deleted DB");
+      }
+
       // Populate messages if provided and not already in store
       if (initialMessages.length > 0 && !messagesBySession[chatId]) {
         const mapped: ChatMessage[] = initialMessages.map((m) => ({
@@ -294,7 +301,7 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
         createNewSession(activeConnectionId, activeConnectionAlias);
       }
     }
-  }, [chatId, activeConnectionId, activeConnectionAlias, activeSessionId, sessions, setActiveSession, createNewSession, initialMessages, messagesBySession]);
+  }, [chatId, activeConnectionId, activeConnectionAlias, activeSessionId, sessions, setActiveSession, createNewSession, initialMessages, messagesBySession, setActiveConnection]);
 
   // Client-side fallback / transition message loading
   useEffect(() => {
