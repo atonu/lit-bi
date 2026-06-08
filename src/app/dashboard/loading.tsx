@@ -1,10 +1,9 @@
-import { Loader2 } from "lucide-react";
+import { SidebarSkeleton } from "@/components/dashboard/sidebar-skeleton";
 
 export default function LoadingDashboard() {
   return (
     <div className="flex h-screen overflow-hidden bg-[#131314]">
-      {/* Sidebar skeleton placeholder */}
-      <div className="hidden w-[280px] shrink-0 border-r border-white/[0.06] bg-[#1a1a1c] sm:flex" />
+      <SidebarSkeleton />
 
       <main className="flex min-w-0 flex-1 flex-col overflow-y-auto p-8">
         <div className="mb-8 flex items-start justify-between">

@@ -17,7 +17,11 @@ import {
   getConnections,
   type ConnectionSummary,
 } from "@/app/actions/ai-chat";
-import { executeQuery } from "@/app/actions/execute-query";
+import {
+  executeQuery,
+  checkQueryJobStatus,
+  getQueryJobResults,
+} from "@/app/actions/execute-query";
 import {
   createChatSession,
   updateChatSessionTitle,
@@ -340,30 +344,78 @@ export function ChatMain({ initialConnections = [], chatId }: ChatMainProps) {
             return;
           }
 
-          // Step 2: Execute the query on the user's DB
+          // Step 2: Initiate async query execution on the backend
           updateMessageStatus(currentSessionId, assistantMsgId, "executing");
-          const execOutcome = await executeQuery(
+          const initOutcome = await executeQuery(
             connectionId,
             aiOutcome.response.sql
           );
 
           if (useChatStore.getState().activeRequestId !== requestId) return;
 
-          if (!execOutcome.success) {
-            resolveMessageWithError(currentSessionId, assistantMsgId, execOutcome.error);
+          if (!initOutcome.success) {
+            resolveMessageWithError(currentSessionId, assistantMsgId, initOutcome.error);
             if (realSessionId) {
               router.push(`/chat/${realSessionId}`);
             }
             return;
           }
 
-          // Step 3: Resolve with chart result
+          const jobId = initOutcome.jobId;
+
+          // Poll job status until complete or failed
+          let jobStatus: any = null;
+          const pollInterval = 1000; // 1s
+          const maxRetries = 120; // 2 minutes limit
+          let retries = 0;
+
+          while (retries < maxRetries) {
+            if (useChatStore.getState().activeRequestId !== requestId) return;
+
+            const statusRes = await checkQueryJobStatus(jobId);
+            if (!statusRes.success) {
+              resolveMessageWithError(currentSessionId, assistantMsgId, statusRes.error);
+              if (realSessionId) router.push(`/chat/${realSessionId}`);
+              return;
+            }
+
+            if (statusRes.status === "completed") {
+              jobStatus = statusRes;
+              break;
+            }
+
+            if (statusRes.status === "failed") {
+              resolveMessageWithError(currentSessionId, assistantMsgId, statusRes.error || "Query execution failed.");
+              if (realSessionId) router.push(`/chat/${realSessionId}`);
+              return;
+            }
+
+            await new Promise((resolve) => setTimeout(resolve, pollInterval));
+            retries++;
+          }
+
+          if (!jobStatus) {
+            resolveMessageWithError(currentSessionId, assistantMsgId, "Query execution timed out.");
+            if (realSessionId) router.push(`/chat/${realSessionId}`);
+            return;
+          }
+
+          // Step 3: Fetch the first page of results
+          const resultsRes = await getQueryJobResults(jobId, 1);
+          if (!resultsRes.success) {
+            resolveMessageWithError(currentSessionId, assistantMsgId, resultsRes.error);
+            if (realSessionId) router.push(`/chat/${realSessionId}`);
+            return;
+          }
+
+          // Step 4: Resolve with chart result
           resolveMessageWithChart(currentSessionId, assistantMsgId, {
-            rows: execOutcome.rows,
-            columns: execOutcome.columns,
-            rowCount: execOutcome.rowCount,
-            executionMs: execOutcome.executionMs,
+            rows: resultsRes.rows,
+            columns: jobStatus.columns,
+            rowCount: jobStatus.rowCount,
+            executionMs: jobStatus.durationMs,
             aiResponse: aiOutcome.response,
+            jobId, // Attach jobId for further paging if needed
           });
 
           // Redirect to the new parameterized route AFTER everything has completed successfully!

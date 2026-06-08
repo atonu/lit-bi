@@ -80,7 +80,7 @@ model User {
   id             String   @id @default(auto()) @map("_id") @db.ObjectId
   email          String   @unique
   name           String
-  hashedPassword String   @map("hashed_password")
+  hashedPassword String?  @map("hashed_password")
   avatarUrl      String?  @map("avatar_url")
   role           UserRole @default(MEMBER)
   createdAt      DateTime @default(now()) @map("created_at")
@@ -113,7 +113,7 @@ model DatabaseConnection {
   // MongoDB field — full encrypted connection URI
   encryptedUri      String?          @map("encrypted_uri")
   // Unique fingerprint — SHA-256 hash of connection params to prevent duplicates
-  uniqueKey         String?          @unique @map("unique_key")
+  uniqueKey         String?          @map("unique_key")
   status            ConnectionStatus @default(PENDING)
   lastTestedAt      DateTime?        @map("last_tested_at")
   createdAt         DateTime         @default(now()) @map("created_at")
@@ -125,6 +125,7 @@ model DatabaseConnection {
   schemaMetadata SchemaMetadata[]
   chatSessions   ChatSession[]
 
+  @@unique([organizationId, uniqueKey])
   @@index([organizationId])
   @@index([status])
   @@map("database_connections")

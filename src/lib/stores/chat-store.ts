@@ -18,6 +18,7 @@ export interface ChartResult {
   rowCount: number;
   executionMs: number;
   aiResponse: AiQueryResponse;
+  jobId?: string;
 }
 
 export interface ChatMessage {

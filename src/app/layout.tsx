@@ -3,6 +3,8 @@ import { Roboto, Roboto_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
+import { Providers } from "@/components/providers";
+
 const robotoSans = Roboto({
   weight: ["400", "500", "700"],
   variable: "--font-roboto-sans",
@@ -42,7 +44,9 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body suppressHydrationWarning className="min-h-full flex flex-col bg-[#131314] text-foreground">
-        {children}
+        <Providers>
+          {children}
+        </Providers>
         <Toaster />
       </body>
     </html>

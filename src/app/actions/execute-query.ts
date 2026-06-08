@@ -1,9 +1,12 @@
 "use server";
 
-import { Pool } from "pg";
-import { MongoClient, Document } from "mongodb";
+import jwt from "jsonwebtoken";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { decryptPassword } from "@/lib/crypto";
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3002";
+const BACKEND_SECRET = process.env.BACKEND_SECRET || "bi-lite-backend-secret-key-super-secure-87654321";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -13,12 +16,9 @@ export interface QueryRow {
   [key: string]: string | number | boolean | null | object;
 }
 
-export interface ExecuteQueryResult {
+export interface ExecuteQueryInitResult {
   success: true;
-  rows: QueryRow[];
-  columns: string[];
-  rowCount: number;
-  executionMs: number;
+  jobId: string;
 }
 
 export interface ExecuteQueryError {
@@ -26,416 +26,166 @@ export interface ExecuteQueryError {
   error: string;
 }
 
-export type ExecuteQueryOutcome = ExecuteQueryResult | ExecuteQueryError;
+export type ExecuteQueryInitOutcome = ExecuteQueryInitResult | ExecuteQueryError;
 
-// ---------------------------------------------------------------------------
-// SQL Safety Guard
-// ---------------------------------------------------------------------------
-// Belt-and-suspenders check before we even send the query to the DB.
-// The AI prompt already restricts output to SELECT, but we verify here too.
-// ---------------------------------------------------------------------------
+export interface JobStatusResult {
+  success: true;
+  status: "pending" | "processing" | "completed" | "failed";
+  rowCount: number;
+  columns: string[];
+  durationMs: number;
+  error: string | null;
+}
 
-const FORBIDDEN_PATTERN =
-  /\b(INSERT|UPDATE|DELETE|DROP|ALTER|TRUNCATE|CREATE|GRANT|REVOKE|EXECUTE|CALL|COPY|VACUUM|ANALYZE|CLUSTER|REINDEX|LOCK|SET\s+ROLE|SET\s+SESSION|pg_read_file|pg_ls_dir|lo_import|lo_export)\b/i;
-
-function isSafeQuery(sql: string): boolean {
-  const stripped = sql
-    .replace(/--[^\n]*/g, "") // strip single-line comments
-    .replace(/\/\*[\s\S]*?\*\//g, "") // strip block comments
-    .trim();
-
-  // Must start with SELECT or WITH (for CTEs that start with SELECT)
-  if (!/^(SELECT|WITH)\b/i.test(stripped)) return false;
-
-  // Must not contain forbidden keywords
-  if (FORBIDDEN_PATTERN.test(stripped)) return false;
-
-  return true;
+export interface JobResultsResult {
+  success: true;
+  rows: any[];
+  pageNum: number;
+  totalPages: number;
+  rowCount: number;
 }
 
 // ---------------------------------------------------------------------------
-// MQL Safety Guard
-// ---------------------------------------------------------------------------
-// MongoDB aggregation pipelines arrive as a JSON string.
-// We disallow any stage that writes data ($out, $merge) or runs arbitrary JS
-// ($where, $function, $accumulator).
+// Helper: Sign JWT for backend authentication
 // ---------------------------------------------------------------------------
 
-const FORBIDDEN_MQL_STAGES = [
-  "$out",
-  "$merge",
-  "$where",
-  "$function",
-  "$accumulator",
-];
-
-function isSafeMqlPipeline(pipelineJson: string): boolean {
-  try {
-    const pipeline = JSON.parse(pipelineJson);
-    if (!Array.isArray(pipeline)) return false;
-    for (const stage of pipeline) {
-      const stageKey = Object.keys(stage ?? {})[0];
-      if (FORBIDDEN_MQL_STAGES.includes(stageKey)) return false;
-    }
-    return true;
-  } catch {
-    return false;
-  }
+function signBackendToken(session: any): string {
+  return jwt.sign(
+    {
+      userId: session.user.id,
+      organizationId: session.user.organizationId,
+      role: session.user.role,
+    },
+    BACKEND_SECRET,
+    { expiresIn: "5m" } // Short-lived token for security
+  );
 }
 
-const MAX_ROWS = 500;
-
 // ---------------------------------------------------------------------------
-// Server Action: executeQuery (dispatcher)
+// Server Action: executeQuery (initializes job)
 // ---------------------------------------------------------------------------
 
 export async function executeQuery(
   connectionId: string,
   query: string
-): Promise<ExecuteQueryOutcome> {
-  // 1. Load connection record to determine the engine
-  let connection: {
-    engine: string;
-    host: string | null;
-    port: number | null;
-    dbName: string | null;
-    dbUser: string | null;
-    encryptedPassword: string | null;
-    encryptedUri: string | null;
-    sslEnabled: boolean;
-  } | null;
+): Promise<ExecuteQueryInitOutcome> {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.organizationId) {
+    return { success: false, error: "Unauthorized. Please log in." };
+  }
+  const organizationId = session.user.organizationId;
+
+  // Verify target connection belongs to the organization
+  const conn = await db.databaseConnection.findFirst({
+    where: { id: connectionId, organizationId },
+    select: { engine: true },
+  });
+
+  if (!conn) {
+    return { success: false, error: "Database connection not found or unauthorized." };
+  }
+
+  const token = signBackendToken(session);
 
   try {
-    connection = await db.databaseConnection.findUnique({
-      where: { id: connectionId, status: "CONNECTED" },
-      select: {
-        engine: true,
-        host: true,
-        port: true,
-        dbName: true,
-        dbUser: true,
-        encryptedPassword: true,
-        encryptedUri: true,
-        sslEnabled: true,
+    const res = await fetch(`${BACKEND_URL}/api/query/execute`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        connectionId,
+        engine: conn.engine,
+        query,
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      return { success: false, error: data.error || "Failed to start query execution on backend." };
+    }
+
+    return { success: true, jobId: data.jobId };
+  } catch (err: any) {
+    return { success: false, error: `Backend connection error: ${err.message || String(err)}` };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Server Action: checkQueryJobStatus
+// ---------------------------------------------------------------------------
+
+export async function checkQueryJobStatus(
+  jobId: string
+): Promise<JobStatusResult | ExecuteQueryError> {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.organizationId) {
+    return { success: false, error: "Unauthorized. Please log in." };
+  }
+
+  const token = signBackendToken(session);
+
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/query/status/${jobId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
       },
     });
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return { success: false, error: `Control plane error: ${msg}` };
-  }
 
-  if (!connection) {
-    return {
-      success: false,
-      error: "Connection not found or is not in CONNECTED state.",
-    };
-  }
-
-  if (connection.engine === "MONGODB") {
-    return executeMongoPipeline(connectionId, connection, query);
-  }
-
-  return executePostgresQuery(connectionId, connection, query);
-}
-
-// ---------------------------------------------------------------------------
-// executePostgresQuery — PostgreSQL (existing logic)
-// ---------------------------------------------------------------------------
-
-async function executePostgresQuery(
-  connectionId: string,
-  connection: {
-    host: string | null;
-    port: number | null;
-    dbName: string | null;
-    dbUser: string | null;
-    encryptedPassword: string | null;
-    sslEnabled: boolean;
-  },
-  sql: string
-): Promise<ExecuteQueryOutcome> {
-  // Safety pre-check
-  if (!isSafeQuery(sql)) {
-    return {
-      success: false,
-      error: "Query rejected: only read-only SELECT statements are permitted.",
-    };
-  }
-
-  // Decrypt password (server-only, never exposed to client)
-  let password: string;
-  try {
-    password = decryptPassword(connection.encryptedPassword!);
-  } catch {
-    return {
-      success: false,
-      error:
-        "Failed to decrypt database credentials. Please re-save the connection.",
-    };
-  }
-
-  const sslParam = connection.sslEnabled ? "?sslmode=require" : "?sslmode=disable";
-  const connectionString =
-    `postgresql://${encodeURIComponent(connection.dbUser!)}:${encodeURIComponent(password)}` +
-    `@${connection.host}:${connection.port}/${encodeURIComponent(connection.dbName!)}${sslParam}`;
-
-  const pool = new Pool({
-    connectionString,
-    max: 1,
-    connectionTimeoutMillis: 10_000,
-    idleTimeoutMillis: 1_000,
-    ssl: connection.sslEnabled ? { rejectUnauthorized: false } : undefined,
-  });
-
-  const start = Date.now();
-  try {
-    const client = await pool.connect();
-    try {
-      await client.query("BEGIN READ ONLY");
-
-      const limitedSql = /\bLIMIT\b/i.test(sql)
-        ? sql
-        : `${sql} LIMIT ${MAX_ROWS}`;
-
-      const result = await client.query<QueryRow>(limitedSql);
-      await client.query("COMMIT");
-
-      const executionMs = Date.now() - start;
-      const columns = result.fields.map((f) => f.name);
-
-      return {
-        success: true,
-        rows: result.rows,
-        columns,
-        rowCount: result.rowCount ?? result.rows.length,
-        executionMs,
-      };
-    } catch (queryErr) {
-      await client.query("ROLLBACK").catch(() => {});
-      const msg =
-        queryErr instanceof Error ? queryErr.message : String(queryErr);
-      const sanitized = msg
-        .replace(/postgresql:\/\/[^@]+@/g, "postgresql://***@")
-        .replace(/password=[^\s&]+/gi, "password=***");
-      return { success: false, error: `Query execution failed: ${sanitized}` };
-    } finally {
-      client.release();
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      return { success: false, error: data.error || "Failed to fetch job status." };
     }
-  } catch (connErr) {
-    const msg = connErr instanceof Error ? connErr.message : String(connErr);
-    const sanitized = msg
-      .replace(/postgresql:\/\/[^@]+@/g, "postgresql://***@")
-      .replace(/password=[^\s&]+/gi, "password=***");
-    return {
-      success: false,
-      error: `Database connection failed: ${sanitized}`,
-    };
-  } finally {
-    await pool.end();
-  }
-}
-
-// ---------------------------------------------------------------------------
-// executeMongoPipeline — MongoDB
-// ---------------------------------------------------------------------------
-// The `query` parameter is expected to be a JSON string in the format:
-//   { "collection": "orders", "pipeline": [...aggregation stages...] }
-//
-// The AI generates this format when the connection engine is MONGODB.
-// ---------------------------------------------------------------------------
-
-interface MongoQueryPayload {
-  collection: string;
-  pipeline: Document[];
-}
-
-async function executeMongoPipeline(
-  _connectionId: string,
-  connection: {
-    encryptedUri: string | null;
-    dbName: string | null;
-    sslEnabled: boolean;
-  },
-  queryJson: string
-): Promise<ExecuteQueryOutcome> {
-  // 1. Parse the query payload
-  let payload: MongoQueryPayload;
-  
-  // Clean up any markdown fences the AI might have added
-  let cleanJson = queryJson.trim();
-  if (cleanJson.startsWith("```json")) {
-    cleanJson = cleanJson.replace(/^```json\n/, "").replace(/\n```$/, "");
-  } else if (cleanJson.startsWith("```")) {
-    cleanJson = cleanJson.replace(/^```\n/, "").replace(/\n```$/, "");
-  }
-
-  console.log("=== AI MONGO QUERY ===");
-  console.log(cleanJson);
-
-  try {
-    payload = JSON.parse(cleanJson);
-    if (!payload.collection || !Array.isArray(payload.pipeline)) {
-      throw new Error("Invalid format. Expected { collection, pipeline[] }.");
-    }
-  } catch (parseErr) {
-    const msg = parseErr instanceof Error ? parseErr.message : String(parseErr);
-    return {
-      success: false,
-      error: `Invalid MongoDB query format: ${msg}`,
-    };
-  }
-
-  // 2. MQL safety check
-  const pipelineJson = JSON.stringify(payload.pipeline);
-  if (!isSafeMqlPipeline(pipelineJson)) {
-    return {
-      success: false,
-      error:
-        "Query rejected: pipeline contains a forbidden stage ($out, $merge, $where, $function, $accumulator).",
-    };
-  }
-
-  // 3. Decrypt the connection URI
-  let uri: string;
-  try {
-    uri = decryptPassword(connection.encryptedUri!);
-  } catch {
-    return {
-      success: false,
-      error:
-        "Failed to decrypt MongoDB credentials. Please re-save the connection.",
-    };
-  }
-
-  // 4. Determine the target database name:
-  //    Priority: connection.dbName (saved at introspection) > URI path segment
-  let defaultDbName: string | null = connection.dbName;
-  if (!defaultDbName) {
-    try {
-      const url = new URL(
-        uri.replace("mongodb+srv://", "https://").replace("mongodb://", "http://")
-      );
-      const pathDb = url.pathname.replace(/^\//, "").split("?")[0];
-      if (pathDb) defaultDbName = pathDb;
-    } catch {
-      // ignore
-    }
-  }
-
-  if (!defaultDbName) {
-    return {
-      success: false,
-      error:
-        "Cannot determine which MongoDB database to query. Please re-connect and make sure your connection URI includes the database name (e.g. mongodb+srv://user:pass@host/myDatabase).",
-    };
-  }
-
-  // Parse target DB and collection from payload if AI prefixed it as "db.collection"
-  let targetDbName = defaultDbName;
-  let targetCollection = payload.collection;
-  if (payload.collection.includes(".")) {
-    const parts = payload.collection.split(".");
-    // Only accept the db prefix if it matches our known dbName (prevent injection)
-    if (parts[0] === defaultDbName) {
-      targetDbName = parts[0];
-      targetCollection = parts.slice(1).join(".");
-    }
-    // Otherwise treat the whole thing as the collection name in the default db
-  }
-
-  console.log(`=== MONGO EXECUTE: db=${targetDbName} collection=${targetCollection} ===`);
-  console.log("Pipeline:", JSON.stringify(payload.pipeline));
-
-  // 5. Run the aggregation pipeline (read-only by design — no write stages pass guard)
-  const client = new MongoClient(uri, {
-    serverSelectionTimeoutMS: 10_000,
-    connectTimeoutMS: 10_000,
-    ...(connection.sslEnabled && { tls: true, tlsAllowInvalidCertificates: true }),
-  });
-
-  const start = Date.now();
-  try {
-    await client.connect();
-    const mdb = client.db(targetDbName);
-    const coll = mdb.collection(targetCollection);
-
-    // Append $limit stage if not already present
-    const hasLimit = payload.pipeline.some((s) => "$limit" in s);
-    const safePipeline = hasLimit
-      ? payload.pipeline
-      : [...payload.pipeline, { $limit: MAX_ROWS }];
-
-    const cursor = coll.aggregate(safePipeline, { allowDiskUse: false });
-    const docs = await cursor.toArray();
-
-    const executionMs = Date.now() - start;
-
-    if (docs.length === 0) {
-      return {
-        success: true,
-        rows: [],
-        columns: [],
-        rowCount: 0,
-        executionMs,
-      };
-    }
-
-    // Derive columns from the union of all keys in the result set
-    const columnSet = new Set<string>();
-    for (const doc of docs) {
-      for (const key of Object.keys(doc)) {
-        columnSet.add(key);
-      }
-    }
-    const columns = Array.from(columnSet);
-
-    // Flatten documents to QueryRow — convert ObjectId/Date to strings
-    const rows: QueryRow[] = docs.map((doc) => {
-      const row: QueryRow = {};
-      for (const col of columns) {
-        const val = doc[col];
-        if (val === undefined || val === null) {
-          row[col] = null;
-        } else if (typeof val === "object" && "toHexString" in val) {
-          // ObjectId
-          row[col] = (val as { toHexString: () => string }).toHexString();
-        } else if (val instanceof Date) {
-          row[col] = val.toISOString();
-        } else if (typeof val === "object") {
-          row[col] = JSON.stringify(val);
-        } else {
-          row[col] = val as string | number | boolean;
-        }
-      }
-      return row;
-    });
 
     return {
       success: true,
-      rows,
-      columns,
-      rowCount: rows.length,
-      executionMs,
+      status: data.status,
+      rowCount: data.rowCount,
+      columns: data.columns,
+      durationMs: data.durationMs,
+      error: data.error,
     };
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    let sanitized = msg.replace(
-      /mongodb(\+srv)?:\/\/[^@]+@/g,
-      "mongodb$1://***@"
-    );
-    if (
-      sanitized.toLowerCase().includes("tlsv1 alert") ||
-      sanitized.toLowerCase().includes("ssl alert") ||
-      sanitized.toLowerCase().includes("alert number") ||
-      sanitized.toLowerCase().includes("handshake failure")
-    ) {
-      sanitized += "\n\n💡 Tip: This SSL/TLS error typically indicates that your database's firewall or IP whitelist is blocking the connection. If you are using MongoDB Atlas, make sure you have allowed access from all IP addresses (0.0.0.0/0) in your Atlas Network Access settings, as Vercel uses dynamic IP addresses.";
+  } catch (err: any) {
+    return { success: false, error: `Backend status error: ${err.message || String(err)}` };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Server Action: getQueryJobResults (paginated)
+// ---------------------------------------------------------------------------
+
+export async function getQueryJobResults(
+  jobId: string,
+  page = 1
+): Promise<JobResultsResult | ExecuteQueryError> {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.organizationId) {
+    return { success: false, error: "Unauthorized. Please log in." };
+  }
+
+  const token = signBackendToken(session);
+
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/query/results/${jobId}?page=${page}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      return { success: false, error: data.error || "Failed to fetch job results." };
     }
+
     return {
-      success: false,
-      error: `MongoDB query failed: ${sanitized}`,
+      success: true,
+      rows: data.rows,
+      pageNum: data.pageNum,
+      totalPages: data.totalPages,
+      rowCount: data.rowCount,
     };
-  } finally {
-    await client.close();
+  } catch (err: any) {
+    return { success: false, error: `Backend results error: ${err.message || String(err)}` };
   }
 }
