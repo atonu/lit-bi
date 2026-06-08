@@ -2,8 +2,7 @@
 
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getServerSession } from "@/lib/session";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -32,7 +31,7 @@ export interface StoredChatMessage {
 // ---------------------------------------------------------------------------
 
 async function getOrgContext() {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession();
   if (!session?.user?.organizationId) {
     throw new Error("Unauthorized. Please log in.");
   }

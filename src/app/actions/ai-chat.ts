@@ -4,8 +4,7 @@ import { generateObject, generateText } from "ai";
 import { deepseek } from "@ai-sdk/deepseek";
 import * as z from 'zod';
 import { db } from "@/lib/db";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getServerSession } from "@/lib/session";
 
 // ---------------------------------------------------------------------------
 // Output schema — strict shape the AI must conform to (SQL engines only)
@@ -314,7 +313,7 @@ export async function askQuestion(
   // 1. Load the connection to know the engine
   let connectionEngine: string;
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession();
     if (!session?.user?.organizationId) {
       return { success: false, error: "Unauthorized. Please log in." };
     }
@@ -412,7 +411,7 @@ export interface ConnectionSummary {
 
 export async function getConnections(): Promise<ConnectionSummary[]> {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession();
     if (!session?.user?.organizationId) return [];
     const organizationId = session.user.organizationId;
 
@@ -459,7 +458,7 @@ export interface ConnectionDetail {
 
 export async function getAllConnections(): Promise<ConnectionDetail[]> {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession();
     if (!session?.user?.organizationId) return [];
     const organizationId = session.user.organizationId;
 

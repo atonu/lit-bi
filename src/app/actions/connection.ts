@@ -7,8 +7,7 @@ import { DatabaseEngine } from "@/generated/prisma";
 import { encryptPassword, decryptPassword } from "@/lib/crypto";
 import crypto from "crypto";
 import { revalidatePath } from "next/cache";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getServerSession } from "@/lib/session";
 import jwt from "jsonwebtoken";
 // ---------------------------------------------------------------------------
 // Types
@@ -170,7 +169,7 @@ async function testMongoConnection(
 export async function testConnection(
   creds: ConnectionCredentials
 ): Promise<TestConnectionResult> {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession();
   if (!session?.user?.organizationId) {
     return { success: false, error: "Unauthorized. Please log in." };
   }
@@ -518,7 +517,7 @@ async function introspectMongoSchema(
 export async function introspectSchema(
   creds: ConnectionCredentials
 ): Promise<IntrospectResult> {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession();
   if (!session?.user?.organizationId) {
     return { success: false, tables: [], columns: [], error: "Unauthorized. Please log in." };
   }
@@ -594,7 +593,7 @@ export async function saveConnection(
   columns: ColumnMetadata[]
 ): Promise<SaveConnectionResult> {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession();
     if (!session?.user?.organizationId) {
       return { success: false, error: "Unauthorized. Please log in." };
     }
@@ -722,7 +721,7 @@ export async function deleteConnection(
   connectionId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession();
     if (!session?.user?.organizationId) {
       return { success: false, error: "Unauthorized. Please log in." };
     }
@@ -783,7 +782,7 @@ export async function updateConnectionAlias(
   alias: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession();
     if (!session?.user?.organizationId) {
       return { success: false, error: "Unauthorized. Please log in." };
     }

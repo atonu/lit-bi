@@ -1,8 +1,7 @@
 "use server";
 
 import jwt from "jsonwebtoken";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getServerSession } from "@/lib/session";
 import { db } from "@/lib/db";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3002";
@@ -69,7 +68,7 @@ export async function executeQuery(
   connectionId: string,
   query: string
 ): Promise<ExecuteQueryInitOutcome> {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession();
   if (!session?.user?.organizationId) {
     return { success: false, error: "Unauthorized. Please log in." };
   }
@@ -119,7 +118,7 @@ export async function executeQuery(
 export async function checkQueryJobStatus(
   jobId: string
 ): Promise<JobStatusResult | ExecuteQueryError> {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession();
   if (!session?.user?.organizationId) {
     return { success: false, error: "Unauthorized. Please log in." };
   }
@@ -159,7 +158,7 @@ export async function getQueryJobResults(
   jobId: string,
   page = 1
 ): Promise<JobResultsResult | ExecuteQueryError> {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession();
   if (!session?.user?.organizationId) {
     return { success: false, error: "Unauthorized. Please log in." };
   }

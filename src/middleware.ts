@@ -1,20 +1,13 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
 
 export async function middleware(request: NextRequest) {
-  const token = await getToken({
-    req: request,
-    secret: process.env.NEXTAUTH_SECRET || "bi-lite-jwt-secret-key-super-secure-12345678",
-  });
-
   const { pathname } = request.nextUrl;
+  const isAuthPage = pathname.startsWith("/signin") || pathname.startsWith("/signup") || pathname.startsWith("/forgot-password") || pathname.startsWith("/reset-password");
 
-  const isAuthPage = pathname.startsWith("/signin") || pathname.startsWith("/signup");
-
-  // Bypass API auth endpoints and static file processing
+  // Bypass API endpoints and static file processing
   const isBypassRoute =
-    pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/api") ||
     pathname.startsWith("/_next") ||
     pathname.includes(".") || // files like favicon.png
     pathname.startsWith("/static");
@@ -23,16 +16,18 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Check for the existence of the refresh token (or our custom isAuthenticated flag)
+  const hasAuth = request.cookies.has("refreshToken") || request.cookies.has("isAuthenticated");
+
   // Redirect to signin if not authenticated
-  if (!token && !isAuthPage) {
+  if (!hasAuth && !isAuthPage) {
     const loginUrl = new URL("/signin", request.url);
-    // Optionally capture redirect callback
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
   // Redirect to dashboard/home if authenticated and attempting to view login/signup
-  if (token && isAuthPage) {
+  if (hasAuth && isAuthPage) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 

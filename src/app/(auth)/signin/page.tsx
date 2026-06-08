@@ -3,11 +3,16 @@
 import React, { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { signIn } from "next-auth/react";
+import apiClient from "@/lib/axios";
+import { useAuthStore } from "@/lib/stores/auth-store";
+
+import Image from "next/image";
 
 export default function SignInPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const setAuth = useAuthStore((state) => state.setAuth);
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -16,6 +21,8 @@ export default function SignInPage() {
   const successMessage =
     searchParams.get("success") === "registered"
       ? "Registration successful! Please sign in below."
+      : searchParams.get("success") === "reset"
+      ? "Password successfully reset! Please sign in with your new password."
       : "";
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,27 +36,17 @@ export default function SignInPage() {
 
     startTransition(async () => {
       try {
-        const res = await signIn("credentials", {
-          redirect: false,
-          email,
-          password,
-        });
-
-        if (res?.error) {
-          setError(res.error || "Invalid email or password.");
-        } else {
+        const res = await apiClient.post("/auth/login", { email, password });
+        if (res.data.success) {
+          setAuth(res.data.user, res.data.accessToken);
           router.push("/");
           router.refresh();
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Sign-in error:", err);
-        setError("An unexpected error occurred. Please try again.");
+        setError(err.response?.data?.error || "Invalid email or password.");
       }
     });
-  };
-
-  const handleGoogleSignIn = () => {
-    signIn("google", { callbackUrl: "/" });
   };
 
   return (
@@ -60,11 +57,22 @@ export default function SignInPage() {
 
       <div className="relative z-10 w-full max-w-md animate-slide-up">
         {/* Brand/Logo */}
-        <div className="mb-8 text-center">
-          <Link href="/" className="inline-block text-3xl font-bold tracking-tight">
-            <span className="gradient-text font-extrabold">BI</span>-Lite
+        <div className="mb-8 text-center flex flex-col items-center">
+          <Link href="/" className="inline-flex flex-col items-center gap-4 text-3xl font-bold tracking-tight hover:opacity-90 transition-opacity">
+            <div className="flex size-28 shrink-0 items-center justify-center overflow-hidden mb-2">
+              <Image 
+                src="/favicon.png" 
+                alt="BI-Lite Logo" 
+                width={112} 
+                height={112} 
+                className="object-cover"
+              />
+            </div>
+            <span>
+              <span className="gradient-text font-extrabold">BI</span>-Lite
+            </span>
           </Link>
-          <p className="mt-2 text-sm text-gray-400">
+          <p className="mt-1 text-sm text-gray-400">
             Welcome back! Log in to view your dashboards.
           </p>
         </div>
@@ -96,9 +104,14 @@ export default function SignInPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label htmlFor="password" className="block text-xs font-semibold uppercase tracking-wider text-gray-400">
+                  Password
+                </label>
+                <Link href="/forgot-password" className="text-xs text-purple-400 hover:text-purple-300 hover:underline">
+                  Forgot Password?
+                </Link>
+              </div>
               <input
                 id="password"
                 type="password"
@@ -134,40 +147,6 @@ export default function SignInPage() {
               )}
             </button>
           </form>
-
-          <div className="relative my-6 flex items-center justify-center">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/5" />
-            </div>
-            <span className="relative bg-[#0e0e10]/80 px-3 text-xs text-gray-500 uppercase tracking-wider">
-              Or
-            </span>
-          </div>
-
-          <button
-            onClick={handleGoogleSignIn}
-            className="flex w-full items-center justify-center gap-3 rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-white transition duration-200 hover:bg-white/10 cursor-pointer"
-          >
-            <svg className="h-5 w-5" viewBox="0 0 24 24">
-              <path
-                fill="#EA4335"
-                d="M12 5.04c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 1.84 14.95 1 12 1 7.35 1 3.4 3.65 1.5 7.5l3.8 2.95C6.2 7.42 8.87 5.04 12 5.04z"
-              />
-              <path
-                fill="#4285F4"
-                d="M23.49 12.27c0-.81-.07-1.59-.2-2.34H12v4.44h6.45c-.28 1.48-1.11 2.74-2.37 3.58l3.69 2.87c2.16-1.99 3.42-4.92 3.42-8.55z"
-              />
-              <path
-                fill="#FBBC05"
-                d="M5.3 14.5c-.24-.72-.38-1.49-.38-2.3s.14-1.58.38-2.3L1.5 6.95C.54 8.88 0 11.04 0 13.3c0 2.26.54 4.42 1.5 6.35l3.8-3.15z"
-              />
-              <path
-                fill="#34A853"
-                d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.69-2.87c-1.02.68-2.33 1.09-3.95 1.09-3.13 0-5.8-2.38-6.75-5.41L1.75 16c1.9 3.85 5.85 6.5 10.25 6.5z"
-              />
-            </svg>
-            Sign in with Google
-          </button>
         </div>
 
         {/* Redirect */}

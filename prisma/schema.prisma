@@ -80,11 +80,14 @@ model User {
   id             String   @id @default(auto()) @map("_id") @db.ObjectId
   email          String   @unique
   name           String
-  hashedPassword String?  @map("hashed_password")
-  avatarUrl      String?  @map("avatar_url")
-  role           UserRole @default(MEMBER)
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  hashedPassword     String?  @map("hashed_password")
+  avatarUrl          String?  @map("avatar_url")
+  role               UserRole @default(MEMBER)
+  refreshToken       String?  @map("refresh_token")
+  resetToken         String?  @map("reset_token")
+  resetTokenExpiry   DateTime? @map("reset_token_expiry")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
 
   // Relations
   organizationId String         @map("organization_id") @db.ObjectId
