@@ -93,6 +93,7 @@ model User {
   organizationId String         @map("organization_id") @db.ObjectId
   organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   reports        ReportTemplate[]
+  chatSessions   ChatSession[]
 
   @@index([organizationId])
   @@map("users")
@@ -175,10 +176,13 @@ model ChatSession {
   connectionAlias String?           @map("connection_alias")
   organizationId String             @map("organization_id") @db.ObjectId
   organization   Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String             @map("user_id") @db.ObjectId
+  user           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages       ChatMessage[]
 
   @@index([connectionId])
   @@index([organizationId])
+  @@index([userId])
   @@index([updatedAt])
   @@map("chat_sessions")
 }

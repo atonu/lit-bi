@@ -9,7 +9,7 @@ import {
 } from "react";
 import Image from "next/image";
 import { Database, ChevronDown, Sparkles, Plus } from "lucide-react";
-import { useChatStore } from "@/lib/stores/chat-store";
+import { useChatStore, type ChatMessage, type MessageRole, type MessageStatus, type ChartResult } from "@/lib/stores/chat-store";
 import { ChatMessageBubble } from "./chat-message";
 import { ChatInput } from "./chat-input";
 import {
@@ -25,6 +25,7 @@ import {
 import {
   createChatSession,
   updateChatSessionTitle,
+  type StoredChatMessage,
 } from "@/app/actions/chat-history";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -143,12 +144,12 @@ function WelcomeScreen({
   return (
     <div className="flex h-full flex-col items-center justify-center gap-8 px-4 pb-32">
       <div className="flex flex-col items-center gap-4 text-center">
-        <div className="flex size-20 items-center justify-center rounded-3xl overflow-hidden">
+        <div className="flex size-32 items-center justify-center rounded-3xl overflow-hidden">
           <Image
             src="/bilite-ai.png"
             alt="BI-Lite AI Logo"
-            width={180}
-            height={180}
+            width={128}
+            height={128}
             className="object-cover"
           />
         </div>
@@ -189,9 +190,10 @@ function WelcomeScreen({
 interface ChatMainProps {
   initialConnections?: ConnectionSummary[];
   chatId?: string;
+  initialMessages?: StoredChatMessage[];
 }
 
-export function ChatMain({ initialConnections = [], chatId }: ChatMainProps) {
+export function ChatMain({ initialConnections = [], chatId, initialMessages = [] }: ChatMainProps) {
   const router = useRouter();
   const {
     activeConnectionId,
@@ -217,6 +219,7 @@ export function ChatMain({ initialConnections = [], chatId }: ChatMainProps) {
     updateSessionTitle,
     startSyncTimer,
     stopSyncTimer,
+    messagesBySession,
   } = useChatStore();
 
   const [connections, setConnections] =
@@ -268,6 +271,18 @@ export function ChatMain({ initialConnections = [], chatId }: ChatMainProps) {
       if (activeSessionId !== chatId) {
         setActiveSession(chatId);
       }
+      // Populate messages if provided and not already in store
+      if (initialMessages.length > 0 && !messagesBySession[chatId]) {
+        const mapped: ChatMessage[] = initialMessages.map((m) => ({
+          id: m.id,
+          role: m.role.toLowerCase() as MessageRole,
+          content: m.content,
+          status: (m.role === "ERROR" ? "error" : "done") as MessageStatus,
+          timestamp: new Date(m.createdAt).getTime(),
+          chartResult: m.chartResult as ChartResult | undefined,
+        }));
+        useChatStore.getState().setSessionMessages(chatId, mapped);
+      }
     } else if (activeConnectionId && activeConnectionAlias && !activeSessionId) {
       // Check if there's an existing session for this connection (fallback for home page)
       const existingSession = sessions.find(
@@ -279,7 +294,26 @@ export function ChatMain({ initialConnections = [], chatId }: ChatMainProps) {
         createNewSession(activeConnectionId, activeConnectionAlias);
       }
     }
-  }, [chatId, activeConnectionId, activeConnectionAlias, activeSessionId, sessions, setActiveSession, createNewSession]);
+  }, [chatId, activeConnectionId, activeConnectionAlias, activeSessionId, sessions, setActiveSession, createNewSession, initialMessages, messagesBySession]);
+
+  // Client-side fallback / transition message loading
+  useEffect(() => {
+    if (activeSessionId && !activeSessionId.startsWith("new-") && !messagesBySession[activeSessionId]) {
+      import("@/app/actions/chat-history").then(({ getChatMessages }) => {
+        getChatMessages(activeSessionId).then((storedMsgs) => {
+          const mapped: ChatMessage[] = storedMsgs.map((m) => ({
+            id: m.id,
+            role: m.role.toLowerCase() as MessageRole,
+            content: m.content,
+            status: (m.role === "ERROR" ? "error" : "done") as MessageStatus,
+            timestamp: new Date(m.createdAt).getTime(),
+            chartResult: m.chartResult as ChartResult | undefined,
+          }));
+          useChatStore.getState().setSessionMessages(activeSessionId, mapped);
+        });
+      });
+    }
+  }, [activeSessionId, messagesBySession]);
 
   // ── Main chat handler ──────────────────────────────────────────────────
 

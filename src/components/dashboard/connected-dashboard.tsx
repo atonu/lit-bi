@@ -141,7 +141,7 @@ export function ConnectedDashboard({ connections }: ConnectedDashboardProps) {
 
       {/* Call-to-action panel */}
       <div className="flex flex-1 flex-col items-center justify-center gap-6 rounded-3xl border border-white/[0.06] bg-white/[0.02] py-20 text-center">
-        <div className="flex size-20 items-center justify-center rounded-3xl overflow-hidden ring-1 ring-white/10">
+        <div className="flex size-20 items-center justify-center rounded-3xl overflow-hidden">
           <Image 
             src="/favicon.png" 
             alt="BI-Lite Logo" 

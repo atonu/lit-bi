@@ -211,17 +211,17 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className={cn("flex h-16 shrink-0 items-center px-3", expanded ? "justify-between" : "justify-center")}>
         {expanded && (
-          <div className="flex items-center gap-2 pl-4 overflow-hidden">
-            <div className="flex size-7 shrink-0 items-center justify-center rounded-lg overflow-hidden">
+          <div className="flex items-center gap-3 pl-4 overflow-hidden">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg overflow-hidden">
               <Image 
                 src="/favicon.png" 
                 alt="BI-Lite Logo" 
-                width={28} 
-                height={28} 
+                width={36} 
+                height={36} 
                 className="object-cover"
               />
             </div>
-            <span className="truncate text-sm font-semibold text-white">BI-Lite</span>
+            <span className="truncate text-base font-semibold text-white">BI-Lite</span>
           </div>
         )}
 

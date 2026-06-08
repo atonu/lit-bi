@@ -96,6 +96,7 @@ interface ChatActions {
   stopSyncTimer: () => void;
   markSynced: (sessionId: string) => void;
   getUnsyncedSessionIds: () => string[];
+  reset: () => void;
 }
 
 type ChatStore = ChatState & ChatActions;
@@ -475,6 +476,28 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       const lastMsg = msgs[msgs.length - 1];
       const lastSync = lastSyncedAt[id] ?? 0;
       return lastMsg.timestamp > lastSync;
+    });
+  },
+
+  reset: () => {
+    const timer = get().syncTimerId;
+    if (timer) {
+      clearInterval(timer);
+    }
+    set({
+      activeConnectionId: null,
+      activeConnectionAlias: null,
+      activeSessionId: null,
+      messagesBySession: {},
+      sessions: [],
+      sessionsLoaded: false,
+      searchQuery: "",
+      isThinking: false,
+      activeRequestId: null,
+      activeRequestSessionId: null,
+      activeMessages: [],
+      lastSyncedAt: {},
+      syncTimerId: null,
     });
   },
 }));

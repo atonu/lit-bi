@@ -33,6 +33,14 @@ export const useAuthStore = create<AuthState>()(
       logout: () => {
         jsCookie.remove("isAuthenticated");
         set({ isAuthenticated: false, user: null, accessToken: null });
+        
+        // Clear chat store state to prevent user data leakage on logout
+        try {
+          const { useChatStore } = require("./chat-store");
+          useChatStore.getState().reset();
+        } catch (err) {
+          console.error("Failed to reset chat store on logout:", err);
+        }
       },
     }),
     {

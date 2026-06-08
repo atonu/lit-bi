@@ -51,7 +51,7 @@ export async function createChatSession(
   title = "New Chat"
 ): Promise<{ success: true; sessionId: string } | { success: false; error: string }> {
   try {
-    const { organizationId } = await getOrgContext();
+    const { organizationId, userId } = await getOrgContext();
 
     // Verify database connection belongs to the organization
     const conn = await db.databaseConnection.findFirst({
@@ -67,6 +67,7 @@ export async function createChatSession(
         connectionId,
         connectionAlias,
         organizationId,
+        userId,
       },
     });
     revalidatePath("/", "layout");
@@ -86,11 +87,11 @@ export async function updateChatSessionTitle(
   title: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const { organizationId } = await getOrgContext();
+    const { organizationId, userId } = await getOrgContext();
 
     // Verify session belongs to the organization
     const existing = await db.chatSession.findFirst({
-      where: { id: sessionId, organizationId },
+      where: { id: sessionId, organizationId, userId },
     });
     if (!existing) {
       return { success: false, error: "Chat session not found or unauthorized." };
@@ -114,11 +115,12 @@ export async function updateChatSessionTitle(
 
 export async function getChatSessions(connectionId?: string): Promise<ChatSessionSummary[]> {
   try {
-    const { organizationId } = await getOrgContext();
+    const { organizationId, userId } = await getOrgContext();
 
     const sessions = await db.chatSession.findMany({
       where: {
         organizationId,
+        userId,
         ...(connectionId ? { connectionId } : {}),
       },
       orderBy: { updatedAt: "desc" },
@@ -167,13 +169,14 @@ export async function getChatSessions(connectionId?: string): Promise<ChatSessio
 
 export async function searchChatSessions(query: string): Promise<ChatSessionSummary[]> {
   try {
-    const { organizationId } = await getOrgContext();
+    const { organizationId, userId } = await getOrgContext();
 
     if (!query.trim()) return getChatSessions();
 
     const sessions = await db.chatSession.findMany({
       where: {
         organizationId,
+        userId,
         title: { contains: query, mode: "insensitive" as const },
       },
       orderBy: { updatedAt: "desc" },
@@ -230,11 +233,11 @@ export async function saveChatMessages(
   }>
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const { organizationId } = await getOrgContext();
+    const { organizationId, userId } = await getOrgContext();
 
     // Verify session belongs to the organization
     const existing = await db.chatSession.findFirst({
-      where: { id: sessionId, organizationId },
+      where: { id: sessionId, organizationId, userId },
     });
     if (!existing) {
       return { success: false, error: "Chat session not found or unauthorized." };
@@ -273,11 +276,11 @@ export async function saveChatMessages(
 
 export async function getChatMessages(sessionId: string): Promise<StoredChatMessage[]> {
   try {
-    const { organizationId } = await getOrgContext();
+    const { organizationId, userId } = await getOrgContext();
 
     // Verify session belongs to the organization
     const existing = await db.chatSession.findFirst({
-      where: { id: sessionId, organizationId },
+      where: { id: sessionId, organizationId, userId },
     });
     if (!existing) {
       return [];
@@ -307,11 +310,11 @@ export async function deleteChatSession(
   sessionId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const { organizationId } = await getOrgContext();
+    const { organizationId, userId } = await getOrgContext();
 
     // Verify session belongs to the organization
     const existing = await db.chatSession.findFirst({
-      where: { id: sessionId, organizationId },
+      where: { id: sessionId, organizationId, userId },
     });
     if (!existing) {
       return { success: false, error: "Chat session not found or unauthorized." };

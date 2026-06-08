@@ -1,7 +1,7 @@
 import { AppSidebar } from "@/components/dashboard/sidebar";
 import { ChatMain } from "@/components/chat/chat-main";
 import { getConnections } from "@/app/actions/ai-chat";
-import { getChatSessions } from "@/app/actions/chat-history";
+import { getChatSessions, getChatMessages } from "@/app/actions/chat-history";
 import { notFound } from "next/navigation";
 
 export const metadata = {
@@ -11,9 +11,10 @@ export const metadata = {
 
 export default async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [connections, sessions] = await Promise.all([
+  const [connections, sessions, initialMessages] = await Promise.all([
     getConnections(),
     getChatSessions(),
+    getChatMessages(id),
   ]);
 
   // Validate session exists in history
@@ -28,7 +29,11 @@ export default async function ChatPage({ params }: { params: Promise<{ id: strin
       <AppSidebar initialSessions={sessions} />
 
       <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <ChatMain initialConnections={connections} chatId={id} />
+        <ChatMain 
+          initialConnections={connections} 
+          chatId={id} 
+          initialMessages={initialMessages} 
+        />
       </main>
     </div>
   );
