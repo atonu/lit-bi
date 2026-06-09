@@ -226,6 +226,7 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
     useState<ConnectionSummary[]>(initialConnections);
   const [_isPending, startTransition] = useTransition();
   const [showAddConnection, setShowAddConnection] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isEmpty = activeMessages.length === 0;
   const isCurrentSessionThinking = isThinking && activeRequestSessionId === activeSessionId;
@@ -264,12 +265,22 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [activeMessages]);
 
+  // Reset suggestions state based on whether the active session is empty
+  useEffect(() => {
+    setShowSuggestions(isEmpty);
+  }, [activeSessionId, isEmpty]);
+
+  const syncedChatIdRef = useRef<string | undefined>(undefined);
+
   // Ensure there's an active session when a connection is selected
   useEffect(() => {
     if (chatId) {
       // If we're on a specific chat route, make sure it's set as active
-      if (activeSessionId !== chatId) {
+      if (activeSessionId === chatId) {
+        syncedChatIdRef.current = chatId;
+      } else if (syncedChatIdRef.current !== chatId && !activeSessionId?.startsWith("new-")) {
         setActiveSession(chatId);
+        syncedChatIdRef.current = chatId;
       }
 
       // Also restore the active connection of this session
@@ -290,15 +301,19 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
         }));
         useChatStore.getState().setSessionMessages(chatId, mapped);
       }
-    } else if (activeConnectionId && activeConnectionAlias && !activeSessionId) {
-      // Check if there's an existing session for this connection (fallback for home page)
-      const existingSession = sessions.find(
-        (s) => s.connectionId === activeConnectionId
-      );
-      if (existingSession) {
-        setActiveSession(existingSession.id);
-      } else {
-        createNewSession(activeConnectionId, activeConnectionAlias);
+    } else {
+      syncedChatIdRef.current = undefined;
+
+      if (activeConnectionId && activeConnectionAlias && !activeSessionId) {
+        // Check if there's an existing session for this connection (fallback for home page)
+        const existingSession = sessions.find(
+          (s) => s.connectionId === activeConnectionId
+        );
+        if (existingSession) {
+          setActiveSession(existingSession.id);
+        } else {
+          createNewSession(activeConnectionId, activeConnectionAlias);
+        }
       }
     }
   }, [chatId, activeConnectionId, activeConnectionAlias, activeSessionId, sessions, setActiveSession, createNewSession, initialMessages, messagesBySession, setActiveConnection]);
@@ -529,6 +544,15 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
               }}
               onAddNew={() => setShowAddConnection(true)}
             />
+            {activeConnectionId && (
+              <button
+                type="button"
+                onClick={() => setShowSuggestions((s) => !s)}
+                className="text-xs text-white/40 underline hover:text-white/80 transition-colors ml-2 cursor-pointer"
+              >
+                {showSuggestions ? "Hide Suggestions" : "Suggestions"}
+              </button>
+            )}
             {!activeConnectionId && connections.length === 0 && (
               <button
                 onClick={() => setShowAddConnection(true)}
@@ -546,7 +570,7 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
             disabled={!activeConnectionId || isCurrentSessionThinking}
             isThinking={isCurrentSessionThinking}
             onStop={handleStop}
-            isEmpty={isEmpty}
+            showSuggestions={showSuggestions}
           />
 
           <p className="mt-2 text-center text-[10px] text-white/20">

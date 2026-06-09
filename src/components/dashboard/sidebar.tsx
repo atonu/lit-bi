@@ -17,6 +17,7 @@ import {
   LogOut,
   Edit2,
   User,
+  Loader2,
 } from "lucide-react";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
@@ -359,18 +360,31 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
                         )}
                       </div>
                       {msgCount > 0 && (
-                        <span className="shrink-0 text-[10px] text-white/20">{msgCount}</span>
+                        <span
+                          className={cn(
+                            "shrink-0 text-[10px] text-white/20 transition-all duration-200",
+                            deletingId === session.id ? "hidden" : "group-hover:hidden"
+                          )}
+                        >
+                          {msgCount}
+                        </span>
                       )}
-                      <button
-                        id={`delete-session-${session.id}`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSessionToDelete({ id: session.id, title: session.title });
-                        }}
-                        className="absolute right-2 hidden shrink-0 rounded p-0.5 text-white/30 hover:text-red-400 group-hover:flex"
-                      >
-                        <Trash2 className="size-3.5" />
-                      </button>
+                      {deletingId === session.id ? (
+                        <div className="absolute right-2 shrink-0 rounded p-0.5 text-white/40">
+                          <Loader2 className="size-3.5 animate-spin" />
+                        </div>
+                      ) : (
+                        <button
+                          id={`delete-session-${session.id}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSessionToDelete({ id: session.id, title: session.title });
+                          }}
+                          className="absolute right-2 hidden shrink-0 rounded p-0.5 text-white/30 hover:text-red-400 group-hover:flex"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </button>
+                      )}
                     </div>
                   );
                 })}
