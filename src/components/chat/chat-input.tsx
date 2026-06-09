@@ -116,7 +116,7 @@ export function ChatInput({
                 ? "Thinking…"
                 : "Ask a question about your data…"
           }
-          className="min-w-0 flex-1 resize-none bg-transparent text-sm text-white/90 placeholder-white/25 outline-none disabled:cursor-not-allowed"
+          className="min-w-0 flex-1 resize-none bg-transparent text-base md:text-sm text-white/90 placeholder-white/25 outline-none disabled:cursor-not-allowed"
           style={{ minHeight: "24px", maxHeight: "180px" }}
         />
         {isThinking ? (
@@ -146,7 +146,7 @@ export function ChatInput({
         )}
       </div>
 
-      <p className="text-center text-[10px] text-white/20">
+      <p className="text-center text-[10px] text-white/20 hidden md:block">
         Enter to send · Shift+Enter for new line
       </p>
     </div>

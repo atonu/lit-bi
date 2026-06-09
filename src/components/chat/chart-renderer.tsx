@@ -337,7 +337,7 @@ export function ChartRenderer({ result, messageId }: ChartRendererProps) {
       className="mt-2 overflow-hidden rounded-xl border border-border/40 bg-card/60 backdrop-blur-sm"
     >
       {/* Chart header */}
-      <div className="flex items-center justify-between border-b border-border/40 px-4 py-3">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between border-b border-border/40 px-4 py-3">
         <div className="flex flex-col gap-0.5">
           <span className="text-sm font-semibold text-foreground">
             {aiResponse.chartTitle}
@@ -346,7 +346,7 @@ export function ChartRenderer({ result, messageId }: ChartRendererProps) {
             {rowCount} rows · {executionMs}ms
           </span>
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5">
           {/* View toggle */}
           {canRenderChart && (
             <div className="flex rounded-lg border border-border/40 bg-muted/30 p-0.5">

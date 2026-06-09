@@ -7,6 +7,7 @@ import {
   Plus,
   Search,
   MessageSquare,
+  MessageSquarePlus,
   Trash2,
   Menu,
   PanelLeftClose,
@@ -637,37 +638,15 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
         </button>
       )}
 
-      {/* Mobile Floating Bottom Bar */}
-      {!isMobileOpen && !isChatRoute && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-6 rounded-full border border-white/10 bg-[#1e1e1e]/90 px-6 py-3 shadow-2xl backdrop-blur-md md:hidden">
-          <button
-            onClick={handleNewChat}
-            className="flex size-10 items-center justify-center rounded-full text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-95 cursor-pointer"
-            title="New Chat"
-          >
-            <Plus className="size-5" />
-          </button>
-          <button
-            onClick={() => router.push("/dashboard")}
-            className={cn(
-              "flex size-10 items-center justify-center rounded-full transition-all active:scale-95 cursor-pointer",
-              pathname === "/dashboard" ? "bg-white/10 text-white" : "text-white/60 hover:bg-white/10 hover:text-white"
-            )}
-            title="Dashboard"
-          >
-            <LayoutDashboard className="size-5" />
-          </button>
-          <button
-            onClick={() => router.push("/connections")}
-            className={cn(
-              "flex size-10 items-center justify-center rounded-full transition-all active:scale-95 cursor-pointer",
-              pathname === "/connections" ? "bg-white/10 text-white" : "text-white/60 hover:bg-white/10 hover:text-white"
-            )}
-            title="Connections"
-          >
-            <Database className="size-5" />
-          </button>
-        </div>
+      {/* Mobile New Chat Button */}
+      {!isMobileOpen && (
+        <button
+          onClick={handleNewChat}
+          className="fixed top-4 right-4 z-40 flex size-10 items-center justify-center rounded-full border border-white/10 bg-[#1a1a1a]/95 text-white/70 hover:bg-white/10 hover:text-white transition-colors md:hidden shadow-lg cursor-pointer"
+          title="New Chat"
+        >
+          <MessageSquarePlus className="size-5" />
+        </button>
       )}
 
       {/* Full-Screen Mobile Sidebar Drawer */}

@@ -168,7 +168,7 @@ export function ConnectionStepper({
         </div>
 
         {/* Step indicator */}
-        <div className="flex justify-center border-b border-border/50 px-6 py-4">
+        <div className="border-b border-border/50 px-6 py-4">
           <StepIndicator steps={STEP_LABELS} currentStep={step} />
         </div>
 

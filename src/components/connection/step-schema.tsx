@@ -72,172 +72,186 @@ export function StepSchema({
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      <div className="flex-1 overflow-y-auto scrollbar-thin p-6 flex flex-col gap-6">
+    <div className="flex flex-col h-full overflow-y-auto md:overflow-hidden">
+      <div className="p-6 flex flex-col gap-6 md:flex-1 md:overflow-y-auto scrollbar-thin">
         {/* Header */}
-      <div className="flex flex-col gap-1">
-        <h3 className="text-base font-semibold text-foreground">
-          Schema Preview
-        </h3>
-        <p className="text-xs text-muted-foreground">
-          Review the discovered schema before saving. This will be cached for
-          AI context injection.
-        </p>
-      </div>
-
-      {/* Stats strip */}
-      {result?.success && (
-        <div className="flex gap-4 rounded-lg border border-chart-2/20 bg-chart-2/5 px-4 py-3">
-          <div className="flex items-center gap-2">
-            <Table2 className="size-4 text-chart-2" />
-            <span className="text-xs font-semibold text-foreground">
-              {tableNames.length}
-            </span>
-            <span className="text-xs text-muted-foreground">tables</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Columns3 className="size-4 text-chart-1" />
-            <span className="text-xs font-semibold text-foreground">
-              {result.columns.length}
-            </span>
-            <span className="text-xs text-muted-foreground">columns</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Key className="size-4 text-chart-3" />
-            <span className="text-xs font-semibold text-foreground">
-              {result.columns.filter((c) => c.isPrimaryKey).length}
-            </span>
-            <span className="text-xs text-muted-foreground">primary keys</span>
-          </div>
+        <div className="flex flex-col gap-1">
+          <h3 className="text-base font-semibold text-foreground">
+            Schema Preview
+          </h3>
+          <p className="text-xs text-muted-foreground">
+            Review the discovered schema before saving. This will be cached for
+            AI context injection.
+          </p>
         </div>
-      )}
 
-      {/* Table explorer */}
-      <div className="flex flex-col rounded-xl border border-border/40 bg-muted/10 overflow-hidden">
-        {tableNames.length > 0 && (
-          <div className="flex items-center justify-between px-4 py-2 border-b border-border/30 bg-muted/20">
-            <button
-              onClick={() => setSelectedTables(new Set(tableNames))}
-              className="text-[11px] font-medium text-chart-1 hover:underline transition-colors"
-            >
-              Select All
-            </button>
-            {selectedTables.size > 0 && (
-              <span className="text-[11px] text-muted-foreground">
-                {selectedTables.size} table{selectedTables.size === 1 ? "" : "s"} selected
+        {/* Stats strip */}
+        {result?.success && (
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 rounded-lg border border-chart-2/20 bg-chart-2/5 px-3 py-3 sm:px-4">
+            <div className="flex flex-col items-start gap-1">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <Table2 className="size-4 sm:size-5 text-chart-2 shrink-0" />
+                <span className="text-sm sm:text-base font-bold text-foreground leading-none">
+                  {tableNames.length}
+                </span>
+              </div>
+              <span className="text-[9px] sm:text-[10px] text-muted-foreground leading-none">
+                tables
               </span>
-            )}
+            </div>
+
+            <div className="flex flex-col items-start gap-1">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <Columns3 className="size-4 sm:size-5 text-chart-1 shrink-0" />
+                <span className="text-sm sm:text-base font-bold text-foreground leading-none">
+                  {result.columns.length}
+                </span>
+              </div>
+              <span className="text-[9px] sm:text-[10px] text-muted-foreground leading-none">
+                columns
+              </span>
+            </div>
+
+            <div className="flex flex-col items-start gap-1">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <Key className="size-4 sm:size-5 text-chart-3 shrink-0" />
+                <span className="text-sm sm:text-base font-bold text-foreground leading-none">
+                  {result.columns.filter((c) => c.isPrimaryKey).length}
+                </span>
+              </div>
+              <span className="text-[9px] sm:text-[10px] text-muted-foreground leading-none">
+                primary keys
+              </span>
+            </div>
           </div>
         )}
 
-        <div className="max-h-[320px] overflow-y-auto scrollbar-thin">
-          {tableNames.length === 0 ? (
-            <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
-              {result === null ? (
-                <Loader2 className="size-5 animate-spin" />
-              ) : (
-                "No user tables found."
+        {/* Table explorer */}
+        <div className="flex flex-col rounded-xl border border-border/40 bg-muted/10 overflow-hidden">
+          {tableNames.length > 0 && (
+            <div className="flex items-center justify-between px-4 py-2 border-b border-border/30 bg-muted/20">
+              <button
+                onClick={() => setSelectedTables(new Set(tableNames))}
+                className="text-[11px] font-medium text-chart-1 hover:underline transition-colors"
+              >
+                Select All
+              </button>
+              {selectedTables.size > 0 && (
+                <span className="text-[11px] text-muted-foreground">
+                  {selectedTables.size} table{selectedTables.size === 1 ? "" : "s"} selected
+                </span>
               )}
             </div>
-          ) : (
-            tableNames.map((tableFqn, tableIdx) => {
-              const cols = tableMap.get(tableFqn) ?? [];
-              const [schema, table] = tableFqn.split(".");
-              const isSelected = selectedTables.has(tableFqn);
+          )}
 
-              return (
-                <details
-                  key={tableFqn}
-                  open={tableIdx === 0}
-                  className="group border-b border-border/30 last:border-0"
-                >
-                  <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3 hover:bg-muted/30">
-                    <div className="flex items-center" onClick={(e) => e.stopPropagation()}>
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={(e) => {
-                          const newSet = new Set(selectedTables);
-                          if (e.target.checked) newSet.add(tableFqn);
-                          else newSet.delete(tableFqn);
-                          setSelectedTables(newSet);
-                        }}
-                        className="size-3.5 rounded border-border/50 text-chart-1 focus:ring-chart-1/30 cursor-pointer"
-                      />
-                    </div>
-                    <Table2 className={`size-4 shrink-0 transition-colors ${isSelected ? "text-chart-1" : "text-muted-foreground"}`} />
-                    <div className={`flex flex-1 items-baseline gap-2 transition-colors ${!isSelected ? "opacity-60" : ""}`}>
-                      <span className="text-xs font-semibold text-foreground">
-                        {table}
-                      </span>
-                      {schema !== "public" && (
-                        <span className="text-[10px] text-muted-foreground">
-                          {schema}
-                        </span>
-                      )}
-                    </div>
-                    <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
-                      {cols.length} cols
-                    </span>
-                  </summary>
+          <div className="min-h-[380px] max-h-[480px] md:min-h-[260px] md:max-h-[320px] overflow-y-auto scrollbar-thin">
+            {tableNames.length === 0 ? (
+              <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
+                {result === null ? (
+                  <Loader2 className="size-5 animate-spin" />
+                ) : (
+                  "No user tables found."
+                )}
+              </div>
+            ) : (
+              tableNames.map((tableFqn, tableIdx) => {
+                const cols = tableMap.get(tableFqn) ?? [];
+                const [schema, table] = tableFqn.split(".");
+                const isSelected = selectedTables.has(tableFqn);
 
-                  {/* Column rows */}
-                  <div className={`divide-y divide-border/20 pb-1 ${!isSelected ? "opacity-50" : ""}`}>
-                    {cols.map((col: ColumnMetadata) => (
-                      <div
-                        key={col.columnName}
-                        className="flex items-center gap-3 px-6 py-2 pl-10"
-                      >
-                        {col.isPrimaryKey ? (
-                          <Key className="size-3 shrink-0 text-chart-3" />
-                        ) : (
-                          <div className="size-3 shrink-0" />
-                        )}
-                        <span className="flex-1 font-mono text-xs text-foreground">
-                          {col.columnName}
+                return (
+                  <details
+                    key={tableFqn}
+                    open={tableIdx === 0}
+                    className="group border-b border-border/30 last:border-0"
+                  >
+                    <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3 hover:bg-muted/30">
+                      <div className="flex items-center" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={(e) => {
+                            const newSet = new Set(selectedTables);
+                            if (e.target.checked) newSet.add(tableFqn);
+                            else newSet.delete(tableFqn);
+                            setSelectedTables(newSet);
+                          }}
+                          className="size-3.5 rounded border-border/50 text-chart-1 focus:ring-chart-1/30 cursor-pointer"
+                        />
+                      </div>
+                      <Table2 className={`size-4 shrink-0 transition-colors ${isSelected ? "text-chart-1" : "text-muted-foreground"}`} />
+                      <div className={`flex flex-1 items-baseline gap-2 transition-colors ${!isSelected ? "opacity-60" : ""}`}>
+                        <span className="text-xs font-semibold text-foreground">
+                          {table}
                         </span>
-                        <span
-                          className={`rounded-md px-1.5 py-0.5 text-[10px] font-medium ${dataTypeBadgeColor(col.dataType)}`}
-                        >
-                          {col.dataType}
-                        </span>
-                        {col.isNullable && (
-                          <span className="text-[10px] text-muted-foreground/60">
-                            nullable
+                        {schema !== "public" && (
+                          <span className="text-[10px] text-muted-foreground">
+                            {schema}
                           </span>
                         )}
                       </div>
-                    ))}
-                  </div>
-                </details>
-              );
-            })
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
+                        {cols.length} cols
+                      </span>
+                    </summary>
+
+                    {/* Column rows */}
+                    <div className={`divide-y divide-border/20 pb-1 ${!isSelected ? "opacity-50" : ""}`}>
+                      {cols.map((col: ColumnMetadata) => (
+                        <div
+                          key={col.columnName}
+                          className="flex items-center gap-3 px-6 py-2 pl-10"
+                        >
+                          {col.isPrimaryKey ? (
+                            <Key className="size-3 shrink-0 text-chart-3" />
+                          ) : (
+                            <div className="size-3 shrink-0" />
+                          )}
+                          <span className="flex-1 font-mono text-xs text-foreground">
+                            {col.columnName}
+                          </span>
+                          <span
+                            className={`rounded-md px-1.5 py-0.5 text-[10px] font-medium ${dataTypeBadgeColor(col.dataType)}`}
+                          >
+                            {col.dataType}
+                          </span>
+                          {col.isNullable && (
+                            <span className="text-[10px] text-muted-foreground/60">
+                              nullable
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                );
+              })
+            )}
+          </div>
+
+          {tableNames.length > 0 && (
+            <div className="flex px-4 py-2 border-t border-border/30 bg-muted/20">
+              <button
+                onClick={() => setSelectedTables(new Set())}
+                className="text-[11px] font-medium text-destructive hover:underline transition-colors"
+              >
+                Deselect All
+              </button>
+            </div>
           )}
         </div>
 
-        {tableNames.length > 0 && (
-          <div className="flex px-4 py-2 border-t border-border/30 bg-muted/20">
-            <button
-              onClick={() => setSelectedTables(new Set())}
-              className="text-[11px] font-medium text-destructive hover:underline transition-colors"
-            >
-              Deselect All
-            </button>
+        {/* Error state */}
+        {result?.error && (
+          <div className="rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2">
+            <p className="font-mono text-xs text-destructive/90">{result.error}</p>
           </div>
         )}
-      </div>
-
-      {/* Error state */}
-      {result?.error && (
-        <div className="rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2">
-          <p className="font-mono text-xs text-destructive/90">{result.error}</p>
-        </div>
-      )}
 
       </div>
 
       {/* Actions */}
-      <div className="border-t border-border/50 p-6 bg-background flex gap-3 shrink-0">
+      <div className="border-t border-border/50 p-6 bg-background flex gap-3 shrink-0 md:sticky md:bottom-0">
         <Button
           variant="outline"
           onClick={onBack}
@@ -262,7 +276,8 @@ export function StepSchema({
           ) : (
             <>
               <CheckCircle2 className="size-4" />
-              Save & Activate Connection
+              <span className="hidden sm:inline">Save & Activate Connection</span>
+              <span className="inline sm:hidden">Save & Activate</span>
             </>
           )}
         </Button>

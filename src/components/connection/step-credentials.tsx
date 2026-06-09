@@ -29,8 +29,8 @@ export function StepCredentials({
   const isMongo = creds.engine === "MONGODB";
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      <div className="flex-1 overflow-y-auto scrollbar-thin p-6 flex flex-col gap-6">
+    <div className="flex flex-col h-full overflow-y-auto md:overflow-hidden">
+      <div className="p-6 flex flex-col gap-6 md:flex-1 md:overflow-y-auto scrollbar-thin">
         {/* Header */}
       <div className="flex flex-col gap-1">
         <h3 className="text-base font-semibold text-foreground">
@@ -60,13 +60,13 @@ export function StepCredentials({
                   host: eng !== "MONGODB" ? creds.host ?? "" : undefined,
                 })
               }
-              className={`flex flex-1 items-center justify-center gap-2 rounded-lg border py-2.5 text-sm font-medium transition-all ${
+              className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-2 py-2 text-[10px] sm:text-xs font-medium transition-all ${
                 creds.engine === eng
                   ? "border-chart-1/50 bg-chart-1/10 text-chart-1"
                   : "border-border/60 bg-muted/30 text-muted-foreground hover:border-border hover:text-foreground"
               }`}
             >
-              <Database className="size-4" />
+              <Database className="size-3.5" />
               {ENGINE_LABELS[eng]}
             </button>
           ))}
@@ -190,7 +190,7 @@ export function StepCredentials({
       </div>
 
       {/* Next button */}
-      <div className="border-t border-border/50 p-6 bg-background shrink-0">
+      <div className="border-t border-border/50 p-6 bg-background shrink-0 md:sticky md:bottom-0">
         <Button
           id="step-credentials-next"
           onClick={onNext}

@@ -29,8 +29,8 @@ export function StepTest({
   const isSuccess = result?.success === true;
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      <div className="flex-1 overflow-y-auto scrollbar-thin p-6 flex flex-col gap-6">
+    <div className="flex flex-col h-full overflow-y-auto md:overflow-hidden">
+      <div className="p-6 flex flex-col gap-6 md:flex-1 md:overflow-y-auto scrollbar-thin">
         {/* Header */}
       <div className="flex flex-col gap-1">
         <h3 className="text-base font-semibold text-foreground">
@@ -131,7 +131,7 @@ export function StepTest({
       </div>
 
       {/* Actions */}
-      <div className="border-t border-border/50 p-6 bg-background flex gap-3 shrink-0">
+      <div className="border-t border-border/50 p-6 bg-background flex gap-3 shrink-0 md:sticky md:bottom-0">
         <Button
           variant="outline"
           onClick={onBack}

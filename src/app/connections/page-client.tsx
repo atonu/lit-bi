@@ -54,7 +54,7 @@ export function ConnectionsPageClient({ connections: initial }: Props) {
         ].map((stat) => (
           <div
             key={stat.label}
-            className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5"
+            className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 md:p-5"
           >
             <p className="text-xs text-white/30">{stat.label}</p>
             <p className={`mt-1 text-3xl font-semibold ${stat.color}`}>{stat.value}</p>
