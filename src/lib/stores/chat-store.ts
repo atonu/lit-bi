@@ -18,6 +18,7 @@ export interface ChartResult {
   rowCount: number;
   executionMs: number;
   aiResponse: AiQueryResponse;
+  jobId?: string;
 }
 
 export interface ChatMessage {
@@ -95,6 +96,7 @@ interface ChatActions {
   stopSyncTimer: () => void;
   markSynced: (sessionId: string) => void;
   getUnsyncedSessionIds: () => string[];
+  reset: () => void;
 }
 
 type ChatStore = ChatState & ChatActions;
@@ -102,6 +104,27 @@ type ChatStore = ChatState & ChatActions;
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+async function syncSession(sessionId: string, messages: ChatMessage[]) {
+  if (sessionId.startsWith("new-")) return;
+  const doneMsgs = messages.filter((m) => m.status === "done" || m.status === "error");
+  if (doneMsgs.length === 0) return;
+
+  try {
+    const { saveChatMessages } = await import("@/app/actions/chat-history");
+    await saveChatMessages(
+      sessionId,
+      doneMsgs.map((m) => ({
+        id: m.id,
+        role: m.role.toUpperCase() as "USER" | "ASSISTANT" | "ERROR",
+        content: m.content,
+        chartResult: m.chartResult,
+      }))
+    );
+  } catch (err) {
+    console.error("Failed to sync session:", err);
+  }
+}
 
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -254,6 +277,12 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         activeRequestSessionId: state.activeRequestSessionId === oldId ? newId : state.activeRequestSessionId,
       };
     });
+
+    // Sync the promoted session immediately
+    const messages = get().messagesBySession[newId] || [];
+    syncSession(newId, messages).then(() => {
+      get().markSynced(newId);
+    });
   },
 
   // ── Messages ──────────────────────────────────────────────────────────
@@ -279,6 +308,15 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           state.activeSessionId === sessionId ? updated : state.activeMessages,
       };
     });
+
+    // Sync immediately if it's a real session
+    if (!sessionId.startsWith("new-")) {
+      const messages = get().messagesBySession[sessionId] || [];
+      syncSession(sessionId, messages).then(() => {
+        get().markSynced(sessionId);
+      });
+    }
+
     return id;
   },
 
@@ -340,6 +378,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         isThinking: false,
       };
     });
+
+    // Sync immediately if it's a real session
+    if (!sessionId.startsWith("new-")) {
+      const messages = get().messagesBySession[sessionId] || [];
+      syncSession(sessionId, messages).then(() => {
+        get().markSynced(sessionId);
+      });
+    }
   },
 
   resolveMessageWithError: (sessionId, messageId, errorText) => {
@@ -360,6 +406,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         isThinking: false,
       };
     });
+
+    // Sync immediately if it's a real session
+    if (!sessionId.startsWith("new-")) {
+      const messages = get().messagesBySession[sessionId] || [];
+      syncSession(sessionId, messages).then(() => {
+        get().markSynced(sessionId);
+      });
+    }
   },
 
   // ── Search ─────────────────────────────────────────────────────────────
@@ -474,6 +528,28 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       const lastMsg = msgs[msgs.length - 1];
       const lastSync = lastSyncedAt[id] ?? 0;
       return lastMsg.timestamp > lastSync;
+    });
+  },
+
+  reset: () => {
+    const timer = get().syncTimerId;
+    if (timer) {
+      clearInterval(timer);
+    }
+    set({
+      activeConnectionId: null,
+      activeConnectionAlias: null,
+      activeSessionId: null,
+      messagesBySession: {},
+      sessions: [],
+      sessionsLoaded: false,
+      searchQuery: "",
+      isThinking: false,
+      activeRequestId: null,
+      activeRequestSessionId: null,
+      activeMessages: [],
+      lastSyncedAt: {},
+      syncTimerId: null,
     });
   },
 }));

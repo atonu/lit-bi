@@ -8,7 +8,7 @@
 // Chat sync interval — how often chat sessions are persisted to MongoDB
 // ---------------------------------------------------------------------------
 /** Interval in milliseconds for syncing chat history to the database. Default: 2 minutes. */
-export const CHAT_SYNC_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
+export const CHAT_SYNC_INTERVAL_MS = 5 * 1000; // 5 seconds
 
 export const PLACEHOLDER_ORG_ID = "000000000000000000000001"; // 24-char hex ObjectId
 

@@ -6,8 +6,9 @@ import { db } from "@/lib/db";
 import { DatabaseEngine } from "@/generated/prisma";
 import { encryptPassword, decryptPassword } from "@/lib/crypto";
 import crypto from "crypto";
-import { PLACEHOLDER_ORG_ID } from "@/lib/constants";
 import { revalidatePath } from "next/cache";
+import { getServerSession } from "@/lib/session";
+import jwt from "jsonwebtoken";
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -168,12 +169,53 @@ async function testMongoConnection(
 export async function testConnection(
   creds: ConnectionCredentials
 ): Promise<TestConnectionResult> {
-  if (creds.engine === "MONGODB") {
-    return testMongoConnection(creds);
+  const session = await getServerSession();
+  if (!session?.user?.organizationId) {
+    return { success: false, error: "Unauthorized. Please log in." };
   }
-  // PostgreSQL and MySQL both use pg-compatible connection strings for now
-  // (MySQL support can be added separately with the mysql2 driver)
-  return testPostgresConnection(creds);
+
+  // Sign backend token
+  const token = jwt.sign(
+    {
+      userId: session.user.id,
+      organizationId: session.user.organizationId,
+      role: session.user.role,
+    },
+    process.env.BACKEND_SECRET || "bi-lite-backend-secret-key-super-secure-87654321",
+    { expiresIn: "5m" }
+  );
+
+  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3002";
+
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/connection/test`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(creds),
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      return {
+        success: false,
+        error: data.error || "Failed to test connection on backend.",
+      };
+    }
+
+    return {
+      success: true,
+      latencyMs: data.latencyMs,
+      serverVersion: data.serverVersion,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: `Backend connection error: ${err.message || String(err)}`,
+    };
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -471,14 +513,61 @@ async function introspectMongoSchema(
 // ---------------------------------------------------------------------------
 // Dispatcher: introspectSchema
 // ---------------------------------------------------------------------------
-
+// Dispatcher: introspectSchema
 export async function introspectSchema(
   creds: ConnectionCredentials
 ): Promise<IntrospectResult> {
-  if (creds.engine === "MONGODB") {
-    return introspectMongoSchema(creds);
+  const session = await getServerSession();
+  if (!session?.user?.organizationId) {
+    return { success: false, tables: [], columns: [], error: "Unauthorized. Please log in." };
   }
-  return introspectPostgresSchema(creds);
+
+  // Sign backend token
+  const token = jwt.sign(
+    {
+      userId: session.user.id,
+      organizationId: session.user.organizationId,
+      role: session.user.role,
+    },
+    process.env.BACKEND_SECRET || "bi-lite-backend-secret-key-super-secure-87654321",
+    { expiresIn: "5m" }
+  );
+
+  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3002";
+
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/connection/introspect`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(creds),
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      return {
+        success: false,
+        tables: [],
+        columns: [],
+        error: data.error || "Failed to introspect schema on backend.",
+      };
+    }
+
+    return {
+      success: true,
+      tables: data.tables,
+      columns: data.columns,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      tables: [],
+      columns: [],
+      error: `Backend connection error: ${err.message || String(err)}`,
+    };
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -504,6 +593,12 @@ export async function saveConnection(
   columns: ColumnMetadata[]
 ): Promise<SaveConnectionResult> {
   try {
+    const session = await getServerSession();
+    if (!session?.user?.organizationId) {
+      return { success: false, error: "Unauthorized. Please log in." };
+    }
+    const organizationId = session.user.organizationId;
+
     // Encrypt the sensitive credential
     let encryptedPassword: string | undefined;
     let encryptedUri: string | undefined;
@@ -523,98 +618,95 @@ export async function saveConnection(
     // Compute a unique fingerprint for this connection
     const uniqueKey = computeConnectionUniqueKey(creds);
 
-    // Check if a connection with the same fingerprint already exists
+    // Check if a connection with the same fingerprint already exists in this organization
     const existing = await db.databaseConnection.findFirst({
-      where: { uniqueKey },
-    });
-    if (existing) {
-      if (existing.status === "CONNECTED") {
-        return {
-          success: false,
-          error: `A connection to this database already exists: "${existing.alias}". Please edit the existing connection instead of creating a duplicate.`,
-        };
-      } else {
-        // Delete the inactive/failed connection so we can create a clean new one
-        await db.databaseConnection.delete({
-          where: { id: existing.id },
-        });
-      }
-    }
-
-    // Ensure the placeholder organization exists
-    const org = await db.organization.findUnique({
-      where: { id: PLACEHOLDER_ORG_ID },
+      where: { uniqueKey, organizationId },
     });
 
-    if (!org) {
-      await db.organization.create({
-        data: {
-          id: PLACEHOLDER_ORG_ID,
-          name: "Default Organization",
-          slug: "default",
-        },
-      });
-    }
+    const { ObjectId } = await import("mongodb");
+    const uri = process.env.MONGODB_URI || process.env.DATABASE_URL || "mongodb://localhost:27017/bi_lite";
+    const client = new MongoClient(uri);
+    await client.connect();
 
-    // For MongoDB, extract and persist dbName from the URI if not already set
-    let resolvedDbName = creds.dbName ?? null;
-    if (creds.engine === "MONGODB" && !resolvedDbName && creds.connectionUri) {
-      try {
-        const url = new URL(
-          creds.connectionUri
-            .replace("mongodb+srv://", "https://")
-            .replace("mongodb://", "http://")
-        );
-        const pathDb = url.pathname.replace(/^\//, "").split("?")[0];
-        if (pathDb) resolvedDbName = pathDb;
-      } catch {
-        // ignore parse errors
+    try {
+      const mdb = client.db();
+      const connColl = mdb.collection("database_connections");
+      const schemaColl = mdb.collection("schema_metadata");
+
+      if (existing) {
+        if (existing.status === "CONNECTED") {
+          return {
+            success: false,
+            error: `A connection to this database already exists: "${existing.alias}". Please edit the existing connection instead of creating a duplicate.`,
+          };
+        } else {
+          // Delete the inactive/failed connection and its schema metadata
+          await connColl.deleteOne({ _id: new ObjectId(existing.id) });
+          await schemaColl.deleteMany({ connection_id: new ObjectId(existing.id) });
+        }
       }
-    }
 
-    // Create the connection record
-    const connection = await db.databaseConnection.create({
-      data: {
+      // For MongoDB, extract and persist dbName from the URI if not already set
+      let resolvedDbName = creds.dbName ?? null;
+      if (creds.engine === "MONGODB" && !resolvedDbName && creds.connectionUri) {
+        try {
+          const url = new URL(
+            creds.connectionUri
+              .replace("mongodb+srv://", "https://")
+              .replace("mongodb://", "http://")
+          );
+          const pathDb = url.pathname.replace(/^\//, "").split("?")[0];
+          if (pathDb) resolvedDbName = pathDb;
+        } catch {
+          // ignore parse errors
+        }
+      }
+
+      const connectionId = new ObjectId();
+
+      // Create the connection record
+      await connColl.insertOne({
+        _id: connectionId,
         alias: creds.alias,
-        engine: creds.engine as DatabaseEngine,
-        // SQL fields
+        engine: creds.engine,
         host: creds.host ?? null,
         port: creds.port ?? null,
-        dbName: resolvedDbName,
-        dbUser: creds.dbUser ?? null,
-        encryptedPassword: encryptedPassword ?? null,
-        sslEnabled: creds.sslEnabled ?? false,
-        // MongoDB field
-        encryptedUri: encryptedUri ?? null,
-        // Uniqueness fingerprint
-        uniqueKey,
+        db_name: resolvedDbName,
+        db_user: creds.dbUser ?? null,
+        encrypted_password: encryptedPassword ?? null,
+        ssl_enabled: creds.sslEnabled ?? false,
+        encrypted_uri: encryptedUri ?? null,
+        unique_key: uniqueKey,
         status: "CONNECTED",
-        lastTestedAt: new Date(),
-        organizationId: PLACEHOLDER_ORG_ID,
-      },
-    });
-
-    // Bulk-insert schema metadata
-    if (columns.length > 0) {
-      await db.schemaMetadata.createMany({
-        data: columns.map((col) => ({
-          tableSchema: col.tableSchema,
-          tableName: col.tableName,
-          columnName: col.columnName,
-          dataType: col.dataType,
-          isNullable: col.isNullable,
-          isPrimaryKey: col.isPrimaryKey,
-          columnDefault: col.columnDefault,
-          ordinalPosition: col.ordinalPosition,
-          connectionId: connection.id,
-        })),
-        // Note: skipDuplicates is not supported by the MongoDB Prisma connector.
-        // Duplicate prevention is handled by the unique index on the collection.
+        last_tested_at: new Date(),
+        organization_id: new ObjectId(organizationId),
+        created_at: new Date(),
+        updated_at: new Date(),
       });
-    }
 
-    revalidatePath("/", "layout");
-    return { success: true, connectionId: connection.id };
+      // Bulk-insert schema metadata
+      if (columns.length > 0) {
+        await schemaColl.insertMany(
+          columns.map((col) => ({
+            table_schema: col.tableSchema,
+            table_name: col.tableName,
+            column_name: col.columnName,
+            data_type: col.dataType,
+            is_nullable: col.isNullable,
+            is_primary_key: col.isPrimaryKey,
+            column_default: col.columnDefault,
+            ordinal_position: col.ordinalPosition,
+            connection_id: connectionId,
+            introspected_at: new Date(),
+          }))
+        );
+      }
+
+      revalidatePath("/", "layout");
+      return { success: true, connectionId: connectionId.toString() };
+    } finally {
+      await client.close();
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return { success: false, error: message };
@@ -629,28 +721,52 @@ export async function deleteConnection(
   connectionId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // 1. Manually clean up schema metadata (Cascade equivalent)
-    await db.schemaMetadata.deleteMany({
-      where: { connectionId },
-    });
-
-    // 2. Manually nullify connection reference in chat sessions (SetNull equivalent)
-    await db.chatSession.updateMany({
-      where: { connectionId },
-      data: { connectionId: null },
-    });
-
-    // 3. Safe delete the connection record itself
-    const exists = await db.databaseConnection.findUnique({
-      where: { id: connectionId },
-    });
-    if (exists) {
-      await db.databaseConnection.delete({
-        where: { id: connectionId },
-      });
+    const session = await getServerSession();
+    if (!session?.user?.organizationId) {
+      return { success: false, error: "Unauthorized. Please log in." };
     }
-    revalidatePath("/", "layout");
-    return { success: true };
+    const organizationId = session.user.organizationId;
+
+    // Verify ownership
+    const exists = await db.databaseConnection.findFirst({
+      where: { id: connectionId, organizationId },
+    });
+    if (!exists) {
+      return { success: false, error: "Connection not found or unauthorized." };
+    }
+
+    const { ObjectId } = await import("mongodb");
+    const uri = process.env.MONGODB_URI || process.env.DATABASE_URL || "mongodb://localhost:27017/bi_lite";
+    const client = new MongoClient(uri);
+    await client.connect();
+
+    try {
+      const mdb = client.db();
+      const connColl = mdb.collection("database_connections");
+      const schemaColl = mdb.collection("schema_metadata");
+      const chatSessionsColl = mdb.collection("chat_sessions");
+
+      // 1. Manually clean up schema metadata (Cascade equivalent)
+      await schemaColl.deleteMany({
+        connection_id: new ObjectId(connectionId),
+      });
+
+      // 2. Manually nullify connection reference in chat sessions (SetNull equivalent)
+      await chatSessionsColl.updateMany(
+        { connection_id: new ObjectId(connectionId) },
+        { $set: { connection_id: null } }
+      );
+
+      // 3. Safe delete the connection record itself
+      await connColl.deleteOne({
+        _id: new ObjectId(connectionId),
+      });
+
+      revalidatePath("/", "layout");
+      return { success: true };
+    } finally {
+      await client.close();
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return { success: false, error: message };
@@ -666,12 +782,39 @@ export async function updateConnectionAlias(
   alias: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await db.databaseConnection.update({
-      where: { id: connectionId },
-      data: { alias },
+    const session = await getServerSession();
+    if (!session?.user?.organizationId) {
+      return { success: false, error: "Unauthorized. Please log in." };
+    }
+    const organizationId = session.user.organizationId;
+
+    // Verify ownership
+    const exists = await db.databaseConnection.findFirst({
+      where: { id: connectionId, organizationId },
     });
-    revalidatePath("/", "layout");
-    return { success: true };
+    if (!exists) {
+      return { success: false, error: "Connection not found or unauthorized." };
+    }
+
+    const { ObjectId } = await import("mongodb");
+    const uri = process.env.MONGODB_URI || process.env.DATABASE_URL || "mongodb://localhost:27017/bi_lite";
+    const client = new MongoClient(uri);
+    await client.connect();
+
+    try {
+      const mdb = client.db();
+      const connColl = mdb.collection("database_connections");
+
+      await connColl.updateOne(
+        { _id: new ObjectId(connectionId) },
+        { $set: { alias } }
+      );
+
+      revalidatePath("/", "layout");
+      return { success: true };
+    } finally {
+      await client.close();
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return { success: false, error: message };

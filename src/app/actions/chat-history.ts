@@ -1,8 +1,8 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { PLACEHOLDER_ORG_ID } from "@/lib/constants";
 import { revalidatePath } from "next/cache";
+import { getServerSession } from "@/lib/session";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -27,6 +27,21 @@ export interface StoredChatMessage {
 }
 
 // ---------------------------------------------------------------------------
+// Helper: Resolve active user organization context
+// ---------------------------------------------------------------------------
+
+async function getOrgContext() {
+  const session = await getServerSession();
+  if (!session?.user?.organizationId) {
+    throw new Error("Unauthorized. Please log in.");
+  }
+  return {
+    organizationId: session.user.organizationId,
+    userId: session.user.id,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Create a new chat session
 // ---------------------------------------------------------------------------
 
@@ -36,12 +51,23 @@ export async function createChatSession(
   title = "New Chat"
 ): Promise<{ success: true; sessionId: string } | { success: false; error: string }> {
   try {
+    const { organizationId, userId } = await getOrgContext();
+
+    // Verify database connection belongs to the organization
+    const conn = await db.databaseConnection.findFirst({
+      where: { id: connectionId, organizationId },
+    });
+    if (!conn) {
+      return { success: false, error: "Database connection not found or unauthorized." };
+    }
+
     const session = await db.chatSession.create({
       data: {
         title,
         connectionId,
         connectionAlias,
-        organizationId: PLACEHOLDER_ORG_ID,
+        organizationId,
+        userId,
       },
     });
     revalidatePath("/", "layout");
@@ -61,6 +87,16 @@ export async function updateChatSessionTitle(
   title: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const { organizationId, userId } = await getOrgContext();
+
+    // Verify session belongs to the organization
+    const existing = await db.chatSession.findFirst({
+      where: { id: sessionId, organizationId, userId },
+    });
+    if (!existing) {
+      return { success: false, error: "Chat session not found or unauthorized." };
+    }
+
     await db.chatSession.update({
       where: { id: sessionId },
       data: { title },
@@ -79,8 +115,14 @@ export async function updateChatSessionTitle(
 
 export async function getChatSessions(connectionId?: string): Promise<ChatSessionSummary[]> {
   try {
+    const { organizationId, userId } = await getOrgContext();
+
     const sessions = await db.chatSession.findMany({
-      where: connectionId ? { connectionId } : undefined,
+      where: {
+        organizationId,
+        userId,
+        ...(connectionId ? { connectionId } : {}),
+      },
       orderBy: { updatedAt: "desc" },
       take: 50,
       include: {
@@ -126,10 +168,15 @@ export async function getChatSessions(connectionId?: string): Promise<ChatSessio
 // ---------------------------------------------------------------------------
 
 export async function searchChatSessions(query: string): Promise<ChatSessionSummary[]> {
-  if (!query.trim()) return getChatSessions();
   try {
+    const { organizationId, userId } = await getOrgContext();
+
+    if (!query.trim()) return getChatSessions();
+
     const sessions = await db.chatSession.findMany({
       where: {
+        organizationId,
+        userId,
         title: { contains: query, mode: "insensitive" as const },
       },
       orderBy: { updatedAt: "desc" },
@@ -172,21 +219,31 @@ export async function searchChatSessions(query: string): Promise<ChatSessionSumm
   }
 }
 
-
+// ---------------------------------------------------------------------------
 // Bulk-save messages for a session (upsert-style sync)
 // ---------------------------------------------------------------------------
 
 export async function saveChatMessages(
   sessionId: string,
   messages: Array<{
-    id: string; // client-side temp id (used to detect new messages)
+    id: string; // client-side temp id
     role: "USER" | "ASSISTANT" | "ERROR";
     content: string;
     chartResult?: unknown;
   }>
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // Delete existing messages and re-insert (simplest sync strategy)
+    const { organizationId, userId } = await getOrgContext();
+
+    // Verify session belongs to the organization
+    const existing = await db.chatSession.findFirst({
+      where: { id: sessionId, organizationId, userId },
+    });
+    if (!existing) {
+      return { success: false, error: "Chat session not found or unauthorized." };
+    }
+
+    // Delete existing messages and re-insert
     await db.chatMessage.deleteMany({ where: { sessionId } });
 
     if (messages.length > 0) {
@@ -219,6 +276,16 @@ export async function saveChatMessages(
 
 export async function getChatMessages(sessionId: string): Promise<StoredChatMessage[]> {
   try {
+    const { organizationId, userId } = await getOrgContext();
+
+    // Verify session belongs to the organization
+    const existing = await db.chatSession.findFirst({
+      where: { id: sessionId, organizationId, userId },
+    });
+    if (!existing) {
+      return [];
+    }
+
     const messages = await db.chatMessage.findMany({
       where: { sessionId },
       orderBy: { createdAt: "asc" },
@@ -243,6 +310,16 @@ export async function deleteChatSession(
   sessionId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const { organizationId, userId } = await getOrgContext();
+
+    // Verify session belongs to the organization
+    const existing = await db.chatSession.findFirst({
+      where: { id: sessionId, organizationId, userId },
+    });
+    if (!existing) {
+      return { success: false, error: "Chat session not found or unauthorized." };
+    }
+
     await db.chatSession.delete({ where: { id: sessionId } });
     revalidatePath("/", "layout");
     return { success: true };

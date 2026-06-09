@@ -4,6 +4,7 @@ import { generateObject, generateText } from "ai";
 import { deepseek } from "@ai-sdk/deepseek";
 import * as z from 'zod';
 import { db } from "@/lib/db";
+import { getServerSession } from "@/lib/session";
 
 // ---------------------------------------------------------------------------
 // Output schema — strict shape the AI must conform to (SQL engines only)
@@ -312,8 +313,14 @@ export async function askQuestion(
   // 1. Load the connection to know the engine
   let connectionEngine: string;
   try {
-    const conn = await db.databaseConnection.findUnique({
-      where: { id: connectionId, status: "CONNECTED" },
+    const session = await getServerSession();
+    if (!session?.user?.organizationId) {
+      return { success: false, error: "Unauthorized. Please log in." };
+    }
+    const organizationId = session.user.organizationId;
+
+    const conn = await db.databaseConnection.findFirst({
+      where: { id: connectionId, status: "CONNECTED", organizationId },
       select: { engine: true },
     });
     if (!conn) {
@@ -404,8 +411,12 @@ export interface ConnectionSummary {
 
 export async function getConnections(): Promise<ConnectionSummary[]> {
   try {
+    const session = await getServerSession();
+    if (!session?.user?.organizationId) return [];
+    const organizationId = session.user.organizationId;
+
     const connections = await db.databaseConnection.findMany({
-      where: { status: "CONNECTED" },
+      where: { status: "CONNECTED", organizationId },
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
@@ -447,7 +458,12 @@ export interface ConnectionDetail {
 
 export async function getAllConnections(): Promise<ConnectionDetail[]> {
   try {
+    const session = await getServerSession();
+    if (!session?.user?.organizationId) return [];
+    const organizationId = session.user.organizationId;
+
     const connections = await db.databaseConnection.findMany({
+      where: { organizationId },
       orderBy: { createdAt: "desc" },
       select: {
         id: true,

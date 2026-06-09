@@ -5,19 +5,19 @@
 // schema validators for the BI-Lite control-plane database.
 //
 // Usage:
-//   mongosh "mongodb://localhost:27017/aura_bi" mongodb_setup.js
-//   mongosh "mongodb+srv://<user>:<pass>@cluster.mongodb.net/aura_bi" mongodb_setup.js
+//   mongosh "mongodb://localhost:27017/bi_lite" mongodb_setup.js
+//   mongosh "mongodb+srv://<user>:<pass>@cluster.mongodb.net/bi_lite" mongodb_setup.js
 //
 // This is the MongoDB equivalent of supabase_setup.sql.
 // It is idempotent — safe to run multiple times.
 // =============================================================================
 
 // ---------------------------------------------------------------------------
-// Switch to (or create) the aura_bi database
+// Switch to (or create) the bi_lite database
 // ---------------------------------------------------------------------------
-// When you connect with the URI above, you are already on aura_bi.
+// When you connect with the URI above, you are already on bi_lite.
 // The line below is a safety net in case you run this from a different db.
-use("aura_bi");
+use("bi_lite");
 
 print("=== BI-Lite MongoDB Bootstrap ===\n");
 

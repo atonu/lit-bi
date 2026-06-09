@@ -290,9 +290,33 @@ export function ChartRenderer({ result, messageId }: ChartRendererProps) {
   const [viewMode, setViewMode] = useState<"chart" | "table">("chart");
   const [isExporting, setIsExporting] = useState(false);
 
-  const { aiResponse, rows, executionMs, rowCount } = result;
+  const { aiResponse, rows, executionMs, rowCount, jobId } = result;
   const canRenderChart = aiResponse.chartType !== "TABLE";
   const safeFilename = aiResponse.chartTitle;
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [currentRows, setCurrentRows] = useState(rows);
+  const [loadingPage, setLoadingPage] = useState(false);
+
+  const totalPages = Math.ceil(rowCount / 500); // 500 rows per page limit
+
+  const fetchPage = async (page: number) => {
+    if (!jobId) return;
+    setLoadingPage(true);
+    try {
+      const { getQueryJobResults } = await import("@/app/actions/execute-query");
+      const res = await getQueryJobResults(jobId, page);
+      if (res.success) {
+        setCurrentRows(res.rows);
+        setCurrentPage(page);
+      }
+    } catch (err) {
+      console.error("Failed to fetch page:", err);
+    } finally {
+      setLoadingPage(false);
+    }
+  };
 
   async function handleExportPng() {
     setIsExporting(true);
@@ -304,7 +328,7 @@ export function ChartRenderer({ result, messageId }: ChartRendererProps) {
   }
 
   function handleExportCsv() {
-    exportToCsv(rows, safeFilename);
+    exportToCsv(currentRows, safeFilename);
   }
 
   return (
@@ -374,9 +398,49 @@ export function ChartRenderer({ result, messageId }: ChartRendererProps) {
       </div>
 
       {/* Chart body */}
-      <div className="p-4">
-        <ChartBody result={result} viewMode={viewMode} />
+      <div className="p-4 relative">
+        {loadingPage && (
+          <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-xs z-10">
+            <div className="flex items-center gap-2 rounded-full bg-card border border-border px-4 py-2 text-xs text-foreground shadow-lg">
+              <span className="size-2 animate-ping rounded-full bg-blue-500" />
+              Loading page {currentPage}...
+            </div>
+          </div>
+        )}
+        <ChartBody result={{ ...result, rows: currentRows }} viewMode={viewMode} />
       </div>
+
+      {/* Pagination Footer */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between border-t border-border/40 px-4 py-2 bg-muted/10 text-[10px] text-muted-foreground">
+          <span>
+            Showing {(currentPage - 1) * 500 + 1}–{Math.min(currentPage * 500, rowCount)} of {rowCount} rows
+          </span>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage === 1 || loadingPage}
+              onClick={() => fetchPage(currentPage - 1)}
+              className="h-6 gap-1 px-2 text-[9px] hover:text-foreground cursor-pointer"
+            >
+              Previous
+            </Button>
+            <span className="font-semibold text-foreground/80">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage === totalPages || loadingPage}
+              onClick={() => fetchPage(currentPage + 1)}
+              className="h-6 gap-1 px-2 text-[9px] hover:text-foreground cursor-pointer"
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

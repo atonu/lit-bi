@@ -43,12 +43,12 @@ Start-Service -Name "MongoDB"   # if stopped
 
 From the project root, run:
 ```powershell
-mongosh "mongodb://localhost:27017/aura_bi" mongodb_setup.js
+mongosh "mongodb://localhost:27017/bi_lite" mongodb_setup.js
 ```
 
 For **MongoDB Atlas**:
 ```powershell
-mongosh "mongodb+srv://<user>:<password>@<cluster>.mongodb.net/aura_bi" mongodb_setup.js
+mongosh "mongodb+srv://<user>:<password>@<cluster>.mongodb.net/bi_lite" mongodb_setup.js
 ```
 
 This creates all 5 collections with validators and indexes, and seeds the default organization.
@@ -71,10 +71,10 @@ Edit `.env` in the project root and set:
 
 ```env
 # Local MongoDB
-MONGODB_URI="mongodb://localhost:27017/aura_bi"
+MONGODB_URI="mongodb://localhost:27017/bi_lite"
 
 # MongoDB Atlas
-MONGODB_URI="mongodb+srv://<user>:<password>@<cluster>.mongodb.net/aura_bi?retryWrites=true&w=majority"
+MONGODB_URI="mongodb+srv://<user>:<password>@<cluster>.mongodb.net/bi_lite?retryWrites=true&w=majority"
 ```
 
 > **Security note:** Never commit `.env` to version control. It is already in `.gitignore`.
