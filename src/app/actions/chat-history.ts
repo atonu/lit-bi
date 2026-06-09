@@ -1,8 +1,8 @@
 "use server";
 
-import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { getServerSession } from "@/lib/session";
+import jwt from "jsonwebtoken";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -27,18 +27,19 @@ export interface StoredChatMessage {
 }
 
 // ---------------------------------------------------------------------------
-// Helper: Resolve active user organization context
+// Helper: Sign a short-lived token for backend authentication
 // ---------------------------------------------------------------------------
 
-async function getOrgContext() {
-  const session = await getServerSession();
-  if (!session?.user?.organizationId) {
-    throw new Error("Unauthorized. Please log in.");
-  }
-  return {
-    organizationId: session.user.organizationId,
-    userId: session.user.id,
-  };
+function getBackendToken(session: any): string {
+  return jwt.sign(
+    {
+      userId: session.user.id,
+      organizationId: session.user.organizationId,
+      role: session.user.role,
+    },
+    process.env.BACKEND_SECRET || "bi-lite-backend-secret-key-super-secure-87654321",
+    { expiresIn: "5m" }
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -51,28 +52,30 @@ export async function createChatSession(
   title = "New Chat"
 ): Promise<{ success: true; sessionId: string } | { success: false; error: string }> {
   try {
-    const { organizationId, userId } = await getOrgContext();
+    const session = await getServerSession();
+    if (!session?.user?.organizationId) {
+      return { success: false, error: "Unauthorized. Please log in." };
+    }
+    const token = getBackendToken(session);
+    const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3002";
 
-    // Verify database connection belongs to the organization
-    const conn = await db.databaseConnection.findFirst({
-      where: { id: connectionId, organizationId },
+    const res = await fetch(`${BACKEND_URL}/api/chat/sessions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ connectionId, connectionAlias, title }),
     });
-    if (!conn) {
-      return { success: false, error: "Database connection not found or unauthorized." };
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      return { success: false, error: data.error || "Failed to create chat session on backend." };
     }
 
-    const session = await db.chatSession.create({
-      data: {
-        title,
-        connectionId,
-        connectionAlias,
-        organizationId,
-        userId,
-      },
-    });
     revalidatePath("/", "layout");
-    return { success: true, sessionId: session.id };
-  } catch (err) {
+    return { success: true, sessionId: data.sessionId };
+  } catch (err: any) {
     const msg = err instanceof Error ? err.message : String(err);
     return { success: false, error: msg };
   }
@@ -87,23 +90,30 @@ export async function updateChatSessionTitle(
   title: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const { organizationId, userId } = await getOrgContext();
+    const session = await getServerSession();
+    if (!session?.user?.organizationId) {
+      return { success: false, error: "Unauthorized. Please log in." };
+    }
+    const token = getBackendToken(session);
+    const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3002";
 
-    // Verify session belongs to the organization
-    const existing = await db.chatSession.findFirst({
-      where: { id: sessionId, organizationId, userId },
+    const res = await fetch(`${BACKEND_URL}/api/chat/sessions/${sessionId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ title }),
     });
-    if (!existing) {
-      return { success: false, error: "Chat session not found or unauthorized." };
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      return { success: false, error: data.error || "Failed to update chat session title on backend." };
     }
 
-    await db.chatSession.update({
-      where: { id: sessionId },
-      data: { title },
-    });
     revalidatePath("/", "layout");
     return { success: true };
-  } catch (err) {
+  } catch (err: any) {
     const msg = err instanceof Error ? err.message : String(err);
     return { success: false, error: msg };
   }
@@ -115,49 +125,25 @@ export async function updateChatSessionTitle(
 
 export async function getChatSessions(connectionId?: string): Promise<ChatSessionSummary[]> {
   try {
-    const { organizationId, userId } = await getOrgContext();
+    const session = await getServerSession();
+    if (!session?.user?.organizationId) {
+      return [];
+    }
+    const token = getBackendToken(session);
+    const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3002";
 
-    const sessions = await db.chatSession.findMany({
-      where: {
-        organizationId,
-        userId,
-        ...(connectionId ? { connectionId } : {}),
-      },
-      orderBy: { updatedAt: "desc" },
-      take: 50,
-      include: {
-        connection: { select: { alias: true } },
-        _count: { select: { messages: true } },
-        messages: {
-          orderBy: { createdAt: "asc" },
-          take: 1,
-        },
+    const url = connectionId
+      ? `${BACKEND_URL}/api/chat/sessions?connectionId=${connectionId}`
+      : `${BACKEND_URL}/api/chat/sessions`;
+
+    const res = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
       },
     });
 
-    return sessions.map((s) => {
-      let title = s.title;
-      if (title === "New Chat" && s.messages.length > 0) {
-        const firstMsg = s.messages[0];
-        if (firstMsg.content) {
-          title = firstMsg.content.slice(0, 20).trim() + (firstMsg.content.length > 20 ? "..." : "");
-          db.chatSession.update({
-            where: { id: s.id },
-            data: { title },
-          }).catch(() => {});
-        }
-      }
-
-      return {
-        id: s.id,
-        title,
-        connectionId: s.connectionId,
-        connectionAlias: s.connectionAlias || s.connection?.alias || "Deleted DB",
-        updatedAt: s.updatedAt,
-        createdAt: s.createdAt,
-        messageCount: s._count.messages,
-      };
-    });
+    if (!res.ok) return [];
+    return await res.json();
   } catch {
     return [];
   }
@@ -169,51 +155,24 @@ export async function getChatSessions(connectionId?: string): Promise<ChatSessio
 
 export async function searchChatSessions(query: string): Promise<ChatSessionSummary[]> {
   try {
-    const { organizationId, userId } = await getOrgContext();
+    const session = await getServerSession();
+    if (!session?.user?.organizationId) {
+      return [];
+    }
+    const token = getBackendToken(session);
+    const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3002";
 
-    if (!query.trim()) return getChatSessions();
-
-    const sessions = await db.chatSession.findMany({
-      where: {
-        organizationId,
-        userId,
-        title: { contains: query, mode: "insensitive" as const },
-      },
-      orderBy: { updatedAt: "desc" },
-      take: 20,
-      include: {
-        connection: { select: { alias: true } },
-        _count: { select: { messages: true } },
-        messages: {
-          orderBy: { createdAt: "asc" },
-          take: 1,
+    const res = await fetch(
+      `${BACKEND_URL}/api/chat/sessions/search?query=${encodeURIComponent(query)}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      },
-    });
-
-    return sessions.map((s) => {
-      let title = s.title;
-      if (title === "New Chat" && s.messages.length > 0) {
-        const firstMsg = s.messages[0];
-        if (firstMsg.content) {
-          title = firstMsg.content.slice(0, 20).trim() + (firstMsg.content.length > 20 ? "..." : "");
-          db.chatSession.update({
-            where: { id: s.id },
-            data: { title },
-          }).catch(() => {});
-        }
       }
+    );
 
-      return {
-        id: s.id,
-        title,
-        connectionId: s.connectionId,
-        connectionAlias: s.connectionAlias || s.connection?.alias || "Deleted DB",
-        updatedAt: s.updatedAt,
-        createdAt: s.createdAt,
-        messageCount: s._count.messages,
-      };
-    });
+    if (!res.ok) return [];
+    return await res.json();
   } catch {
     return [];
   }
@@ -226,45 +185,36 @@ export async function searchChatSessions(query: string): Promise<ChatSessionSumm
 export async function saveChatMessages(
   sessionId: string,
   messages: Array<{
-    id: string; // client-side temp id
+    id: string;
     role: "USER" | "ASSISTANT" | "ERROR";
     content: string;
     chartResult?: unknown;
   }>
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const { organizationId, userId } = await getOrgContext();
-
-    // Verify session belongs to the organization
-    const existing = await db.chatSession.findFirst({
-      where: { id: sessionId, organizationId, userId },
-    });
-    if (!existing) {
-      return { success: false, error: "Chat session not found or unauthorized." };
+    const session = await getServerSession();
+    if (!session?.user?.organizationId) {
+      return { success: false, error: "Unauthorized. Please log in." };
     }
+    const token = getBackendToken(session);
+    const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3002";
 
-    // Delete existing messages and re-insert
-    await db.chatMessage.deleteMany({ where: { sessionId } });
-
-    if (messages.length > 0) {
-      await db.chatMessage.createMany({
-        data: messages.map((m) => ({
-          sessionId,
-          role: m.role,
-          content: m.content,
-          chartResult: m.chartResult ? (m.chartResult as object) : undefined,
-        })),
-      });
-    }
-
-    // Touch session updatedAt
-    await db.chatSession.update({
-      where: { id: sessionId },
-      data: { updatedAt: new Date() },
+    const res = await fetch(`${BACKEND_URL}/api/chat/sessions/${sessionId}/messages`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ messages }),
     });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      return { success: false, error: data.error || "Failed to save chat messages on backend." };
+    }
 
     return { success: true };
-  } catch (err) {
+  } catch (err: any) {
     const msg = err instanceof Error ? err.message : String(err);
     return { success: false, error: msg };
   }
@@ -276,27 +226,21 @@ export async function saveChatMessages(
 
 export async function getChatMessages(sessionId: string): Promise<StoredChatMessage[]> {
   try {
-    const { organizationId, userId } = await getOrgContext();
-
-    // Verify session belongs to the organization
-    const existing = await db.chatSession.findFirst({
-      where: { id: sessionId, organizationId, userId },
-    });
-    if (!existing) {
+    const session = await getServerSession();
+    if (!session?.user?.organizationId) {
       return [];
     }
+    const token = getBackendToken(session);
+    const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3002";
 
-    const messages = await db.chatMessage.findMany({
-      where: { sessionId },
-      orderBy: { createdAt: "asc" },
+    const res = await fetch(`${BACKEND_URL}/api/chat/sessions/${sessionId}/messages`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
-    return messages.map((m) => ({
-      id: m.id,
-      role: m.role as "USER" | "ASSISTANT" | "ERROR",
-      content: m.content,
-      chartResult: m.chartResult ?? undefined,
-      createdAt: m.createdAt,
-    }));
+
+    if (!res.ok) return [];
+    return await res.json();
   } catch {
     return [];
   }
@@ -310,20 +254,28 @@ export async function deleteChatSession(
   sessionId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const { organizationId, userId } = await getOrgContext();
+    const session = await getServerSession();
+    if (!session?.user?.organizationId) {
+      return { success: false, error: "Unauthorized. Please log in." };
+    }
+    const token = getBackendToken(session);
+    const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3002";
 
-    // Verify session belongs to the organization
-    const existing = await db.chatSession.findFirst({
-      where: { id: sessionId, organizationId, userId },
+    const res = await fetch(`${BACKEND_URL}/api/chat/sessions/${sessionId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
-    if (!existing) {
-      return { success: false, error: "Chat session not found or unauthorized." };
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      return { success: false, error: data.error || "Failed to delete chat session on backend." };
     }
 
-    await db.chatSession.delete({ where: { id: sessionId } });
     revalidatePath("/", "layout");
     return { success: true };
-  } catch (err) {
+  } catch (err: any) {
     const msg = err instanceof Error ? err.message : String(err);
     return { success: false, error: msg };
   }

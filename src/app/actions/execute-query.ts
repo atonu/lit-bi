@@ -2,7 +2,6 @@
 
 import jwt from "jsonwebtoken";
 import { getServerSession } from "@/lib/session";
-import { db } from "@/lib/db";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3002";
 const BACKEND_SECRET = process.env.BACKEND_SECRET || "bi-lite-backend-secret-key-super-secure-87654321";
@@ -72,17 +71,6 @@ export async function executeQuery(
   if (!session?.user?.organizationId) {
     return { success: false, error: "Unauthorized. Please log in." };
   }
-  const organizationId = session.user.organizationId;
-
-  // Verify target connection belongs to the organization
-  const conn = await db.databaseConnection.findFirst({
-    where: { id: connectionId, organizationId },
-    select: { engine: true },
-  });
-
-  if (!conn) {
-    return { success: false, error: "Database connection not found or unauthorized." };
-  }
 
   const token = signBackendToken(session);
 
@@ -95,7 +83,6 @@ export async function executeQuery(
       },
       body: JSON.stringify({
         connectionId,
-        engine: conn.engine,
         query,
       }),
     });
