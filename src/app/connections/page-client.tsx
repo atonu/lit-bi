@@ -25,22 +25,23 @@ export function ConnectionsPageClient({ connections: initial }: Props) {
   };
 
   return (
-    <div className="min-h-full p-8">
+    <div className="min-h-full p-4 pt-20 md:p-8">
       {/* Page header */}
-      <div className="mb-8 flex items-start justify-between">
+      <div className="mb-8 flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-white">Connections</h1>
-          <p className="mt-1 text-sm text-white/40">
+          <h1 className="text-xl md:text-2xl font-semibold text-white">Connections</h1>
+          <p className="mt-1 text-xs md:text-sm text-white/40">
             Manage your database connections. Each connection is unique — no duplicates allowed.
           </p>
         </div>
         <button
           id="add-connection-btn"
           onClick={() => setShowAdd(true)}
-          className="flex items-center gap-2 rounded-xl bg-blue-500/80 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-500"
+          className="flex size-10 items-center justify-center shrink-0 rounded-full border border-green-500/80 bg-transparent text-green-500 hover:bg-green-500/10 md:size-auto md:rounded-xl md:border md:border-blue-500/50 md:bg-transparent md:px-4 md:py-2.5 md:text-sm md:font-medium md:text-blue-400 md:transition-colors md:hover:bg-blue-500/10 cursor-pointer"
+          title="Add Connection"
         >
-          <Plus className="size-4" />
-          Add Connection
+          <Plus className="size-4 text-green-500 md:text-blue-400" />
+          <span className="hidden md:inline">Add Connection</span>
         </button>
       </div>
 

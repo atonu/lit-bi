@@ -15,7 +15,7 @@ export default async function ConnectionsPage() {
   ]);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#131314]">
+    <div className="flex h-screen h-dvh overflow-hidden bg-[#131314]">
       <AppSidebar initialSessions={sessions} />
 
       <main className="flex min-w-0 flex-1 flex-col overflow-y-auto">

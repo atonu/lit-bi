@@ -104,14 +104,23 @@ export function ConnectionsTable({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-white/[0.06]">
-              {["Alias", "Engine", "Host / Database", "Status", "Created", ""].map((h) => (
-                <th
-                  key={h}
-                  className="px-5 py-3.5 text-left text-[11px] font-medium uppercase tracking-wider text-white/30"
-                >
-                  {h}
-                </th>
-              ))}
+              <th className="px-5 py-3.5 text-left text-[11px] font-medium uppercase tracking-wider text-white/30">
+                Alias
+              </th>
+              <th className="hidden sm:table-cell px-5 py-3.5 text-left text-[11px] font-medium uppercase tracking-wider text-white/30">
+                Engine
+              </th>
+              <th className="hidden md:table-cell px-5 py-3.5 text-left text-[11px] font-medium uppercase tracking-wider text-white/30">
+                Host / Database
+              </th>
+              <th className="px-5 py-3.5 text-left text-[11px] font-medium uppercase tracking-wider text-white/30">
+                Status
+              </th>
+              <th className="hidden sm:table-cell px-5 py-3.5 text-left text-[11px] font-medium uppercase tracking-wider text-white/30">
+                Created
+              </th>
+              <th className="px-5 py-3.5 text-left text-[11px] font-medium uppercase tracking-wider text-white/30">
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -135,12 +144,12 @@ export function ConnectionsTable({
                 </td>
 
                 {/* Engine */}
-                <td className="px-5 py-4">
+                <td className="hidden sm:table-cell px-5 py-4">
                   <span className="text-white/50">{engineLabel(conn.engine)}</span>
                 </td>
 
                 {/* Host / DB */}
-                <td className="px-5 py-4">
+                <td className="hidden md:table-cell px-5 py-4">
                   <div className="flex flex-col gap-0.5">
                     {conn.host && (
                       <span className="flex items-center gap-1.5 text-white/60">
@@ -167,17 +176,17 @@ export function ConnectionsTable({
                 </td>
 
                 {/* Created */}
-                <td className="px-5 py-4 text-xs text-white/35">
+                <td className="hidden sm:table-cell px-5 py-4 text-xs text-white/35">
                   {formatDate(conn.createdAt)}
                 </td>
 
                 {/* Actions */}
                 <td className="px-5 py-4">
-                  <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="flex items-center justify-end gap-1 opacity-100 md:opacity-0 transition-opacity md:group-hover:opacity-100">
                     <button
                       id={`edit-conn-${conn.id}`}
                       onClick={() => setEditingConn(conn)}
-                      className="flex size-7 items-center justify-center rounded-lg text-white/30 transition-colors hover:bg-white/[0.08] hover:text-white/70"
+                      className="flex size-7 items-center justify-center rounded-lg text-white/30 transition-colors hover:bg-white/[0.08] hover:text-white/70 cursor-pointer"
                       title="Edit connection"
                     >
                       <Pencil className="size-3.5" />
@@ -185,7 +194,7 @@ export function ConnectionsTable({
                     <button
                       id={`delete-conn-${conn.id}`}
                       onClick={() => setShowDeleteConfirm(conn.id)}
-                      className="flex size-7 items-center justify-center rounded-lg text-white/30 transition-colors hover:bg-red-500/10 hover:text-red-400"
+                      className="flex size-7 items-center justify-center rounded-lg text-white/30 transition-colors hover:bg-red-500/10 hover:text-red-400 cursor-pointer"
                       title="Delete connection"
                     >
                       <Trash2 className="size-3.5" />

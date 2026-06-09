@@ -4,12 +4,14 @@ import { persist } from "zustand/middleware";
 interface SidebarState {
   isPinned: boolean; // true = always expanded (user pinned it)
   isHovered: boolean; // true = expanded because of hover
+  isMobileOpen: boolean; // true = mobile sidebar drawer is open
 }
 
 interface SidebarActions {
   togglePin: () => void;
   setHovered: (hovered: boolean) => void;
   setExpanded: (expanded: boolean) => void;
+  setMobileOpen: (open: boolean) => void;
 }
 
 type SidebarStore = SidebarState & SidebarActions & {
@@ -22,6 +24,7 @@ export const useSidebarStore = create<SidebarStore>()(
     (set, get) => ({
       isPinned: false,
       isHovered: false,
+      isMobileOpen: false,
 
       isExpanded: () => get().isPinned || get().isHovered,
 
@@ -30,6 +33,8 @@ export const useSidebarStore = create<SidebarStore>()(
       setHovered: (hovered) => set({ isHovered: hovered }),
 
       setExpanded: (expanded) => set({ isPinned: expanded, isHovered: false }),
+
+      setMobileOpen: (open) => set({ isMobileOpen: open }),
     }),
     {
       name: "litebi-sidebar",

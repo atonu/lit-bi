@@ -63,7 +63,7 @@ function ConnectionSelector({
           {active ? active.alias : "No database selected"}
         </span>
         {active && (
-          <span className="text-white/30">
+          <span className="hidden sm:inline text-white/30">
             · {active.dbName ?? active.host}
           </span>
         )}

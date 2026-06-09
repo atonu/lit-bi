@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Database, Plus, RefreshCw, Activity, ExternalLink, CheckCircle } from "lucide-react";
+import { Database, Plus, RefreshCw, Activity, ExternalLink, CheckCircle, Trash2 } from "lucide-react";
 import Image from "next/image";
 import type { ConnectionDetail } from "@/app/actions/ai-chat";
 import { ConnectionStepper } from "@/components/connection/connection-stepper";
@@ -20,7 +20,7 @@ export function ConnectedDashboard({ connections }: ConnectedDashboardProps) {
 
   if (connections.length === 0 || !activeConn) {
     return (
-      <div className="flex min-h-full flex-col items-center justify-center p-6 text-center">
+      <div className="flex min-h-full flex-col items-center justify-center p-6 pt-20 md:p-6 text-center">
         <div className="mb-4 flex size-16 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.02]">
           <Database className="size-8 text-white/20" />
         </div>
@@ -30,9 +30,9 @@ export function ConnectedDashboard({ connections }: ConnectedDashboardProps) {
         </p>
         <button
           onClick={() => setAddOpen(true)}
-          className="mt-6 flex items-center gap-2 rounded-xl bg-blue-500/80 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-500"
+          className="mt-6 flex items-center gap-2 rounded-xl border border-blue-500/50 bg-transparent px-4 py-2 text-sm font-medium text-blue-400 transition-colors hover:bg-blue-500/10 cursor-pointer"
         >
-          <Plus className="size-4" />
+          <Plus className="size-4 text-blue-400" />
           Add Connection
         </button>
         {addOpen && (
@@ -46,18 +46,18 @@ export function ConnectedDashboard({ connections }: ConnectedDashboardProps) {
   }
 
   return (
-    <div className="flex min-h-full flex-col gap-6 p-8">
+    <div className="flex min-h-full flex-col gap-6 p-4 pt-20 md:p-8">
       {/* Header bar */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-semibold text-white">Dashboard Overview</h2>
-          <p className="mt-1 text-sm text-white/40">
+          <h2 className="text-xl md:text-2xl font-semibold text-white">Dashboard Overview</h2>
+          <p className="mt-1 text-xs md:text-sm text-white/40">
             Connected to{" "}
             <span className="font-medium text-white/90">{activeConn.alias}</span>{" "}
             · {activeConn.host ? `${activeConn.host}/${activeConn.dbName}` : 'MongoDB Atlas'}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3">
           {/* Connection switcher */}
           {connections.length > 1 && (
             <select
@@ -66,7 +66,7 @@ export function ConnectedDashboard({ connections }: ConnectedDashboardProps) {
                 const found = connections.find((c) => c.id === e.target.value);
                 if (found) setActiveConn(found);
               }}
-              className="rounded-xl border border-white/[0.06] bg-white/[0.04] px-4 py-2 text-sm text-white/80 outline-none transition-all hover:bg-white/[0.06] focus:border-blue-500/40 focus:ring-1 focus:ring-blue-500/20"
+              className="rounded-xl border border-white/[0.06] bg-white/[0.04] px-2.5 md:px-4 py-2 text-xs md:text-sm text-white/80 outline-none transition-all hover:bg-white/[0.06] focus:border-blue-500/40 focus:ring-1 focus:ring-blue-500/20 max-w-[120px] md:max-w-none"
             >
               {connections.map((c) => (
                 <option key={c.id} value={c.id} className="bg-[#1e1e1e] text-white">
@@ -78,16 +78,19 @@ export function ConnectedDashboard({ connections }: ConnectedDashboardProps) {
 
           <button
             onClick={() => setAddOpen(true)}
-            className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.05] px-4 py-2 text-sm font-medium text-white/80 transition-all hover:bg-white/[0.08] hover:text-white"
+            className="flex size-10 items-center justify-center shrink-0 rounded-full border border-green-500/80 bg-transparent text-green-500 hover:bg-green-500/10 md:size-auto md:rounded-xl md:border md:border-blue-500/50 md:bg-transparent md:px-4 md:py-2 md:text-sm md:font-medium md:text-blue-400 transition-all md:hover:bg-blue-500/10 cursor-pointer"
+            title="Add Connection"
           >
-            <Plus className="size-4" />
-            Add Connection
+            <Plus className="size-4 text-green-500 md:text-blue-400" />
+            <span className="hidden md:inline">Add Connection</span>
           </button>
           <button
             onClick={() => setShowConfirmDisconnect(true)}
-            className="flex items-center gap-1.5 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-400 transition-all hover:bg-red-500/20"
+            className="flex size-10 items-center justify-center shrink-0 rounded-full border border-red-500/80 bg-transparent text-red-500 hover:bg-red-500/10 md:size-auto md:rounded-xl md:border md:border-red-500/50 md:bg-transparent md:px-4 md:py-2 md:text-sm md:font-medium md:text-red-400 transition-all md:hover:bg-red-500/10 cursor-pointer"
+            title="Disconnect"
           >
-            Disconnect
+            <Trash2 className="size-4 md:hidden block text-red-500" />
+            <span className="hidden md:inline">Disconnect</span>
           </button>
         </div>
       </div>

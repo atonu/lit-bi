@@ -15,7 +15,7 @@ export default async function HomePage() {
   ]);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#131314]">
+    <div className="flex h-screen h-dvh overflow-hidden bg-[#131314]">
       {/* Gemini-style sidebar */}
       <AppSidebar initialSessions={sessions} />
 
