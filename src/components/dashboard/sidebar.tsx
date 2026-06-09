@@ -94,6 +94,7 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editName, setEditName] = useState("");
   const [isUpdatingName, setIsUpdatingName] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const user = useAuthStore((state) => state.user);
   const setAuth = useAuthStore((state) => state.setAuth);
@@ -192,6 +193,8 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
   };
 
   const handleLogout = async () => {
+    setIsUserMenuOpen(false);
+    setIsLoggingOut(true);
     try {
       await apiClient.post("/auth/logout");
     } catch (err) {
@@ -487,14 +490,24 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
               {user?.name?.[0] || "U"}
             </div>
             {expanded && (
-              <div className="min-w-0 text-left">
-                <p className="truncate text-sm font-medium text-white/80">
-                  {user?.name || "User"}
-                </p>
-                <p className="truncate text-xs text-white/30">
-                  User
-                </p>
-              </div>
+              <>
+                <div className="min-w-0 flex-1 text-left">
+                  <p className="truncate text-sm font-medium text-white/80">
+                    {user?.name || "User"}
+                  </p>
+                  <p className="truncate text-xs text-white/30">
+                    User
+                  </p>
+                </div>
+                {isLoggingOut && (
+                  <div className="shrink-0 flex items-center justify-center ml-auto">
+                    <svg className="size-4 animate-spin text-white/50" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                  </div>
+                )}
+              </>
             )}
           </button>
 
