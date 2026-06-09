@@ -514,10 +514,10 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
       {/* Messages area */}
       <div className={cn(
         "flex-1 overflow-y-auto",
-        isChatPanelHidden 
-          ? "pb-16" 
-          : showSuggestions 
-            ? "pb-[380px] md:pb-8" 
+        isChatPanelHidden
+          ? "pb-16 md:pb-36"
+          : showSuggestions
+            ? "pb-[380px] md:pb-8"
             : "pb-[180px] md:pb-8"
       )}>
         {isEmpty ? (
@@ -540,11 +540,12 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
 
       {/* Bottom input area — absolute/fixed on mobile, normal relative on desktop */}
       <div className={cn(
-        "shrink-0 border-t border-white/[0.06] bg-[#131314] px-4 py-4",
-        "fixed bottom-0 left-0 right-0 z-30 md:relative md:bottom-auto md:left-auto md:right-auto md:z-auto md:border-t md:bg-[#131314] md:p-4",
-        isChatPanelHidden && "hidden md:block"
+        "shrink-0 border-t border-white/[0.06] bg-[#131314] px-4 py-4 w-full",
+        "fixed bottom-0 left-0 right-0 z-30",
+        "md:relative md:bottom-auto md:left-auto md:right-auto md:z-auto md:border md:border-white/10 md:bg-[#1e1e20] md:rounded-2xl md:p-4 md:max-w-[850px] md:w-[calc(100%-2rem)] md:mx-auto md:mb-6 md:shadow-2xl md:shadow-black/50",
+        isChatPanelHidden && "hidden"
       )}>
-        <div className="mx-auto max-w-3xl">
+        <div className="w-full">
           {/* Connection selector row */}
           <div className="mb-3 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
@@ -577,11 +578,11 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
               )}
             </div>
 
-            {/* Down arrow to minimize panel on mobile */}
+            {/* Down arrow to minimize panel */}
             <button
               type="button"
               onClick={() => setIsChatPanelHidden(true)}
-              className="flex size-7 items-center justify-center rounded-lg text-white/40 hover:bg-white/[0.06] hover:text-white md:hidden cursor-pointer"
+              className="flex size-7 items-center justify-center rounded-lg text-white/40 hover:bg-white/[0.06] hover:text-white cursor-pointer"
               title="Minimize chat panel"
             >
               <ChevronDown className="size-4" />
@@ -597,9 +598,10 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
             showSuggestions={showSuggestions}
           />
 
-          <p className="mt-2 text-center text-[10px] text-white/20 hidden md:block">
-            BI-Lite can make mistakes. Verify important data.
-          </p>
+          <div className="mt-2 flex justify-center items-center text-[10px] text-white/20 hidden md:flex px-1 select-none gap-1">
+            <span>Enter to send · Shift+Enter for new line.</span>
+            <span>BI-Lite can make mistakes. Verify important data.</span>
+          </div>
         </div>
       </div>
 
@@ -607,7 +609,7 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
       {isChatPanelHidden && (
         <button
           onClick={() => setIsChatPanelHidden(false)}
-          className="fixed bottom-6 right-6 z-40 flex size-[68px] items-center justify-center rounded-full shadow-2xl md:hidden cursor-pointer hover:scale-105 active:scale-95 transition-all bg-transparent border-none"
+          className="fixed bottom-6 right-6 md:bottom-12 md:right-12 z-40 flex size-[68px] items-center justify-center rounded-full shadow-2xl cursor-pointer hover:scale-105 active:scale-95 transition-all bg-transparent border-none"
           title="Restore chat panel"
         >
           <div className="size-[68px] rounded-full overflow-hidden">

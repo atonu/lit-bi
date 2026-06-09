@@ -146,9 +146,6 @@ export function ChatInput({
         )}
       </div>
 
-      <p className="text-center text-[10px] text-white/20 hidden md:block">
-        Enter to send · Shift+Enter for new line
-      </p>
     </div>
   );
 }
