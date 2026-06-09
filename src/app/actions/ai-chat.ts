@@ -33,7 +33,13 @@ const SqlAiResponseSchema = z.object({
   yAxisKey: z
     .string()
     .describe(
-      "The field name in the query result to use as the Y axis or primary value."
+      "The primary field name in the query result to use as the default Y axis value."
+    ),
+  yAxisKeys: z
+    .array(z.string())
+    .optional()
+    .describe(
+      "Optional. An array of multiple field names in the query result to plot as separate lines (for multi-line LINE charts)."
     ),
   reasoning: z
     .string()
@@ -48,6 +54,7 @@ export type AiQueryResponse = {
   chartTitle: string;
   xAxisKey: string;
   yAxisKey: string;
+  yAxisKeys?: string[];
   reasoning: string;
 };
 
@@ -158,7 +165,7 @@ STRICT RULES — YOU MUST FOLLOW THESE OR THE RESPONSE WILL BE REJECTED:
 6. Use standard SQL-92 syntax compatible with PostgreSQL.
 
 CHART SELECTION GUIDE:
-- LINE: Time-series data with a date/timestamp x-axis. Best for trends over time.
+- LINE: Time-series data with a date/timestamp x-axis. Best for trends over time. If comparing multiple trend fields on the same X axis, include all comparison column names in "yAxisKeys" and put the primary one in "yAxisKey".
 - BAR: Categorical comparisons (e.g. sales by region, counts by category). Best for ranking.
 - DONUT: Part-of-whole relationships. Best when there are 2-8 distinct categories.
 - AREA: Cumulative or stacked time-series. Best for showing volume over time.
@@ -170,7 +177,7 @@ DATABASE SCHEMA:
 ${schemaBlock}
 \`\`\`
 
-When choosing xAxisKey and yAxisKey, use the EXACT column name (or alias) that will appear in the SQL result set.`;
+When choosing xAxisKey, yAxisKey, and optional yAxisKeys, use the EXACT column name (or alias) that will appear in the SQL result set.`;
 }
 
 function buildMongoSystemPrompt(schemaBlock: string): string {
@@ -185,6 +192,7 @@ You MUST respond with ONLY a single valid JSON object — no markdown, no explan
   "chartTitle": "<concise title, max 60 chars>",
   "xAxisKey": "<field name that will appear in result documents>",
   "yAxisKey": "<field name that will appear in result documents>",
+  "yAxisKeys": ["<optional list of multiple field names for multi-line charts>"],
   "reasoning": "<1-2 sentence explanation>"
 }
 
@@ -197,7 +205,7 @@ PIPELINE RULES:
 CHART SELECTION:
 - TABLE: listing raw documents / many fields (use this for simple "show me" queries)
 - BAR: categorical comparisons
-- LINE: time-series trends
+- LINE: time-series trends (supports multi-line by specifying "yAxisKeys" array of fields)
 - DONUT: part-of-whole (2-8 categories)
 - AREA: cumulative time-series
 - SCATTER: correlation between two numeric fields
@@ -208,7 +216,7 @@ ${schemaBlock}
 \`\`\`
 
 EXAMPLE — "show me 5 employees":
-{"collection":"employees","pipeline":[{"$limit":5}],"chartType":"TABLE","chartTitle":"Employees","xAxisKey":"name","yAxisKey":"name","reasoning":"Listing raw employee documents as a table."}`;
+{"collection":"employees","pipeline":[{"$limit":5}],"chartType":"TABLE","chartTitle":"Employees","xAxisKey":"name","yAxisKey":"name","yAxisKeys":[],"reasoning":"Listing raw employee documents as a table."}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -253,6 +261,7 @@ async function askMongoQuestion(
     chartTitle: string;
     xAxisKey: string;
     yAxisKey: string;
+    yAxisKeys?: string[];
     reasoning: string;
   };
   try {
@@ -292,6 +301,7 @@ async function askMongoQuestion(
       chartTitle: parsed.chartTitle || "Query Result",
       xAxisKey: parsed.xAxisKey || "_id",
       yAxisKey: parsed.yAxisKey || "_id",
+      yAxisKeys: Array.isArray(parsed.yAxisKeys) ? parsed.yAxisKeys : undefined,
       reasoning: parsed.reasoning || "",
     },
     connectionId,

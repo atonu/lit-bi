@@ -117,7 +117,13 @@ function ChartBody({
   viewMode: "chart" | "table";
 }) {
   const { rows, columns, aiResponse } = result;
-  const { chartType, xAxisKey, yAxisKey } = aiResponse;
+  const { chartType, xAxisKey, yAxisKey, yAxisKeys } = aiResponse;
+
+  const yKeys = Array.isArray(yAxisKeys) && yAxisKeys.length > 0
+    ? yAxisKeys
+    : yAxisKey
+      ? [yAxisKey]
+      : [];
 
   if (viewMode === "table") {
     return <DataTable rows={rows} columns={columns} />;
@@ -153,14 +159,17 @@ function ChartBody({
           <YAxis {...commonYAxisProps} />
           <Tooltip contentStyle={TOOLTIP_STYLE} />
           <Legend wrapperStyle={{ fontSize: "11px" }} />
-          <Line
-            type="monotone"
-            dataKey={yAxisKey}
-            stroke={CHART_COLORS[0]}
-            strokeWidth={2}
-            dot={rows.length <= 30}
-            activeDot={{ r: 5 }}
-          />
+          {yKeys.map((key, index) => (
+            <Line
+              key={key}
+              type="monotone"
+              dataKey={key}
+              stroke={CHART_COLORS[index % CHART_COLORS.length]}
+              strokeWidth={2}
+              dot={rows.length <= 30}
+              activeDot={{ r: 5 }}
+            />
+          ))}
         </LineChart>
       </ResponsiveContainer>
     );
