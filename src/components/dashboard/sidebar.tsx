@@ -235,11 +235,11 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
           {expanded && (
             <div className="flex items-center gap-3 pl-4 overflow-hidden">
               <div className="flex size-9 shrink-0 items-center justify-center rounded-lg overflow-hidden">
-                <Image 
-                  src="/favicon.png" 
-                  alt="BI-Lite Logo" 
-                  width={36} 
-                  height={36} 
+                <Image
+                  src="/favicon.png"
+                  alt="BI-Lite Logo"
+                  width={36}
+                  height={36}
                   className="object-cover"
                 />
               </div>
@@ -325,7 +325,7 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
         )}
 
         {/* ── Chat History ────────────────────────────────────────────────── */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-white/10">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-white/10 mt-4">
           {expanded ? (
             grouped.length > 0 ? (
               grouped.map((group) => (
@@ -361,7 +361,6 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
                             : "text-white/60 hover:bg-white/[0.06] hover:text-white/90"
                         )}
                       >
-                        <MessageSquare className="size-4 shrink-0 opacity-60" />
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm leading-tight">{session.title}</p>
                           {session.connectionAlias && (
@@ -559,7 +558,7 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
                       <Edit2 className="size-3.5" />
                     </button>
                   </div>
-                  
+
                   <div className="my-1 h-px bg-white/10" />
 
                   <button
@@ -580,7 +579,7 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
             <div className="w-full max-w-sm animate-in fade-in zoom-in-95 rounded-2xl border border-white/10 bg-[#1e1e1e] p-6 shadow-2xl">
               <h3 className="text-lg font-semibold text-white">Edit Profile</h3>
-              
+
               <div className="mt-4 flex items-center gap-3 rounded-lg bg-white/5 p-3 border border-white/5">
                 <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-violet-600 text-sm font-bold text-white uppercase">
                   {user?.name?.[0] || "U"}
@@ -656,11 +655,11 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
           <div className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between px-6 border-b border-white/[0.06] bg-[#1a1a1a]">
             <div className="flex items-center gap-3">
               <div className="flex size-9 shrink-0 items-center justify-center rounded-lg overflow-hidden">
-                <Image 
-                  src="/favicon.png" 
-                  alt="BI-Lite Logo" 
-                  width={36} 
-                  height={36} 
+                <Image
+                  src="/favicon.png"
+                  alt="BI-Lite Logo"
+                  width={36}
+                  height={36}
                   className="object-cover"
                 />
               </div>
@@ -727,7 +726,6 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
                             : "text-white/60 hover:bg-white/[0.06] hover:text-white/90"
                         )}
                       >
-                        <MessageSquare className="size-4 shrink-0 opacity-60" />
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm leading-tight">{session.title}</p>
                           {session.connectionAlias && (
@@ -856,7 +854,7 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
                         <Edit2 className="size-3.5" />
                       </button>
                     </div>
-                    
+
                     <div className="my-1 h-px bg-white/10" />
 
                     <button
