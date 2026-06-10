@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Database, Search, Sparkles } from "lucide-react";
+import { Database, Search, Sparkles, HelpCircle } from "lucide-react";
+import Link from "next/link";
 import { ConnectionStepper } from "@/components/connection/connection-stepper";
 import { useChatStore } from "@/lib/stores/chat-store";
 import { getConnections } from "@/app/actions/ai-chat";
@@ -48,6 +49,15 @@ export function TopBar() {
               AI
             </span>
           </button>
+
+          {/* Need help? Link */}
+          <Link
+            href="/help"
+            className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-white/50 hover:text-white hover:bg-white/5 transition-all mr-1 cursor-pointer"
+          >
+            <HelpCircle className="size-4 text-white/45" />
+            <span>Need help?</span>
+          </Link>
 
           {/* Primary CTA */}
           <Button

@@ -19,6 +19,7 @@ import {
   User,
   Loader2,
   X,
+  HelpCircle,
 } from "lucide-react";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
@@ -470,6 +471,7 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
           {[
             { label: "Dashboard", icon: <LayoutDashboard className="size-5" />, href: "/dashboard" },
             { label: "Connections", icon: <Database className="size-5" />, href: "/connections" },
+            { label: "Help & Docs", icon: <HelpCircle className="size-5" />, href: "/help" },
           ].map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -777,6 +779,7 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
             {[
               { label: "Dashboard", icon: <LayoutDashboard className="size-5" />, href: "/dashboard" },
               { label: "Connections", icon: <Database className="size-5" />, href: "/connections" },
+              { label: "Help & Docs", icon: <HelpCircle className="size-5" />, href: "/help" },
             ].map((item) => {
               const isActive = pathname === item.href;
               return (

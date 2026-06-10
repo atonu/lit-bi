@@ -8,7 +8,8 @@ import {
   useState,
 } from "react";
 import Image from "next/image";
-import { Database, ChevronDown, Sparkles, Plus } from "lucide-react";
+import { Database, ChevronDown, Sparkles, Plus, HelpCircle } from "lucide-react";
+import Link from "next/link";
 import { useChatStore, type ChatMessage, type MessageRole, type MessageStatus, type ChartResult } from "@/lib/stores/chat-store";
 import { ChatMessageBubble } from "./chat-message";
 import { ChatInput } from "./chat-input";
@@ -177,6 +178,15 @@ function WelcomeScreen({
               </button>
             </div>
           )}
+          <div className="mt-6 flex justify-center">
+            <Link
+              href="/help"
+              className="inline-flex items-center gap-1.5 text-xs text-white/40 hover:text-white/80 transition-colors cursor-pointer"
+            >
+              <HelpCircle className="size-4" />
+              <span>Learn how to use BI-Lite</span>
+            </Link>
+          </div>
         </div>
       </div>
     </div>
@@ -578,15 +588,25 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
               )}
             </div>
 
-            {/* Down arrow to minimize panel */}
-            <button
-              type="button"
-              onClick={() => setIsChatPanelHidden(true)}
-              className="flex size-7 items-center justify-center rounded-lg text-white/40 hover:bg-white/[0.06] hover:text-white cursor-pointer"
-              title="Minimize chat panel"
-            >
-              <ChevronDown className="size-4" />
-            </button>
+            <div className="flex items-center gap-2">
+              <Link
+                href="/help"
+                className="flex items-center gap-1 text-xs text-white/40 hover:text-white/80 transition-colors cursor-pointer mr-1"
+                title="Need Help?"
+              >
+                <HelpCircle className="size-3.5" />
+                <span className="hidden sm:inline">Need help?</span>
+              </Link>
+              {/* Down arrow to minimize panel */}
+              <button
+                type="button"
+                onClick={() => setIsChatPanelHidden(true)}
+                className="flex size-7 items-center justify-center rounded-lg text-white/40 hover:bg-white/[0.06] hover:text-white cursor-pointer"
+                title="Minimize chat panel"
+              >
+                <ChevronDown className="size-4" />
+              </button>
+            </div>
           </div>
 
           {/* Chat input */}

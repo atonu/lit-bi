@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Database } from "lucide-react";
+import { Plus, Database, HelpCircle } from "lucide-react";
+import Link from "next/link";
 import { ConnectionsTable } from "@/components/connections/connections-table";
 import { ConnectionStepper } from "@/components/connection/connection-stepper";
 import type { ConnectionDetail } from "@/app/actions/ai-chat";
@@ -34,15 +35,25 @@ export function ConnectionsPageClient({ connections: initial }: Props) {
             Manage your database connections. Each connection is unique — no duplicates allowed.
           </p>
         </div>
-        <button
-          id="add-connection-btn"
-          onClick={() => setShowAdd(true)}
-          className="flex size-10 items-center justify-center shrink-0 rounded-full border border-green-500/80 bg-transparent text-green-500 hover:bg-green-500/10 md:size-auto md:rounded-xl md:border md:border-blue-500/50 md:bg-transparent md:px-4 md:py-2.5 md:text-sm md:font-medium md:text-blue-400 md:transition-colors md:hover:bg-blue-500/10 cursor-pointer"
-          title="Add Connection"
-        >
-          <Plus className="size-4 text-green-500 md:text-blue-400" />
-          <span className="hidden md:inline">Add Connection</span>
-        </button>
+        <div className="flex items-center gap-2 md:gap-3 shrink-0">
+          <Link
+            href="/help"
+            className="flex size-10 items-center justify-center shrink-0 rounded-full border border-white/10 bg-transparent text-white/60 hover:bg-white/5 md:size-auto md:rounded-xl md:border md:bg-white/[0.02] md:px-4 md:py-2.5 md:text-sm md:font-medium md:transition-colors hover:text-white cursor-pointer"
+            title="Need Help?"
+          >
+            <HelpCircle className="size-4" />
+            <span className="hidden md:inline">Need help?</span>
+          </Link>
+          <button
+            id="add-connection-btn"
+            onClick={() => setShowAdd(true)}
+            className="flex size-10 items-center justify-center shrink-0 rounded-full border border-green-500/80 bg-transparent text-green-500 hover:bg-green-500/10 md:size-auto md:rounded-xl md:border md:border-blue-500/50 md:bg-transparent md:px-4 md:py-2.5 md:text-sm md:font-medium md:text-blue-400 md:transition-colors md:hover:bg-blue-500/10 cursor-pointer"
+            title="Add Connection"
+          >
+            <Plus className="size-4 text-green-500 md:text-blue-400" />
+            <span className="hidden md:inline">Add Connection</span>
+          </button>
+        </div>
       </div>
 
       {/* Stats row */}
