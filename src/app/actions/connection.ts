@@ -84,13 +84,18 @@ export async function testConnection(
     const token = getBackendToken(session);
     const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3002";
 
+    const payload = { ...creds };
+    if (payload.engine === "MONGODB" && payload.connectionUri === "mongodb+srv://********************************************************") {
+      payload.connectionUri = process.env.SAMPLE_DATASET_URI || "";
+    }
+
     const res = await fetch(`${BACKEND_URL}/api/connection/test`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(creds),
+      body: JSON.stringify(payload),
     });
 
     const data = await res.json();
@@ -129,13 +134,18 @@ export async function introspectSchema(
     const token = getBackendToken(session);
     const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3002";
 
+    const payload = { ...creds };
+    if (payload.engine === "MONGODB" && payload.connectionUri === "mongodb+srv://********************************************************") {
+      payload.connectionUri = process.env.SAMPLE_DATASET_URI || "";
+    }
+
     const res = await fetch(`${BACKEND_URL}/api/connection/introspect`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(creds),
+      body: JSON.stringify(payload),
     });
 
     const data = await res.json();
@@ -179,13 +189,18 @@ export async function saveConnection(
     const token = getBackendToken(session);
     const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3002";
 
+    const payload = { ...creds };
+    if (payload.engine === "MONGODB" && payload.connectionUri === "mongodb+srv://********************************************************") {
+      payload.connectionUri = process.env.SAMPLE_DATASET_URI || "";
+    }
+
     const res = await fetch(`${BACKEND_URL}/api/connections`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ creds, columns }),
+      body: JSON.stringify({ creds: payload, columns }),
     });
 
     const data = await res.json();

@@ -3,6 +3,7 @@ import type { AiQueryResponse } from "@/app/actions/ai-chat";
 import type { QueryRow } from "@/app/actions/execute-query";
 import type { ChatSessionSummary } from "@/app/actions/chat-history";
 import { CHAT_SYNC_INTERVAL_MS } from "@/lib/constants";
+import { useAuthStore } from "@/lib/stores/auth-store";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -109,6 +110,8 @@ async function syncSession(sessionId: string, messages: ChatMessage[]) {
   if (sessionId.startsWith("new-")) return;
   const doneMsgs = messages.filter((m) => m.status === "done" || m.status === "error");
   if (doneMsgs.length === 0) return;
+
+  if (useAuthStore.getState().user?.email === "test@yopmail.com") return;
 
   try {
     const { saveChatMessages } = await import("@/app/actions/chat-history");
@@ -481,6 +484,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     if (existing) return; // already running
 
     const timerId = setInterval(async () => {
+      if (useAuthStore.getState().user?.email === "test@yopmail.com") return;
+
       const { getUnsyncedSessionIds, messagesBySession, markSynced } = get();
       const sessionIds = getUnsyncedSessionIds();
       if (sessionIds.length === 0) return;

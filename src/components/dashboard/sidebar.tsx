@@ -410,7 +410,7 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
               <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
                 <Clock className="size-8 text-white/20" />
                 <p className="text-xs text-white/30">
-                  {searchQuery ? "No chats found" : "No chat history yet"}
+                  {user?.email === "test@yopmail.com" ? "Chat history disabled for this test account. Please login with another account to access chat history." : (searchQuery ? "No chats found" : "No chat history yet")}
                 </p>
               </div>
             )
@@ -843,7 +843,9 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
             ) : (
               <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
                 <Clock className="size-8 text-white/20" />
-                <p className="text-xs text-white/30">No chat history yet</p>
+                <p className="text-xs text-white/30">
+                  {user?.email === "test@yopmail.com" ? "Chat history disabled for this test account. Please login with another account to access chat history." : (searchQuery ? "No chats found" : "No chat history yet")}
+                </p>
               </div>
             )}
           </div>

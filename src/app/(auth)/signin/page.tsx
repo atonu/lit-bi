@@ -48,6 +48,25 @@ export default function SignInPage() {
     });
   };
 
+  const handleTestAccount = () => {
+    setEmail("******************");
+    setPassword("12121212");
+    setError("");
+
+    startTransition(async () => {
+      try {
+        const res = await apiClient.post("/auth/login", { email: "test@yopmail.com", password: "12121212" });
+        if (res.data.success) {
+          setAuth(res.data.user, res.data.accessToken);
+          window.location.href = "/";
+        }
+      } catch (err: any) {
+        console.error("Sign-in error:", err);
+        setError(err.response?.data?.error || "Invalid email or password.");
+      }
+    });
+  };
+
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#0e0e10] text-gray-100 bg-dot-pattern px-4">
       {/* Background radial gradient glow */}
@@ -149,6 +168,22 @@ export default function SignInPage() {
                 "Sign In"
               )}
             </button>
+
+            <div className="relative flex items-center py-2">
+              <div className="flex-grow border-t border-white/10"></div>
+              <span className="shrink-0 px-3 text-xs text-gray-500">OR</span>
+              <div className="flex-grow border-t border-white/10"></div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleTestAccount}
+              disabled={isPending}
+              className="w-full rounded-lg border border-white/20 bg-transparent px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/5 disabled:opacity-50 cursor-pointer"
+            >
+              Continue with test account
+            </button>
+            <p className="mt-2 text-center text-xs text-gray-500">Note: Test account does not save chat history.</p>
           </form>
         </div>
 

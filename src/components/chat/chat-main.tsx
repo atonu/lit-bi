@@ -28,6 +28,7 @@ import {
   updateChatSessionTitle,
   type StoredChatMessage,
 } from "@/app/actions/chat-history";
+import { useAuthStore } from "@/lib/stores/auth-store";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { ConnectionStepper } from "@/components/connection/connection-stepper";
@@ -451,21 +452,27 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
           const derivedTitle = question.slice(0, 20).trim() + (question.length > 20 ? "..." : "");
 
           if (isFirstMessage && sessionId.startsWith("new-")) {
-            // Persist session to DB
-            const sessionResult = await createChatSession(connectionId, activeConnectionAlias || "Deleted DB", derivedTitle);
-            if (sessionResult.success) {
-              realSessionId = sessionResult.sessionId;
+            if (useAuthStore.getState().user?.email === "test@yopmail.com") {
+              updateSessionTitle(sessionId, derivedTitle);
+            } else {
+              // Persist session to DB
+              const sessionResult = await createChatSession(connectionId, activeConnectionAlias || "Deleted DB", derivedTitle);
+              if (sessionResult.success) {
+                realSessionId = sessionResult.sessionId;
 
-              // Promote the session locally so state matches the real DB ID
-              promoteSession(sessionId, realSessionId);
-              currentSessionId = realSessionId;
-              updateSessionTitle(realSessionId, derivedTitle);
+                // Promote the session locally so state matches the real DB ID
+                promoteSession(sessionId, realSessionId);
+                currentSessionId = realSessionId;
+                updateSessionTitle(realSessionId, derivedTitle);
+              }
             }
           } else {
             // Update title for existing session if it's currently 'New Chat'
             const currentSession = sessions.find((s) => s.id === sessionId);
             if (currentSession && currentSession.title === "New Chat") {
-              await updateChatSessionTitle(sessionId, derivedTitle);
+              if (useAuthStore.getState().user?.email !== "test@yopmail.com") {
+                await updateChatSessionTitle(sessionId, derivedTitle);
+              }
               updateSessionTitle(sessionId, derivedTitle);
             }
           }
