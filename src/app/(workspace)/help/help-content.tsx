@@ -99,8 +99,8 @@ export function HelpContent() {
         <div className="flex-1 min-w-0 max-w-3xl space-y-0">
 
           {/* ── HERO ─────────────────────────────────────────────────────── */}
-          <div className="relative overflow-hidden rounded-3xl mb-12 min-h-[340px] flex flex-col justify-end p-8 md:p-12">
-            {/* bg-1 behind hero */}
+          <div className="relative overflow-hidden rounded-3xl mb-12 sm:min-h-[340px] flex flex-col justify-end p-8 md:p-12">
+            {/* bg-4 behind hero */}
             <Image
               src="/about-bg-4.png"
               alt="Hero Background"
