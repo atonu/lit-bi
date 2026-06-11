@@ -129,9 +129,6 @@ export async function getChatSessions(connectionId?: string): Promise<ChatSessio
     if (!session?.user?.organizationId) {
       return [];
     }
-    if (session.user.email === "test@yopmail.com") {
-      return [];
-    }
     const token = getBackendToken(session);
     const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3002";
 
@@ -160,9 +157,6 @@ export async function searchChatSessions(query: string): Promise<ChatSessionSumm
   try {
     const session = await getServerSession();
     if (!session?.user?.organizationId) {
-      return [];
-    }
-    if (session.user.email === "test@yopmail.com") {
       return [];
     }
     const token = getBackendToken(session);
@@ -234,9 +228,6 @@ export async function getChatMessages(sessionId: string): Promise<StoredChatMess
   try {
     const session = await getServerSession();
     if (!session?.user?.organizationId) {
-      return [];
-    }
-    if (session.user.email === "test@yopmail.com") {
       return [];
     }
     const token = getBackendToken(session);
