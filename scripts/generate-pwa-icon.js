@@ -3,12 +3,12 @@ const path = require('path');
 
 async function generateIcon() {
   const inputPath = path.join(__dirname, 'public', 'favicon.png');
-  const outputPath = path.join(__dirname, 'public', 'pwa-icon.png');
+  const outputPath = path.join(__dirname, 'public', 'favicon.png');
   const applePath = path.join(__dirname, 'public', 'apple-icon.png');
 
   try {
     const { width, height } = await sharp(inputPath).metadata();
-    
+
     // Create a square background with color #131314
     const size = Math.max(width, height, 512); // ensure it's at least 512x512
     const bg = sharp({
@@ -28,13 +28,13 @@ async function generateIcon() {
         gravity: 'center'
       }
     ])
-    .png()
-    .toFile(outputPath);
+      .png()
+      .toFile(outputPath);
 
     // Also copy to apple-icon
     await sharp(outputPath).resize(180, 180).toFile(applePath);
 
-    console.log('Successfully generated pwa-icon.png and apple-icon.png');
+    console.log('Successfully generated favicon.png and apple-icon.png');
   } catch (err) {
     console.error('Error generating icons:', err);
   }
