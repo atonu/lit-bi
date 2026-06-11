@@ -326,7 +326,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       role: "assistant",
       content: "",
       status: "thinking",
-      timestamp: Date.now(),
+      timestamp: Date.now() + 1, // ensure it's strictly after the user message
     };
     set((state) => {
       const prev = getMessages(state, sessionId);

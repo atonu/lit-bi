@@ -57,12 +57,11 @@ export function ChatMessageBubble({ message }: ChatMessageProps) {
   if (isError) {
     return (
       <div className="flex items-start gap-3">
-        <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-red-500/10 ring-1 ring-red-500/20">
-          <AlertCircle className="size-4 text-red-400" />
+        <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/5 ring-1 ring-white/10">
+          <AlertCircle className="size-4 text-white/40" />
         </div>
-        <div className="min-w-0 flex-1 rounded-2xl rounded-tl-sm bg-red-500/10 px-5 py-3 ring-1 ring-red-500/20">
-          <p className="text-sm font-medium text-red-400">Something went wrong</p>
-          <p className="mt-1 text-xs text-white/40">{message.content}</p>
+        <div className="min-w-0 flex-1 pt-1.5">
+          <p className="text-sm leading-relaxed text-white/70">{message.content}</p>
         </div>
       </div>
     );
