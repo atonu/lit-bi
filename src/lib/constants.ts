@@ -35,3 +35,9 @@ export const SIDEBAR_EXPANDED_WIDTH = 280;
 
 /** Width of collapsed sidebar in px. */
 export const SIDEBAR_COLLAPSED_WIDTH = 64;
+
+// ---------------------------------------------------------------------------
+// External/Deployment constants
+// ---------------------------------------------------------------------------
+/** The base URL of the deployed frontend application */
+export const WEBSITE_URL = "https://lit-bi.vercel.app";

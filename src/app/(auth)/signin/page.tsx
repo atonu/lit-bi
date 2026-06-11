@@ -54,30 +54,30 @@ export default function SignInPage() {
       <div className="absolute top-1/2 left-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-500/10 blur-[120px] pointer-events-none" />
       <div className="absolute top-1/4 left-1/4 h-[300px] w-[300px] rounded-full bg-purple-500/5 blur-[100px] pointer-events-none" />
 
-      <div className="relative z-10 w-full max-w-md animate-slide-up">
-        {/* Brand/Logo */}
-        <div className="mb-8">
-          <div className="flex justify-center mb-12">
-            <Link href="/" className="hover:opacity-90 transition-opacity">
-              <div className="flex size-42 md:size-28 items-center justify-center overflow-hidden">
-                <Image
-                  src="/favicon.png"
-                  alt="BI-Lite Logo"
-                  width={224}
-                  height={224}
-                  className="object-cover w-full h-full"
-                />
-              </div>
-            </Link>
+      {/* Absolute Logo at the Top */}
+      <div className="absolute top-4 md:top-16 lg:top-24 left-1/2 -translate-x-1/2 z-20">
+        <Link href="/" className="hover:opacity-90 transition-opacity">
+          <div className="flex size-28 sm:size-28 items-center justify-center overflow-hidden">
+            <Image
+              src="/favicon.png"
+              alt="BI-Lite Logo"
+              width={224}
+              height={224}
+              className="object-cover w-full h-full"
+            />
           </div>
-          <div className="text-left ml-8">
-            <h1 className="text-3xl font-bold tracking-tight text-white mb-1">
-              <span className="gradient-text font-extrabold">BI</span>-Lite
-            </h1>
-            <p className="text-sm text-gray-400">
-              Welcome back! Log in to view your dashboards.
-            </p>
-          </div>
+        </Link>
+      </div>
+
+      <div className="relative z-10 w-full max-w-md animate-slide-up mt-12">
+        {/* Brand/Title */}
+        <div className="mb-6 ml-2 text-left">
+          <h1 className="text-3xl font-bold tracking-tight text-white mb-1">
+            <span className="gradient-text font-extrabold">BI</span>-Lite
+          </h1>
+          <p className="text-sm text-gray-400">
+            Welcome back! Log in to view your dashboards.
+          </p>
         </div>
 
         {/* Card */}

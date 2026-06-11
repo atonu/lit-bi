@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Roboto, Roboto_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
-
 import { Providers } from "@/components/providers";
+import { WEBSITE_URL } from "@/lib/constants";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -25,7 +25,7 @@ const robotoMono = Roboto_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://lit-bi.vercel.app"),
+  metadataBase: new URL(WEBSITE_URL),
   title: "BI-Lite — AI-Driven Business Intelligence",
   description:
     "Connect your database and ask questions in plain English. BI-Lite writes the SQL, picks the chart, and delivers instant insights.",
@@ -42,14 +42,16 @@ export const metadata: Metadata = {
     title: "BI-Lite — AI-Driven Business Intelligence",
     description:
       "Connect your database and ask questions in plain English. BI-Lite writes the SQL, picks the chart, and delivers instant insights.",
-    url: "https://lit-bi.vercel.app",
+    url: WEBSITE_URL,
     siteName: "BI-Lite",
     images: [
       {
-        url: "/bilite-social.png",
+        url: `${WEBSITE_URL}/bilite-social.png`,
+        secureUrl: `${WEBSITE_URL}/bilite-social.png`,
         width: 1200,
         height: 630,
         alt: "BI-Lite Preview Image",
+        type: "image/png",
       },
     ],
     locale: "en_US",
@@ -60,7 +62,7 @@ export const metadata: Metadata = {
     title: "BI-Lite — AI-Driven Business Intelligence",
     description:
       "Connect your database and ask questions in plain English. BI-Lite writes the SQL, picks the chart, and delivers instant insights.",
-    images: ["/bilite-social.png"],
+    images: [`${WEBSITE_URL}/bilite-social.png`],
   },
 };
 
