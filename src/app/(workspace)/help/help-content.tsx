@@ -22,6 +22,7 @@ const SECTIONS = [
   { id: "ai-chat", label: "2. Talking to Your Data" },
   { id: "dashboards", label: "3. Interactive Dashboards" },
   { id: "chat-history", label: "4. Managing History" },
+  { id: "security", label: "5. Security & Privacy" },
   { id: "contact", label: "Contact & Support" },
 ];
 
@@ -330,6 +331,46 @@ export function HelpContent() {
                 <p>
                   In the sidebar, previous chats are organized chronologically. Hover over any session to reveal options to <strong className="text-white/70">rename</strong> it for better organization or <strong className="text-white/70">permanently delete</strong> it when no longer needed.
                 </p>
+              </div>
+            </div>
+          </section>
+
+          <hr className="border-white/[0.06] mb-12" />
+
+          {/* ── SECTION: Security & Privacy ────────────────────────────────────── */}
+          <section id="security" className="relative overflow-hidden rounded-2xl mb-12 p-8 md:p-10">
+            <Image
+              src="/about-bg-8.png"
+              alt="Security Background"
+              fill
+              className="object-cover object-center "
+            />
+            <div className="absolute inset-0 bg-[#131314]/80" />
+            <div className="relative z-10 space-y-5">
+              <h3 className="text-xl font-semibold text-white flex items-center gap-3">
+                <span className="flex size-7 items-center justify-center rounded-lg bg-teal-500/20 text-teal-400 text-xs font-bold border border-teal-500/20">
+                  5
+                </span>
+                Security & Privacy
+              </h3>
+              <div className="space-y-4 text-white/70 text-sm md:text-base">
+                <p>
+                  We treat your data with the highest level of security. Here is what you need to know about our data handling measures:
+                </p>
+                <ul className="space-y-3 mt-4 ml-2 border-l-2 border-teal-500/30 pl-4">
+                  <li>
+                    <strong className="text-white">What we see:</strong> Database structure/metadata (table names, column headers, and types).
+                  </li>
+                  <li>
+                    <strong className="text-white">What we never see, save, or track:</strong> User data, login info, database connection strings, user behavior analytics, raw row data, personal identifiers, or sensitive credentials.
+                  </li>
+                  <li>
+                    <strong className="text-white">Our AI promise:</strong> The LLM provider does not store or train on your inputs. Your queries remain private.
+                  </li>
+                  <li>
+                    <strong className="text-white">Protection measures:</strong> All AI-generated SQL is parsed into an AST and strictly blocked if it contains destructive operations (e.g. DROP, DELETE). We also enforce hard statement timeouts and execute pre-flight checks (EXPLAIN PLAN) to stop full table scans.
+                  </li>
+                </ul>
               </div>
             </div>
           </section>
