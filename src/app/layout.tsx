@@ -10,6 +10,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  themeColor: "#131314",
 };
 
 const robotoSans = Roboto({
@@ -29,8 +30,18 @@ export const metadata: Metadata = {
   title: "BI-Lite — AI-Driven Business Intelligence",
   description:
     "Connect your database and ask questions in plain English. BI-Lite writes the SQL, picks the chart, and delivers instant insights.",
+  manifest: "/manifest.json",
   icons: {
     icon: "/favicon.png",
+    apple: "/favicon.png",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "BI-Lite",
+    startupImage: [
+      "/bilite-social.png",
+    ],
   },
   keywords: [
     "business intelligence",
