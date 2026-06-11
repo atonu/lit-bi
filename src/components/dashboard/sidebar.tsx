@@ -440,36 +440,6 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
           )}
         </div>
 
-        {/* Delete Confirmation Modal */}
-        {sessionToDelete && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-sm animate-in fade-in zoom-in-95 rounded-2xl border border-white/10 bg-[#1e1e1e] p-6 shadow-2xl">
-              <h3 className="text-base font-semibold text-white">Delete Chat?</h3>
-              <p className="mt-2 text-sm text-white/50">
-                Are you sure you want to delete <span className="font-medium text-white/80">"{sessionToDelete.title}"</span>? This action cannot be undone.
-              </p>
-              <div className="mt-6 flex justify-end gap-3">
-                <button
-                  onClick={() => setSessionToDelete(null)}
-                  disabled={deletingId !== null}
-                  className="rounded-xl px-4 py-2 text-sm font-medium text-white/50 transition-colors hover:bg-white/[0.06] hover:text-white/80 disabled:opacity-40 cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={(e) => {
-                    handleDeleteSession(sessionToDelete.id, e as any);
-                    setSessionToDelete(null);
-                  }}
-                  disabled={deletingId !== null}
-                  className="flex items-center gap-2 rounded-xl bg-red-500/80 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-500 disabled:opacity-50 cursor-pointer"
-                >
-                  {deletingId === sessionToDelete.id ? "Deleting..." : "Delete"}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* ── Bottom Nav ──────────────────────────────────────────────────── */}
         <div className="mt-auto shrink-0 border-t border-white/[0.06] px-3 py-3">
@@ -581,56 +551,7 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
           </div>
         </div>
 
-        {/* Edit Name Modal */}
-        {isEditModalOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-sm animate-in fade-in zoom-in-95 rounded-2xl border border-white/10 bg-[#1e1e1e] p-6 shadow-2xl">
-              <h3 className="text-lg font-semibold text-white">Edit Profile</h3>
 
-              <div className="mt-4 flex items-center gap-3 rounded-lg bg-white/5 p-3 border border-white/5">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-violet-600 text-sm font-bold text-white uppercase">
-                  {user?.name?.[0] || "U"}
-                </div>
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-white">{user?.email}</p>
-                  <p className="truncate text-xs text-white/50">Role: User</p>
-                </div>
-              </div>
-
-              <form onSubmit={handleUpdateName} className="mt-5">
-                <label htmlFor="name" className="block text-xs font-medium text-white/60 mb-1.5">
-                  Display Name
-                </label>
-                <input
-                  id="name"
-                  type="text"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all"
-                  placeholder="Enter your name"
-                  required
-                />
-                <div className="mt-6 flex justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setIsEditModalOpen(false)}
-                    disabled={isUpdatingName}
-                    className="rounded-xl px-4 py-2 text-sm font-medium text-white/50 transition-colors hover:bg-white/[0.06] hover:text-white/80 disabled:opacity-40 cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isUpdatingName || !editName.trim()}
-                    className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-500 disabled:opacity-50 cursor-pointer"
-                  >
-                    {isUpdatingName ? "Saving..." : "Save Changes"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
       </aside>
 
       {/* Mobile Hamburger Button */}
@@ -644,31 +565,85 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
         </button>
       )}
 
-      {/* Mobile Floating Action Buttons */}
-      {!isMobileOpen && (
-        <div className="fixed top-4 right-4 z-40 flex flex-col gap-3 md:hidden">
-          <button
-            onClick={handleNewChat}
-            className="flex size-10 items-center justify-center rounded-full border border-white/10 bg-[#1a1a1a]/95 text-white/70 hover:bg-white/10 hover:text-white transition-colors shadow-lg cursor-pointer"
-            title="New Chat"
-          >
-            <MessageSquarePlus className="size-5" />
-          </button>
+      {/* Delete Confirmation Modal (Responsive & works on mobile/desktop) */}
+      {sessionToDelete && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm animate-in fade-in zoom-in-95 rounded-2xl border border-white/10 bg-[#1e1e1e] p-6 shadow-2xl">
+            <h3 className="text-base font-semibold text-white">Delete Chat?</h3>
+            <p className="mt-2 text-sm text-white/50">
+              Are you sure you want to delete <span className="font-medium text-white/80">"{sessionToDelete.title}"</span>? This action cannot be undone.
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setSessionToDelete(null)}
+                disabled={deletingId !== null}
+                className="rounded-xl px-4 py-2 text-sm font-medium text-white/50 transition-colors hover:bg-white/[0.06] hover:text-white/80 disabled:opacity-40 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={(e) => {
+                  handleDeleteSession(sessionToDelete.id, e as any);
+                  setSessionToDelete(null);
+                }}
+                disabled={deletingId !== null}
+                className="flex items-center gap-2 rounded-xl bg-red-500/80 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-500 disabled:opacity-50 cursor-pointer"
+              >
+                {deletingId === sessionToDelete.id ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-          {isChatRoute && activeSessionId && pathname !== "/" && !pathname.startsWith("/new") && (
-            <button
-              onClick={() => {
-                const currentSession = sessions.find((s) => s.id === activeSessionId);
-                if (currentSession) {
-                  setSessionToDelete({ id: currentSession.id, title: currentSession.title });
-                }
-              }}
-              className="flex size-10 items-center justify-center rounded-full border border-red-500/30 bg-[#1a1a1a]/95 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors shadow-lg cursor-pointer"
-              title="Delete Chat"
-            >
-              <Trash2 className="size-4" />
-            </button>
-          )}
+      {/* Edit Name Modal (Responsive & works on mobile/desktop) */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm animate-in fade-in zoom-in-95 rounded-2xl border border-white/10 bg-[#1e1e1e] p-6 shadow-2xl">
+            <h3 className="text-lg font-semibold text-white">Edit Profile</h3>
+
+            <div className="mt-4 flex items-center gap-3 rounded-lg bg-white/5 p-3 border border-white/5">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-violet-600 text-sm font-bold text-white uppercase">
+                {user?.name?.[0] || "U"}
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-white">{user?.email}</p>
+                <p className="truncate text-xs text-white/50">Role: User</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleUpdateName} className="mt-5">
+              <label htmlFor="name" className="block text-xs font-medium text-white/60 mb-1.5">
+                Display Name
+              </label>
+              <input
+                id="name"
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all"
+                placeholder="Enter your name"
+                required
+              />
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsEditModalOpen(false)}
+                  disabled={isUpdatingName}
+                  className="rounded-xl px-4 py-2 text-sm font-medium text-white/50 transition-colors hover:bg-white/[0.06] hover:text-white/80 disabled:opacity-40 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isUpdatingName || !editName.trim()}
+                  className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-500 disabled:opacity-50 cursor-pointer"
+                >
+                  {isUpdatingName ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 

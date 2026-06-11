@@ -8,7 +8,7 @@ import {
   useState,
 } from "react";
 import Image from "next/image";
-import { Database, ChevronDown, Sparkles, Plus, HelpCircle } from "lucide-react";
+import { Database, ChevronDown, Sparkles, Plus, HelpCircle, MessageSquarePlus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useChatStore, type ChatMessage, type MessageRole, type MessageStatus, type ChartResult } from "@/lib/stores/chat-store";
 import { ChatMessageBubble } from "./chat-message";
@@ -29,9 +29,10 @@ import {
   type StoredChatMessage,
 } from "@/app/actions/chat-history";
 import { useAuthStore } from "@/lib/stores/auth-store";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { ConnectionStepper } from "@/components/connection/connection-stepper";
+import { useSidebarStore } from "@/lib/stores/sidebar-store";
 
 // ---------------------------------------------------------------------------
 // Connection selector pill
@@ -293,6 +294,7 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
     setActiveConnection,
     setActiveSession,
     createNewSession,
+    removeSession,
     promoteSession,
     addUserMessage,
     addAssistantPlaceholder,
@@ -306,6 +308,9 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
     messagesBySession,
   } = useChatStore();
 
+  const pathname = usePathname();
+  const { isMobileOpen } = useSidebarStore();
+
   const [connections, setConnections] =
     useState<ConnectionSummary[]>(initialConnections);
   const [_isPending, startTransition] = useTransition();
@@ -316,6 +321,36 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
   const isEmpty = activeMessages.length === 0;
   const isCurrentSessionThinking = isThinking && activeRequestSessionId === activeSessionId;
   const isHistoryFetching = activeSessionId && !activeSessionId.startsWith("new-") && messagesBySession[activeSessionId] === undefined;
+
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [sessionToDelete, setSessionToDelete] = useState<{ id: string; title: string } | null>(null);
+
+  const handleNewChat = useCallback(() => {
+    if (activeConnectionId && activeConnectionAlias) {
+      createNewSession(activeConnectionId, activeConnectionAlias);
+      router.push("/");
+    } else {
+      router.push("/");
+    }
+  }, [activeConnectionId, activeConnectionAlias, createNewSession, router]);
+
+  const handleDeleteSession = useCallback(
+    async (sessionId: string, e: React.MouseEvent) => {
+      e.stopPropagation();
+      setDeletingId(sessionId);
+      try {
+        const { deleteChatSession } = await import("@/app/actions/chat-history");
+        await deleteChatSession(sessionId);
+        removeSession(sessionId);
+        if (activeSessionId === sessionId) {
+          router.push("/");
+        }
+      } finally {
+        setDeletingId(null);
+      }
+    },
+    [removeSession, activeSessionId, router]
+  );
 
   const handleStop = useCallback(() => {
     cancelActiveRequest(activeSessionId || undefined);
@@ -743,6 +778,63 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
             });
           }}
         />
+      )}
+      {/* Mobile Floating New Chat Button (Left Side - positioned under Hamburger) */}
+      {!isMobileOpen && (
+        <button
+          onClick={handleNewChat}
+          className="fixed top-[68px] left-4 z-40 flex size-10 items-center justify-center rounded-full border border-white/10 bg-[#1a1a1a]/95 text-white/70 hover:bg-white/10 hover:text-white transition-colors shadow-lg cursor-pointer md:hidden"
+          title="New Chat"
+        >
+          <MessageSquarePlus className="size-5" />
+        </button>
+      )}
+
+      {/* Mobile Floating Delete Button (Right Side - top-right position) */}
+      {!isMobileOpen && activeSessionId && pathname !== "/" && !pathname.startsWith("/new") && (
+        <button
+          onClick={() => {
+            const currentSession = sessions.find((s) => s.id === activeSessionId);
+            if (currentSession) {
+              setSessionToDelete({ id: currentSession.id, title: currentSession.title });
+            }
+          }}
+          className="fixed top-4 right-4 z-40 flex size-10 items-center justify-center rounded-full border border-red-500/30 bg-[#1a1a1a]/95 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors shadow-lg cursor-pointer md:hidden"
+          title="Delete Chat"
+        >
+          <Trash2 className="size-4" />
+        </button>
+      )}
+
+      {/* Delete Confirmation Modal (Responsive & works on mobile/desktop) */}
+      {sessionToDelete && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm animate-in fade-in zoom-in-95 rounded-2xl border border-white/10 bg-[#1e1e1e] p-6 shadow-2xl">
+            <h3 className="text-base font-semibold text-white">Delete Chat?</h3>
+            <p className="mt-2 text-sm text-white/50">
+              Are you sure you want to delete <span className="font-medium text-white/80">"{sessionToDelete.title}"</span>? This action cannot be undone.
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setSessionToDelete(null)}
+                disabled={deletingId !== null}
+                className="rounded-xl px-4 py-2 text-sm font-medium text-white/50 transition-colors hover:bg-white/[0.06] hover:text-white/80 disabled:opacity-40 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={(e) => {
+                  handleDeleteSession(sessionToDelete.id, e as any);
+                  setSessionToDelete(null);
+                }}
+                disabled={deletingId !== null}
+                className="flex items-center gap-2 rounded-xl bg-red-500/80 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-500 disabled:opacity-50 cursor-pointer"
+              >
+                {deletingId === sessionToDelete.id ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
