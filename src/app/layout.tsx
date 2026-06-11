@@ -25,6 +25,7 @@ const robotoMono = Roboto_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://lit-bi.vercel.app"),
   title: "BI-Lite — AI-Driven Business Intelligence",
   description:
     "Connect your database and ask questions in plain English. BI-Lite writes the SQL, picks the chart, and delivers instant insights.",
@@ -37,6 +38,30 @@ export const metadata: Metadata = {
     "natural language SQL",
     "data visualization",
   ],
+  openGraph: {
+    title: "BI-Lite — AI-Driven Business Intelligence",
+    description:
+      "Connect your database and ask questions in plain English. BI-Lite writes the SQL, picks the chart, and delivers instant insights.",
+    url: "https://lit-bi.vercel.app",
+    siteName: "BI-Lite",
+    images: [
+      {
+        url: "/bilite-social.png",
+        width: 1200,
+        height: 630,
+        alt: "BI-Lite Preview Image",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "BI-Lite — AI-Driven Business Intelligence",
+    description:
+      "Connect your database and ask questions in plain English. BI-Lite writes the SQL, picks the chart, and delivers instant insights.",
+    images: ["/bilite-social.png"],
+  },
 };
 
 export default function RootLayout({

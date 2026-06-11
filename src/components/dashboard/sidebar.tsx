@@ -97,6 +97,7 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMobileUserMenuOpen, setIsMobileUserMenuOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isMobileSearchActive, setIsMobileSearchActive] = useState(false);
   const [editName, setEditName] = useState("");
   const [isUpdatingName, setIsUpdatingName] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -124,6 +125,7 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
     setHovered(false);
     setIsUserMenuOpen(false);
     setMobileOpen(false); // Close mobile drawer on route change
+    setIsMobileSearchActive(false);
   }, [pathname, setHovered, setMobileOpen]);
 
   useEffect(() => {
@@ -174,11 +176,14 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
         const { deleteChatSession } = await import("@/app/actions/chat-history");
         await deleteChatSession(sessionId);
         removeSession(sessionId);
+        if (activeSessionId === sessionId) {
+          router.push("/");
+        }
       } finally {
         setDeletingId(null);
       }
     },
-    [removeSession]
+    [removeSession, activeSessionId, router]
   );
 
   const handleUpdateName = async (e: React.FormEvent) => {
@@ -639,15 +644,32 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
         </button>
       )}
 
-      {/* Mobile New Chat Button */}
+      {/* Mobile Floating Action Buttons */}
       {!isMobileOpen && (
-        <button
-          onClick={handleNewChat}
-          className="fixed top-4 right-4 z-40 flex size-10 items-center justify-center rounded-full border border-white/10 bg-[#1a1a1a]/95 text-white/70 hover:bg-white/10 hover:text-white transition-colors md:hidden shadow-lg cursor-pointer"
-          title="New Chat"
-        >
-          <MessageSquarePlus className="size-5" />
-        </button>
+        <div className="fixed top-4 right-4 z-40 flex flex-col gap-3 md:hidden">
+          <button
+            onClick={handleNewChat}
+            className="flex size-10 items-center justify-center rounded-full border border-white/10 bg-[#1a1a1a]/95 text-white/70 hover:bg-white/10 hover:text-white transition-colors shadow-lg cursor-pointer"
+            title="New Chat"
+          >
+            <MessageSquarePlus className="size-5" />
+          </button>
+
+          {isChatRoute && activeSessionId && pathname !== "/" && !pathname.startsWith("/new") && (
+            <button
+              onClick={() => {
+                const currentSession = sessions.find((s) => s.id === activeSessionId);
+                if (currentSession) {
+                  setSessionToDelete({ id: currentSession.id, title: currentSession.title });
+                }
+              }}
+              className="flex size-10 items-center justify-center rounded-full border border-red-500/30 bg-[#1a1a1a]/95 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors shadow-lg cursor-pointer"
+              title="Delete Chat"
+            >
+              <Trash2 className="size-4" />
+            </button>
+          )}
+        </div>
       )}
 
       {/* Full-Screen Mobile Sidebar Drawer */}
@@ -677,20 +699,72 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
             </button>
           </div>
 
-          {/* New Chat Button at the top of history */}
+          {/* New Chat & Search Button at the top of history */}
           <div className="px-6 py-4 border-b border-white/[0.04]">
-            <button
-              onClick={() => {
-                handleNewChat();
-                setMobileOpen(false);
-              }}
-              className="flex w-full items-center justify-center gap-3 rounded-full bg-white/[0.06] hover:bg-white/10 py-3 transition-colors border border-white/5 cursor-pointer"
-            >
-              <Plus className="size-5 shrink-0 text-white" />
-              <span className="text-sm font-medium text-white">
-                New chat
-              </span>
-            </button>
+            {!isMobileSearchActive ? (
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => {
+                    handleNewChat();
+                    setMobileOpen(false);
+                  }}
+                  className="flex flex-1 items-center justify-center gap-3 rounded-full bg-white/[0.06] hover:bg-white/10 py-3 transition-colors border border-white/5 cursor-pointer"
+                >
+                  <Plus className="size-5 shrink-0 text-white" />
+                  <span className="text-sm font-medium text-white">
+                    New chat
+                  </span>
+                </button>
+                <button
+                  onClick={() => setIsMobileSearchActive(true)}
+                  className="flex size-12 shrink-0 items-center justify-center rounded-full border border-white/20 text-white/70 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+                  title="Search chats"
+                >
+                  <Search className="size-5" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center gap-2">
+                  <div className="flex flex-1 items-center gap-2 rounded-full bg-white/[0.08] px-3 py-2 ring-1 ring-white/[0.05] transition-all focus-within:ring-white/20">
+                    <Search className="size-4 shrink-0 text-white/40" />
+                    <input
+                      type="text"
+                      placeholder="Search chats"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="min-w-0 flex-1 bg-transparent text-sm text-white/80 placeholder-white/30 outline-none"
+                      autoFocus
+                    />
+                    {searchQuery && (
+                      <button onClick={() => setSearchQuery("")} className="shrink-0 text-white/30 hover:text-white/60 cursor-pointer">✕</button>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => {
+                      setIsMobileSearchActive(false);
+                      setSearchQuery("");
+                    }}
+                    className="flex size-10 shrink-0 items-center justify-center rounded-full border border-white/20 text-white/70 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+                    title="Close search"
+                  >
+                    <X className="size-4" />
+                  </button>
+                </div>
+                <button
+                  onClick={() => {
+                    handleNewChat();
+                    setMobileOpen(false);
+                  }}
+                  className="flex w-full items-center justify-center gap-3 rounded-full bg-white/[0.06] hover:bg-white/10 py-3 transition-colors border border-white/5 cursor-pointer"
+                >
+                  <Plus className="size-5 shrink-0 text-white" />
+                  <span className="text-sm font-medium text-white">
+                    New chat
+                  </span>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Scrollable Chat History */}

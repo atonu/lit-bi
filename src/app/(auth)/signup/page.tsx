@@ -45,24 +45,28 @@ export default function SignUpPage() {
 
       <div className="relative z-10 w-full max-w-md animate-slide-up">
         {/* Brand/Logo */}
-        <div className="mb-8 text-center flex flex-col items-center">
-          <Link href="/" className="inline-flex flex-col items-center gap-4 text-3xl font-bold tracking-tight hover:opacity-90 transition-opacity">
-            <div className="flex size-28 shrink-0 items-center justify-center overflow-hidden mb-2">
-              <Image 
-                src="/favicon.png" 
-                alt="BI-Lite Logo" 
-                width={112} 
-                height={112} 
-                className="object-cover"
-              />
-            </div>
-            <span>
+        <div className="mb-8">
+          <div className="flex justify-center mb-12">
+            <Link href="/" className="hover:opacity-90 transition-opacity">
+              <div className="flex size-42 md:size-28 items-center justify-center overflow-hidden">
+                <Image
+                  src="/favicon.png"
+                  alt="BI-Lite Logo"
+                  width={224}
+                  height={224}
+                  className="object-cover w-full h-full"
+                />
+              </div>
+            </Link>
+          </div>
+          <div className="text-left ml-8">
+            <h1 className="text-3xl font-bold tracking-tight text-white mb-1">
               <span className="gradient-text font-extrabold">BI</span>-Lite
-            </span>
-          </Link>
-          <p className="mt-1 text-sm text-gray-400">
-            Create an account to start analyzing your data
-          </p>
+            </h1>
+            <p className="text-sm text-gray-400">
+              Create an account to start analyzing your data
+            </p>
+          </div>
         </div>
 
         {/* Card */}
