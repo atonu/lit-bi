@@ -232,9 +232,9 @@ function ChatSkeletonLoader() {
             </div>
             <div className="flex items-end gap-3 h-28 px-4">
               {[35, 55, 45, 75, 60, 90, 80, 100, 85].map((h, i) => (
-                <div 
-                  key={i} 
-                  className="flex-1 animate-pulse bg-white/5 rounded-t-sm" 
+                <div
+                  key={i}
+                  className="flex-1 animate-pulse bg-white/5 rounded-t-sm"
                   style={{ height: `${h}%` }}
                 />
               ))}
@@ -783,7 +783,7 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
       {!isMobileOpen && (
         <button
           onClick={handleNewChat}
-          className="fixed top-[68px] left-4 z-40 flex size-10 items-center justify-center rounded-full border border-white/10 bg-[#1a1a1a]/95 text-white/70 hover:bg-white/10 hover:text-white transition-colors shadow-lg cursor-pointer md:hidden"
+          className="fixed top-18 left-4 z-40 flex size-10 items-center justify-center rounded-full border border-white/10 bg-[#1a1a1a]/95 text-white/70 hover:bg-white/10 hover:text-white transition-colors shadow-lg cursor-pointer md:hidden"
           title="New Chat"
         >
           <MessageSquarePlus className="size-5" />
@@ -799,7 +799,7 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
               setSessionToDelete({ id: currentSession.id, title: currentSession.title });
             }
           }}
-          className="fixed top-4 right-4 z-40 flex size-10 items-center justify-center rounded-full border border-red-500/30 bg-[#1a1a1a]/95 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors shadow-lg cursor-pointer md:hidden"
+          className="fixed top-32 left-4 z-40 flex size-10 items-center justify-center rounded-full border border-white/10 bg-[#1a1a1a]/95 text-white/70 hover:bg-white/10 hover:text-white transition-colors shadow-lg cursor-pointer md:hidden"
           title="Delete Chat"
         >
           <Trash2 className="size-4" />
