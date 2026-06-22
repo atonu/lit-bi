@@ -85,15 +85,22 @@ export async function executeQuery(
         connectionId,
         query,
       }),
+      cache: "no-store",
     });
 
-    const data = await res.json();
+    let data: any;
+    try {
+      data = await res.json();
+    } catch {
+      return { success: false, error: `Backend returned non-JSON response (status ${res.status})` };
+    }
     if (!res.ok || !data.success) {
       return { success: false, error: data.error || "Failed to start query execution on backend." };
     }
 
     return { success: true, jobId: data.jobId };
   } catch (err: any) {
+    console.error("[executeQuery] Error:", err);
     return { success: false, error: `Backend connection error: ${err.message || String(err)}` };
   }
 }
@@ -117,9 +124,15 @@ export async function checkQueryJobStatus(
       headers: {
         Authorization: `Bearer ${token}`,
       },
+      cache: "no-store",
     });
 
-    const data = await res.json();
+    let data: any;
+    try {
+      data = await res.json();
+    } catch {
+      return { success: false, error: `Backend returned non-JSON response (status ${res.status})` };
+    }
     if (!res.ok || !data.success) {
       return { success: false, error: data.error || "Failed to fetch job status." };
     }
@@ -157,9 +170,15 @@ export async function getQueryJobResults(
       headers: {
         Authorization: `Bearer ${token}`,
       },
+      cache: "no-store",
     });
 
-    const data = await res.json();
+    let data: any;
+    try {
+      data = await res.json();
+    } catch {
+      return { success: false, error: `Backend returned non-JSON response (status ${res.status})` };
+    }
     if (!res.ok || !data.success) {
       return { success: false, error: data.error || "Failed to fetch job results." };
     }

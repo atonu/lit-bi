@@ -12,9 +12,10 @@ import { Database, ChevronDown, Sparkles, Plus, HelpCircle, MessageSquarePlus, T
 import Link from "next/link";
 import { useChatStore, type ChatMessage, type MessageRole, type MessageStatus, type ChartResult } from "@/lib/stores/chat-store";
 import { ChatMessageBubble } from "./chat-message";
-import { ChatInput } from "./chat-input";
+import { ChatInput, AVAILABLE_MODELS, type UploadedData } from "./chat-input";
 import {
   askQuestion,
+  askUploadQuestion,
   getConnections,
   type ConnectionSummary,
 } from "@/app/actions/ai-chat";
@@ -33,6 +34,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { ConnectionStepper } from "@/components/connection/connection-stepper";
 import { useSidebarStore } from "@/lib/stores/sidebar-store";
+
 
 // ---------------------------------------------------------------------------
 // Connection selector pill
@@ -317,13 +319,18 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
   const [showAddConnection, setShowAddConnection] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isChatPanelHidden, setIsChatPanelHidden] = useState(false);
+  const [selectedModel, setSelectedModel] = useState(AVAILABLE_MODELS[0].id);
+  const [uploadedData, setUploadedData] = useState<UploadedData | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isEmpty = activeMessages.length === 0;
   const isCurrentSessionThinking = isThinking && activeRequestSessionId === activeSessionId;
   const isHistoryFetching = activeSessionId && !activeSessionId.startsWith("new-") && messagesBySession[activeSessionId] === undefined;
 
+  const isTestUser = useAuthStore.getState().user?.email === "test@yopmail.com";
+
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [sessionToDelete, setSessionToDelete] = useState<{ id: string; title: string } | null>(null);
+
 
   const handleNewChat = useCallback(() => {
     if (activeConnectionId && activeConnectionAlias) {
@@ -460,22 +467,61 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
 
   // ── Main chat handler ──────────────────────────────────────────────────
 
-  const handleQuestion = useCallback(
+    const handleQuestion = useCallback(
     (question: string) => {
-      if (!activeConnectionId || !activeSessionId || isCurrentSessionThinking) return;
+      if (!activeSessionId || isCurrentSessionThinking) return;
+
+      // ── Upload mode ──────────────────────────────────────────────────────
+      if (uploadedData) {
+        const sessionId = activeSessionId;
+        const requestId = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+        setActiveRequest(requestId, sessionId);
+        addUserMessage(sessionId, question);
+        const assistantMsgId = `${Date.now()}-assistant`;
+        addAssistantPlaceholder(sessionId, assistantMsgId);
+        setThinking(true);
+
+        startTransition(async () => {
+          try {
+            updateMessageStatus(sessionId, assistantMsgId, "thinking");
+            const result = await askUploadQuestion(
+              uploadedData.uploadId,
+              question,
+              uploadedData.columns,
+              uploadedData.sampleRows,
+              selectedModel
+            );
+            if (!result.success) {
+              resolveMessageWithError(sessionId, assistantMsgId, result.error);
+              return;
+            }
+            resolveMessageWithChart(sessionId, assistantMsgId, {
+              rows: result.rows,
+              columns: result.columns,
+              rowCount: result.rows.length,
+              executionMs: 0,
+              aiResponse: result.response,
+              jobId: `upload-${uploadedData.uploadId}`,
+            });
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            resolveMessageWithError(sessionId, assistantMsgId, msg);
+          }
+        });
+        return;
+      }
+
+      // ── Normal DB mode ────────────────────────────────────────────────────
+      if (!activeConnectionId) return;
 
       const connectionId = activeConnectionId;
       const sessionId = activeSessionId;
       const isFirstMessage = activeMessages.length === 0;
 
-      // Generate a unique request ID
       const requestId = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
       setActiveRequest(requestId, sessionId);
 
-      // Optimistically add user message
       addUserMessage(sessionId, question);
-
-      // Add assistant placeholder
       const assistantMsgId = `${Date.now()}-assistant`;
       addAssistantPlaceholder(sessionId, assistantMsgId);
       setThinking(true);
@@ -487,92 +533,71 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
           const derivedTitle = question.slice(0, 20).trim() + (question.length > 20 ? "..." : "");
 
           if (isFirstMessage && sessionId.startsWith("new-")) {
-            if (useAuthStore.getState().user?.email === "test@yopmail.com") {
+            if (isTestUser) {
               updateSessionTitle(sessionId, derivedTitle);
             } else {
-              // Persist session to DB
               const sessionResult = await createChatSession(connectionId, activeConnectionAlias || "Deleted DB", derivedTitle);
               if (sessionResult.success) {
                 realSessionId = sessionResult.sessionId;
-
-                // Promote the session locally so state matches the real DB ID
                 promoteSession(sessionId, realSessionId);
                 currentSessionId = realSessionId;
                 updateSessionTitle(realSessionId, derivedTitle);
               }
             }
           } else {
-            // Update title for existing session if it's currently 'New Chat'
             const currentSession = sessions.find((s) => s.id === sessionId);
             if (currentSession && currentSession.title === "New Chat") {
-              if (useAuthStore.getState().user?.email !== "test@yopmail.com") {
+              if (!isTestUser) {
                 await updateChatSessionTitle(sessionId, derivedTitle);
               }
               updateSessionTitle(sessionId, derivedTitle);
             }
           }
 
-          // Step 1: AI generates SQL + chart config
           if (useChatStore.getState().activeRequestId !== requestId) return;
           updateMessageStatus(currentSessionId, assistantMsgId, "thinking");
-          const aiOutcome = await askQuestion(connectionId, question);
+          const aiOutcome = await askQuestion(connectionId, question, selectedModel);
 
           if (useChatStore.getState().activeRequestId !== requestId) return;
 
           if (!aiOutcome.success) {
             resolveMessageWithError(currentSessionId, assistantMsgId, aiOutcome.error);
-            if (realSessionId) {
-              router.push(`/chat/${realSessionId}`);
-            }
+            if (realSessionId) router.push(`/chat/${realSessionId}`);
             return;
           }
 
-          // Step 2: Initiate async query execution on the backend
           updateMessageStatus(currentSessionId, assistantMsgId, "executing");
-          const initOutcome = await executeQuery(
-            connectionId,
-            aiOutcome.response.sql
-          );
+          const initOutcome = await executeQuery(connectionId, aiOutcome.response.sql);
 
           if (useChatStore.getState().activeRequestId !== requestId) return;
 
           if (!initOutcome.success) {
             resolveMessageWithError(currentSessionId, assistantMsgId, initOutcome.error);
-            if (realSessionId) {
-              router.push(`/chat/${realSessionId}`);
-            }
+            if (realSessionId) router.push(`/chat/${realSessionId}`);
             return;
           }
 
           const jobId = initOutcome.jobId;
 
-          // Poll job status until complete or failed
           let jobStatus: any = null;
-          const pollInterval = 1000; // 1s
-          const maxRetries = 120; // 2 minutes limit
+          const pollInterval = 1000;
+          const maxRetries = 120;
           let retries = 0;
 
           while (retries < maxRetries) {
             if (useChatStore.getState().activeRequestId !== requestId) return;
-
             const statusRes = await checkQueryJobStatus(jobId);
             if (!statusRes.success) {
               resolveMessageWithError(currentSessionId, assistantMsgId, statusRes.error);
               if (realSessionId) router.push(`/chat/${realSessionId}`);
               return;
             }
-
-            if (statusRes.status === "completed") {
-              jobStatus = statusRes;
-              break;
-            }
-
+            if (statusRes.status === "completed") { jobStatus = statusRes; break; }
             if (statusRes.status === "failed") {
               resolveMessageWithError(currentSessionId, assistantMsgId, statusRes.error || "Query execution failed.");
               if (realSessionId) router.push(`/chat/${realSessionId}`);
               return;
             }
-
             await new Promise((resolve) => setTimeout(resolve, pollInterval));
             retries++;
           }
@@ -583,7 +608,6 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
             return;
           }
 
-          // Step 3: Fetch the first page of results
           const resultsRes = await getQueryJobResults(jobId, 1);
           if (!resultsRes.success) {
             resolveMessageWithError(currentSessionId, assistantMsgId, resultsRes.error);
@@ -591,28 +615,21 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
             return;
           }
 
-          // Step 4: Resolve with chart result
           resolveMessageWithChart(currentSessionId, assistantMsgId, {
             rows: resultsRes.rows,
             columns: jobStatus.columns,
             rowCount: jobStatus.rowCount,
             executionMs: jobStatus.durationMs,
             aiResponse: aiOutcome.response,
-            jobId, // Attach jobId for further paging if needed
+            jobId,
           });
 
-          // Redirect to the new parameterized route AFTER everything has completed successfully!
-          if (realSessionId) {
-            router.push(`/chat/${realSessionId}`);
-          }
+          if (realSessionId) router.push(`/chat/${realSessionId}`);
         } catch (err) {
           if (useChatStore.getState().activeRequestId !== requestId) return;
           const msg = err instanceof Error ? err.message : String(err);
           resolveMessageWithError(currentSessionId, assistantMsgId, msg);
-
-          if (realSessionId) {
-            router.push(`/chat/${realSessionId}`);
-          }
+          if (realSessionId) router.push(`/chat/${realSessionId}`);
         }
       });
     },
@@ -621,6 +638,8 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
       activeSessionId,
       activeMessages.length,
       isCurrentSessionThinking,
+      selectedModel,
+      uploadedData,
       addUserMessage,
       addAssistantPlaceholder,
       updateMessageStatus,
@@ -631,6 +650,7 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
       promoteSession,
       setActiveRequest,
       activeConnectionAlias,
+      isTestUser,
       router,
     ]
   );
@@ -730,10 +750,16 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
           {/* Chat input */}
           <ChatInput
             onSubmit={handleQuestion}
-            disabled={!activeConnectionId || isCurrentSessionThinking}
+            disabled={!activeConnectionId && !uploadedData || isCurrentSessionThinking}
             isThinking={isCurrentSessionThinking}
             onStop={handleStop}
             showSuggestions={showSuggestions}
+            isTestUser={isTestUser}
+            selectedModel={selectedModel}
+            onModelChange={setSelectedModel}
+            uploadedData={uploadedData}
+            onUpload={(data) => setUploadedData(data)}
+            onClearUpload={() => setUploadedData(null)}
           />
 
           <div className="mt-2 flex justify-center items-center text-[10px] text-white/20 hidden md:flex px-1 select-none gap-1">
