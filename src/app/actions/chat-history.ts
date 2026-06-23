@@ -66,6 +66,7 @@ export async function createChatSession(
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({ connectionId, connectionAlias, title }),
+      cache: "no-store",
     });
 
     const data = await res.json();
@@ -104,6 +105,7 @@ export async function updateChatSessionTitle(
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({ title }),
+      cache: "no-store",
     });
 
     const data = await res.json();
@@ -140,6 +142,7 @@ export async function getChatSessions(connectionId?: string): Promise<ChatSessio
       headers: {
         Authorization: `Bearer ${token}`,
       },
+      cache: "no-store",
     });
 
     if (!res.ok) return [];
@@ -168,6 +171,7 @@ export async function searchChatSessions(query: string): Promise<ChatSessionSumm
         headers: {
           Authorization: `Bearer ${token}`,
         },
+        cache: "no-store",
       }
     );
 
@@ -206,6 +210,7 @@ export async function saveChatMessages(
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({ messages }),
+      cache: "no-store",
     });
 
     const data = await res.json();
@@ -237,6 +242,7 @@ export async function getChatMessages(sessionId: string): Promise<StoredChatMess
       headers: {
         Authorization: `Bearer ${token}`,
       },
+      cache: "no-store",
     });
 
     if (!res.ok) return [];
@@ -266,6 +272,7 @@ export async function deleteChatSession(
       headers: {
         Authorization: `Bearer ${token}`,
       },
+      cache: "no-store",
     });
 
     const data = await res.json();

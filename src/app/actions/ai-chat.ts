@@ -76,7 +76,8 @@ function getBackendToken(session: any): string {
 
 export async function askQuestion(
   connectionId: string,
-  naturalLanguageQuestion: string
+  naturalLanguageQuestion: string,
+  model?: string
 ): Promise<AskQuestionOutcome> {
   if (!naturalLanguageQuestion.trim()) {
     return { success: false, error: "Question cannot be empty." };
@@ -96,14 +97,25 @@ export async function askQuestion(
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ connectionId, question: naturalLanguageQuestion }),
+      body: JSON.stringify({ connectionId, question: naturalLanguageQuestion, model }),
+      cache: "no-store",
     });
 
-    const data = await res.json();
+    let data: any;
+    try {
+      data = await res.json();
+    } catch {
+      const text = await res.text().catch(() => "");
+      return {
+        success: false,
+        error: `Backend returned non-JSON response (status ${res.status}): ${text.slice(0, 200)}`,
+      };
+    }
+
     if (!res.ok || !data.success) {
       return {
         success: false,
-        error: data.error || "Failed to parse question on backend.",
+        error: data.error || `Backend error (status ${res.status})`,
       };
     }
 
@@ -113,6 +125,7 @@ export async function askQuestion(
       connectionId: data.connectionId,
     };
   } catch (err: any) {
+    console.error("[askQuestion] Error:", err);
     return {
       success: false,
       error: `Backend connection error: ${err.message || String(err)}`,
@@ -135,6 +148,7 @@ export async function getConnections(): Promise<ConnectionSummary[]> {
       headers: {
         Authorization: `Bearer ${token}`,
       },
+      cache: "no-store",
     });
 
     if (!res.ok) return [];
@@ -159,6 +173,7 @@ export async function getAllConnections(): Promise<ConnectionDetail[]> {
       headers: {
         Authorization: `Bearer ${token}`,
       },
+      cache: "no-store",
     });
 
     if (!res.ok) return [];
@@ -179,9 +194,10 @@ export async function getAllConnections(): Promise<ConnectionDetail[]> {
 // ---------------------------------------------------------------------------
 
 export async function generateChatTitle(
-  firstMessage: string
+  firstMessage: string,
+  model?: string
 ): Promise<string> {
-  const fallback = firstMessage.slice(0, 40).trim() + (firstMessage.length > 40 ? "…" : "");
+  const fallback = firstMessage.slice(0, 40).trim() + (firstMessage.length > 40 ? "\u2026" : "");
   try {
     const session = await getServerSession();
     if (!session?.user?.organizationId) return fallback;
@@ -194,7 +210,8 @@ export async function generateChatTitle(
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ firstMessage }),
+      body: JSON.stringify({ firstMessage, model }),
+      cache: "no-store",
     });
 
     if (!res.ok) return fallback;
@@ -202,5 +219,88 @@ export async function generateChatTitle(
     return data.title || fallback;
   } catch {
     return fallback;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Server Action: uploadFile
+// ---------------------------------------------------------------------------
+
+export async function uploadFile(
+  formData: FormData
+): Promise<{ success: true; uploadId: string; fileName: string; columns: string[]; rowCount: number; sampleRows: any[] } | { success: false; error: string }> {
+  try {
+    const session = await getServerSession();
+    if (!session?.user?.organizationId) {
+      return { success: false, error: "Unauthorized. Please log in." };
+    }
+    const token = getBackendToken(session);
+    const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3002";
+
+    const res = await fetch(`${BACKEND_URL}/api/upload/data`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+      cache: "no-store",
+    });
+
+    let data: any;
+    try {
+      data = await res.json();
+    } catch {
+      return { success: false, error: `Upload returned non-JSON response (status ${res.status})` };
+    }
+    if (!res.ok || !data.success) {
+      return { success: false, error: data.error || "Upload failed." };
+    }
+    return { success: true, uploadId: data.uploadId, fileName: data.fileName, columns: data.columns, rowCount: data.rowCount, sampleRows: data.sampleRows };
+  } catch (err: any) {
+    console.error("[uploadFile] Error:", err);
+    return { success: false, error: err.message || String(err) };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Server Action: askUploadQuestion
+// ---------------------------------------------------------------------------
+
+export async function askUploadQuestion(
+  uploadId: string,
+  question: string,
+  columns: string[],
+  sampleRows: any[],
+  model?: string
+): Promise<{ success: true; response: AiQueryResponse; rows: any[]; columns: string[] } | { success: false; error: string }> {
+  try {
+    const session = await getServerSession();
+    if (!session?.user?.organizationId) {
+      return { success: false, error: "Unauthorized. Please log in." };
+    }
+    const token = getBackendToken(session);
+    const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3002";
+
+    const res = await fetch(`${BACKEND_URL}/api/chat/ask-upload`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ uploadId, question, columns, sampleRows, model }),
+      cache: "no-store",
+    });
+
+    let data: any;
+    try {
+      data = await res.json();
+    } catch {
+      return { success: false, error: `Backend returned non-JSON response (status ${res.status})` };
+    }
+    if (!res.ok || !data.success) {
+      return { success: false, error: data.error || "AI analysis failed." };
+    }
+    return { success: true, response: data.response, rows: data.rows || sampleRows, columns: data.columns || columns };
+  } catch (err: any) {
+    console.error("[askUploadQuestion] Error:", err);
+    return { success: false, error: err.message || String(err) };
   }
 }

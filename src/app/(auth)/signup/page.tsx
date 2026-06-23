@@ -38,39 +38,37 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#0e0e10] text-gray-100 bg-dot-pattern px-4">
-      {/* Background radial gradient glow */}
-      <div className="absolute top-1/2 left-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-purple-500/10 blur-[120px] pointer-events-none" />
-      <div className="absolute top-1/3 right-1/4 h-[300px] w-[300px] rounded-full bg-blue-500/5 blur-[100px] pointer-events-none" />
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#0e0e10] text-gray-100 bg-dot-pattern px-4 py-10">
+      {/* Background glow */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute top-1/2 left-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-purple-500/10 blur-[120px]" />
+        <div className="absolute top-1/3 right-1/4 h-[300px] w-[300px] rounded-full bg-blue-500/5 blur-[100px]" />
+      </div>
 
-      {/* Absolute Logo at the Top */}
-      <div className="absolute top-4 md:top-16 lg:top-24 left-1/2 -translate-x-1/2 z-20">
-        <Link href="/" className="hover:opacity-90 transition-opacity">
-          <div className="flex size-28 sm:size-28 items-center justify-center overflow-hidden">
+      <div className="relative z-10 flex w-full max-w-md flex-col items-center gap-6 animate-slide-up">
+        {/* Logo — in document flow, never overlaps */}
+        <Link href="/" className="hover:opacity-90 transition-opacity shrink-0">
+          <div className="flex size-20 items-center justify-center overflow-hidden drop-shadow-2xl">
             <Image
               src="/favicon.png"
               alt="BI-Lite Logo"
-              width={224}
-              height={224}
+              width={80}
+              height={80}
               className="object-cover w-full h-full"
             />
           </div>
         </Link>
-      </div>
 
-      <div className="relative z-10 w-full max-w-md animate-slide-up mt-12">
-        {/* Brand/Title */}
-        <div className="mb-6 ml-2 text-left">
-          <h1 className="text-3xl font-bold tracking-tight text-white mb-1">
+        {/* Brand / tagline */}
+        <div className="text-center">
+          <h1 className="text-3xl font-bold tracking-tight text-white">
             <span className="gradient-text font-extrabold">BI</span>-Lite
           </h1>
-          <p className="text-sm text-gray-400">
-            Create an account to start analyzing your data
-          </p>
+          <p className="mt-1 text-sm text-gray-400">Create an account to start analyzing your data</p>
         </div>
 
         {/* Card */}
-        <div className="rounded-2xl border border-white/5 bg-white/5 p-8 shadow-2xl backdrop-blur-xl">
+        <div className="w-full rounded-2xl border border-white/5 bg-white/5 p-8 shadow-2xl backdrop-blur-xl">
           <h2 className="text-xl font-semibold mb-6">Get Started</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -145,8 +143,7 @@ export default function SignUpPage() {
           </form>
         </div>
 
-        {/* Redirect */}
-        <p className="mt-6 text-center text-sm text-gray-400">
+        <p className="text-center text-sm text-gray-400">
           Already have an account?{" "}
           <Link href="/signin" className="font-semibold text-purple-400 hover:underline">
             Sign In

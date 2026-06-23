@@ -8,6 +8,7 @@ import {
   Search,
   MessageSquare,
   MessageSquarePlus,
+  MessageSquareText,
   Trash2,
   Menu,
   PanelLeftClose,
@@ -446,6 +447,7 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
           {[
             { label: "Dashboard", icon: <LayoutDashboard className="size-5" />, href: "/dashboard" },
             { label: "Connections", icon: <Database className="size-5" />, href: "/connections" },
+            { label: "Templates", icon: <MessageSquareText className="size-5" />, href: "/templates" },
             { label: "Help & Docs", icon: <HelpCircle className="size-5" />, href: "/help" },
           ].map((item) => {
             const isActive = pathname === item.href;

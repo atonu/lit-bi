@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isAuthPage = pathname.startsWith("/signin") || pathname.startsWith("/signup") || pathname.startsWith("/forgot-password") || pathname.startsWith("/reset-password");
+  const isAuthPage = pathname.startsWith("/signin") || pathname.startsWith("/signup") || pathname.startsWith("/forgot-password") || pathname.startsWith("/reset-password") || pathname.startsWith("/set-password");
 
   // Bypass API endpoints and static file processing
   const isBypassRoute =
@@ -27,7 +27,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Redirect to dashboard/home if authenticated and attempting to view login/signup
-  if (hasAuth && isAuthPage) {
+  if (hasAuth && isAuthPage && !pathname.startsWith("/set-password")) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
