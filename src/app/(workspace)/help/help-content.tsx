@@ -89,7 +89,7 @@ export function HelpContent() {
     // scrollRef is the ONE true scroll container for this page
     <div
       ref={scrollRef}
-      className="relative h-full w-full overflow-y-auto overflow-x-hidden bg-[#131314] text-foreground"
+      className="relative h-full w-full overflow-y-auto overflow-x-hidden bg-[#080310] text-foreground"
       style={{ scrollBehavior: "smooth" }}
     >
       {/* ── MAIN LAYOUT: content + sticky index ────────────────────────── */}
@@ -109,16 +109,16 @@ export function HelpContent() {
               priority
             />
             {/* dark overlay so text stays readable */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#131314] via-[#131314]/70 to-[#131314]/0" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#080310] via-[#080310]/70 to-[#080310]/0" />
             <div className="relative z-10 space-y-3">
-              <div className="inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-3.5 py-1 text-xs font-semibold tracking-wider text-blue-400 uppercase backdrop-blur-sm">
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3.5 py-1 text-xs font-semibold tracking-wider text-primary uppercase backdrop-blur-sm">
                 <BookOpen className="size-3.5" />
                 Documentation
               </div>
               <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white leading-none">
                 Welcome to <br className="md:hidden" />
-                <span className="bg-gradient-to-r from-blue-400 via-violet-400 to-indigo-400 bg-clip-text text-transparent whitespace-nowrap">
-                  BI-Lite
+                <span className="bg-gradient-to-r from-primary via-purple-400 to-fuchsia-400 bg-clip-text text-transparent whitespace-nowrap">
+                  reportbly
                 </span>
               </h1>
               <p className="text-base md:text-lg text-white/60 max-w-xl">
@@ -138,20 +138,20 @@ export function HelpContent() {
               fill
               className="object-cover object-center"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#131314] via-[#131314]/50 to-[#131314]/0" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#080310] via-[#080310]/50 to-[#080310]/0" />
             <div className="relative z-10 space-y-5">
               <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                <span className="flex size-8 items-center justify-center rounded-lg bg-blue-500/20 text-blue-400 text-sm font-bold border border-blue-500/20">
+                <span className="flex size-8 items-center justify-center rounded-lg bg-primary/20 text-primary text-sm font-bold border border-primary/20">
                   0
                 </span>
                 Introduction
               </h2>
               <div className="space-y-4 text-white/75 leading-relaxed text-sm md:text-base">
                 <p>
-                  <strong className="text-white">BI-Lite</strong> is a next-generation, AI-driven Business Intelligence application engineered to bridge the gap between complex database systems and everyday business questions. By leveraging advanced AI natural language processing, BI-Lite allows business analysts, managers, and developers to query their relational or document-based databases in plain English — no SQL skills required.
+                  <strong className="text-white">Reportbly</strong> is a next-generation, AI-driven Business Intelligence application engineered to bridge the gap between complex database systems and everyday business questions. By leveraging advanced AI natural language processing, Reportbly allows business analysts, managers, and developers to query their relational or document-based databases in plain English — no SQL skills required.
                 </p>
                 <p>
-                  The core philosophy of BI-Lite is to democratize data insights. When you submit a question, our AI agent evaluates your database schema, synthesizes a high-performance query, executes it securely, and selects the most appropriate chart type to present results. This cycle turns raw datasets into visual, decision-ready analytics within seconds.
+                  The core philosophy of Reportbly is to democratize data insights. When you submit a question, our AI agent evaluates your database schema, synthesizes a high-performance query, executes it securely, and selects the most appropriate chart type to present results. This cycle turns raw datasets into visual, decision-ready analytics within seconds.
                 </p>
               </div>
             </div>
@@ -173,7 +173,7 @@ export function HelpContent() {
               fill
               className="object-cover object-center "
             />
-            <div className="absolute inset-0 bg-[#131314]/50" />
+            <div className="absolute inset-0 bg-[#080310]/50" />
             <div className="relative z-10 space-y-5">
               <h3 className="text-xl font-semibold text-white flex items-center gap-3">
                 <span className="flex size-7 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400 text-xs font-bold border border-emerald-500/20">
@@ -182,7 +182,7 @@ export function HelpContent() {
                 Connecting a Database
               </h3>
               <p className="text-white/70 text-sm md:text-base">
-                To get started, BI-Lite requires access to a database. We support PostgreSQL, MySQL, SQLite, and MongoDB.
+                To get started, Reportbly requires access to a database. We support PostgreSQL, MySQL, SQLite, and MongoDB.
               </p>
               <div className="grid gap-3">
                 {[
@@ -200,7 +200,7 @@ export function HelpContent() {
                   },
                   {
                     title: "Test and Save",
-                    desc: "BI-Lite runs connection verification automatically. When successful, the status changes to 'CONNECTED' — ready for AI questioning.",
+                    desc: "Reportbly runs connection verification automatically. When successful, the status changes to 'CONNECTED' — ready for AI questioning.",
                   },
                 ].map((step, idx) => (
                   <div
@@ -230,10 +230,10 @@ export function HelpContent() {
               fill
               className="object-cover object-center "
             />
-            <div className="absolute inset-0 bg-[#131314]/70" />
+            <div className="absolute inset-0 bg-[#080310]/70" />
             <div className="relative z-10 space-y-5">
               <h3 className="text-xl font-semibold text-white flex items-center gap-3">
-                <span className="flex size-7 items-center justify-center rounded-lg bg-indigo-500/20 text-indigo-400 text-xs font-bold border border-indigo-500/20">
+                <span className="flex size-7 items-center justify-center rounded-lg bg-primary/20 text-primary text-xs font-bold border border-primary/20">
                   2
                 </span>
                 Talking to Your Data
@@ -241,8 +241,8 @@ export function HelpContent() {
               <p className="text-white/70 text-sm md:text-base">
                 Once a database is connected, interact with it via the Chat panel. The chat interface behaves like a smart assistant tailored to your specific schema.
               </p>
-              <div className="rounded-2xl border border-indigo-500/10 bg-indigo-500/5 p-5 space-y-3">
-                <div className="flex items-center gap-2 text-indigo-400">
+              <div className="rounded-2xl border border-primary/10 bg-primary/5 p-5 space-y-3">
+                <div className="flex items-center gap-2 text-primary">
                   <Sparkles className="size-4" />
                   <span className="text-xs font-bold uppercase tracking-wider">Asking Tips</span>
                 </div>
@@ -287,7 +287,7 @@ export function HelpContent() {
               fill
               className="object-cover object-center "
             />
-            <div className="absolute inset-0 bg-[#131314]/67" />
+            <div className="absolute inset-0 bg-[#080310]/67" />
             <div className="relative z-10 space-y-5">
               <h3 className="text-xl font-semibold text-white flex items-center gap-3">
                 <span className="flex size-7 items-center justify-center rounded-lg bg-pink-500/20 text-pink-400 text-xs font-bold border border-pink-500/20">
@@ -316,7 +316,7 @@ export function HelpContent() {
               fill
               className="object-cover object-center "
             />
-            <div className="absolute inset-0 bg-[#131314]/80" />
+            <div className="absolute inset-0 bg-[#080310]/80" />
             <div className="relative z-10 space-y-5">
               <h3 className="text-xl font-semibold text-white flex items-center gap-3">
                 <span className="flex size-7 items-center justify-center rounded-lg bg-violet-500/20 text-violet-400 text-xs font-bold border border-violet-500/20">
@@ -326,7 +326,7 @@ export function HelpContent() {
               </h3>
               <div className="space-y-4 text-white/70 text-sm md:text-base">
                 <p>
-                  BI-Lite automatically logs all conversation threads so you can return to important analyses or refine past results anytime.
+                  Reportbly automatically logs all conversation threads so you can return to important analyses or refine past results anytime.
                 </p>
                 <p>
                   In the sidebar, previous chats are organized chronologically. Hover over any session to reveal options to <strong className="text-white/70">rename</strong> it for better organization or <strong className="text-white/70">permanently delete</strong> it when no longer needed.
@@ -345,7 +345,7 @@ export function HelpContent() {
               fill
               className="object-cover object-center "
             />
-            <div className="absolute inset-0 bg-[#131314]/80" />
+            <div className="absolute inset-0 bg-[#080310]/80" />
             <div className="relative z-10 space-y-5">
               <h3 className="text-xl font-semibold text-white flex items-center gap-3">
                 <span className="flex size-7 items-center justify-center rounded-lg bg-teal-500/20 text-teal-400 text-xs font-bold border border-teal-500/20">
@@ -359,7 +359,7 @@ export function HelpContent() {
                 </p>
                 <ul className="space-y-3 mt-4 ml-2 border-l-2 border-teal-500/30 pl-4">
                   <li>
-                    <strong className="text-white">What we see:</strong> Database structure/metadata (table names, column headers, and types).
+                     <strong className="text-white">What we see:</strong> Database structure/metadata (table names, column headers, and types).
                   </li>
                   <li>
                     <strong className="text-white">What we never see, save, or track:</strong> User data, login info, database connection strings, user behavior analytics, raw row data, personal identifiers, or sensitive credentials.
@@ -385,25 +385,25 @@ export function HelpContent() {
               fill
               className="object-cover object-center "
             />
-            <div className="absolute inset-0 bg-[#131314]/70" />
+            <div className="absolute inset-0 bg-[#080310]/70" />
             <div className="relative z-10 space-y-6">
               <h3 className="text-xl font-semibold text-white flex items-center gap-3">
-                <User className="size-5 text-blue-400" />
+                <User className="size-5 text-primary" />
                 Contact & Support
               </h3>
               <p className="text-white/70 text-sm leading-relaxed">
                 If you run into issues, have feedback, or want to report bugs regarding database integrations or query synthesis, please reach out.
               </p>
               <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur-sm">
-                <div className="absolute top-[-40px] right-[-40px] size-28 bg-blue-500/15 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute top-[-40px] right-[-40px] size-28 bg-primary/15 rounded-full blur-3xl pointer-events-none" />
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                   <div className="flex items-center gap-4">
-                    <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/20 text-white text-sm font-bold">
+                    <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-fuchsia-600 shadow-lg shadow-primary/20 text-white text-sm font-bold">
                       AA
                     </div>
                     <div>
                       <p className="text-xs text-white/40 font-medium uppercase tracking-wide">Developed by</p>
-                      <p className="text-lg font-bold bg-gradient-to-r from-blue-400 to-violet-400 bg-clip-text text-transparent">
+                      <p className="text-lg font-bold bg-gradient-to-r from-primary to-fuchsia-400 bg-clip-text text-transparent">
                         Atonu Ahmed
                       </p>
                     </div>
@@ -435,7 +435,7 @@ export function HelpContent() {
 
           {/* Footer */}
           <div className="pt-4 pb-8 text-center text-xs text-white/20 select-none">
-            BI-Lite Help Center © {new Date().getFullYear()} · All rights reserved.
+            Reportbly Help Center © {new Date().getFullYear()} · All rights reserved.
           </div>
         </div>
 
@@ -460,12 +460,12 @@ export function HelpContent() {
                     className={cn(
                       "flex items-center justify-between gap-2 border-l-2 pl-4 py-1.5 text-xs font-medium tracking-wide transition-all duration-200 cursor-pointer",
                       isActive
-                        ? "border-blue-500 text-blue-400"
+                        ? "border-primary text-primary"
                         : "border-transparent text-white/35 hover:text-white/70 hover:border-white/15"
                     )}
                   >
                     <span>{sec.label}</span>
-                    {isActive && <ChevronRight className="size-3 text-blue-400/70 shrink-0" />}
+                    {isActive && <ChevronRight className="size-3 text-primary/70 shrink-0" />}
                   </a>
                 );
               })}
@@ -474,7 +474,7 @@ export function HelpContent() {
             <div className="pl-4 pt-4 border-t border-white/5">
               <Link
                 href="/"
-                className="inline-flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 font-semibold group"
+                className="inline-flex items-center gap-1.5 text-xs text-primary hover:opacity-90 font-semibold group"
               >
                 <span>Back to Chat</span>
                 <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />

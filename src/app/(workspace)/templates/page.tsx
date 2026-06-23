@@ -126,11 +126,11 @@ export default function TemplatesPage() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#0e0e10] min-h-screen">
+    <div className="flex flex-col h-full bg-[#080310] min-h-screen">
       {/* Header */}
       <div className="border-b border-white/[0.06] px-6 py-5 flex items-center gap-3">
-        <div className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500/20 to-indigo-500/20 border border-violet-500/20">
-          <MessageSquareText className="size-4 text-violet-400" />
+        <div className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-fuchsia-500/20 border border-primary/20">
+          <MessageSquareText className="size-4 text-primary" />
         </div>
         <div>
           <h1 className="text-sm font-semibold text-white">Prompt Templates</h1>
@@ -170,13 +170,13 @@ export default function TemplatesPage() {
                   }}
                   placeholder="e.g. Show monthly revenue trends for 2026"
                   rows={2}
-                  className="flex-1 resize-none rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-3 text-sm text-white placeholder-white/20 outline-none transition focus:border-violet-500/40 focus:bg-white/[0.06] focus:ring-1 focus:ring-violet-500/20"
+                  className="flex-1 resize-none rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-3 text-sm text-white placeholder-white/20 outline-none transition focus:border-primary/40 focus:bg-white/[0.06] focus:ring-1 focus:ring-primary/20"
                 />
                 <button
                   id="add-template-btn"
                   onClick={handleCreate}
                   disabled={!newText.trim() || isPending}
-                  className="flex shrink-0 items-center gap-1.5 self-end rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-500/20 transition hover:from-violet-500 hover:to-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex shrink-0 items-center gap-1.5 self-end rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-primary/20 transition hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 >
                   <Plus className="size-4" />
                   Add
@@ -210,7 +210,7 @@ export default function TemplatesPage() {
                     key={t.id}
                     className="group flex items-start gap-3 rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-3 transition-colors hover:border-white/[0.10] hover:bg-white/[0.05]"
                   >
-                    <Sparkles className="mt-0.5 size-4 shrink-0 text-violet-400/60" />
+                    <Sparkles className="mt-0.5 size-4 shrink-0 text-primary/60" />
 
                     {editingId === t.id ? (
                       <div className="flex flex-1 flex-col gap-2">
@@ -219,7 +219,7 @@ export default function TemplatesPage() {
                           onChange={(e) => setEditText(e.target.value)}
                           rows={2}
                           autoFocus
-                          className="w-full resize-none rounded-lg border border-violet-500/30 bg-white/[0.06] px-3 py-2 text-sm text-white outline-none"
+                          className="w-full resize-none rounded-lg border border-primary/30 bg-white/[0.06] px-3 py-2 text-sm text-white outline-none"
                         />
                         <div className="flex gap-2">
                           <button

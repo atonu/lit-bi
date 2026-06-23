@@ -9,7 +9,7 @@ export default async function WorkspaceLayout({
   const sessions = await getChatSessions().catch(() => []);
 
   return (
-    <div className="flex h-screen h-dvh overflow-hidden bg-[#131314]">
+    <div className="flex h-screen h-dvh overflow-hidden bg-[#080310]">
       {/* Gemini-style sidebar */}
       <AppSidebar initialSessions={sessions} />
 

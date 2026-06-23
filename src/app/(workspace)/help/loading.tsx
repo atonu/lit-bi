@@ -1,6 +1,6 @@
 export default function LoadingHelp() {
   return (
-    <main className="flex min-w-0 flex-1 flex-col overflow-y-auto bg-[#131314]">
+    <main className="flex min-w-0 flex-1 flex-col overflow-y-auto bg-[#080310]">
       <div className="relative h-full w-full overflow-y-auto overflow-x-hidden text-foreground">
         <div className="mx-auto flex w-full max-w-7xl px-4 pt-20 pb-24 md:pt-14 md:pb-20 lg:px-8 gap-0 lg:gap-12">
           

@@ -1,11 +1,11 @@
 {
-  "name": "BI-Lite — AI-Driven Business Intelligence",
-  "short_name": "BI-Lite",
+  "name": "Reportbly — AI-Driven Business Intelligence",
+  "short_name": "Reportbly",
   "description": "Connect your database and ask questions in plain English.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#131314",
-  "theme_color": "#131314",
+  "background_color": "#080310",
+  "theme_color": "#080310",
   "icons": [
     {
       "src": "/favicon.png",

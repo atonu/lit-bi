@@ -231,7 +231,7 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
       {/* Desktop Sidebar (visible on md and up) */}
       <aside
         className={cn(
-          "relative hidden md:flex h-full flex-col border-r border-white/[0.06] bg-[#1a1a1a] transition-all duration-300 ease-out",
+          "relative hidden md:flex h-full flex-col border-r border-white/[0.06] bg-sidebar transition-all duration-300 ease-out",
           expanded ? EXPANDED_W : COLLAPSED_W
         )}
         onMouseEnter={() => !isPinned && setHovered(true)}
@@ -240,17 +240,16 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
         {/* ── Header ─────────────────────────────────────────────────────── */}
         <div className={cn("flex h-16 shrink-0 items-center px-3", expanded ? "justify-between" : "justify-center")}>
           {expanded && (
-            <div className="flex items-center gap-3 pl-4 overflow-hidden">
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-lg overflow-hidden">
+            <div className="flex items-center pl-3 overflow-hidden">
+              <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl overflow-hidden">
                 <Image
                   src="/favicon.png"
-                  alt="BI-Lite Logo"
-                  width={36}
-                  height={36}
+                  alt="Reportbly Logo"
+                  width={48}
+                  height={48}
                   className="object-cover"
                 />
               </div>
-              <span className="truncate text-base font-semibold text-white">BI-Lite</span>
             </div>
           )}
 
@@ -560,7 +559,7 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
       {!isMobileOpen && (
         <button
           onClick={() => setMobileOpen(true)}
-          className="fixed top-4 left-4 z-40 flex size-10 items-center justify-center rounded-full border border-white/10 bg-[#1a1a1a]/95 text-white/70 hover:bg-white/10 hover:text-white transition-colors md:hidden shadow-lg cursor-pointer"
+          className="fixed top-4 left-4 z-40 flex size-10 items-center justify-center rounded-full border border-white/10 bg-sidebar/95 text-white/70 hover:bg-white/10 hover:text-white transition-colors md:hidden shadow-lg cursor-pointer"
           title="Open Menu"
         >
           <Menu className="size-5" />
@@ -570,7 +569,7 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
       {/* Delete Confirmation Modal (Responsive & works on mobile/desktop) */}
       {sessionToDelete && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-sm animate-in fade-in zoom-in-95 rounded-2xl border border-white/10 bg-[#1e1e1e] p-6 shadow-2xl">
+          <div className="w-full max-w-sm animate-in fade-in zoom-in-95 rounded-2xl border border-white/10 bg-card p-6 shadow-2xl">
             <h3 className="text-base font-semibold text-white">Delete Chat?</h3>
             <p className="mt-2 text-sm text-white/50">
               Are you sure you want to delete <span className="font-medium text-white/80">"{sessionToDelete.title}"</span>? This action cannot be undone.
@@ -601,7 +600,7 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
       {/* Edit Name Modal (Responsive & works on mobile/desktop) */}
       {isEditModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-sm animate-in fade-in zoom-in-95 rounded-2xl border border-white/10 bg-[#1e1e1e] p-6 shadow-2xl">
+          <div className="w-full max-w-sm animate-in fade-in zoom-in-95 rounded-2xl border border-white/10 bg-card p-6 shadow-2xl">
             <h3 className="text-lg font-semibold text-white">Edit Profile</h3>
 
             <div className="mt-4 flex items-center gap-3 rounded-lg bg-white/5 p-3 border border-white/5">
@@ -651,20 +650,19 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
 
       {/* Full-Screen Mobile Sidebar Drawer */}
       {isMobileOpen && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-[#1a1a1a] w-full h-full md:hidden">
+        <div className="fixed inset-0 z-50 flex flex-col bg-sidebar w-full h-full md:hidden">
           {/* Sticky Header */}
-          <div className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between px-6 border-b border-white/[0.06] bg-[#1a1a1a]">
-            <div className="flex items-center gap-3">
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-lg overflow-hidden">
+          <div className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between px-6 border-b border-white/[0.06] bg-sidebar">
+            <div className="flex items-center">
+              <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl overflow-hidden">
                 <Image
                   src="/favicon.png"
-                  alt="BI-Lite Logo"
-                  width={36}
-                  height={36}
+                  alt="Reportbly Logo"
+                  width={48}
+                  height={48}
                   className="object-cover"
                 />
               </div>
-              <span className="text-base font-semibold text-white">BI-Lite</span>
             </div>
             {/* Close button top right in header */}
             <button
@@ -828,7 +826,7 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
           </div>
 
           {/* Sticky Bottom Nav and Profile */}
-          <div className="sticky bottom-0 z-10 shrink-0 border-t border-white/[0.06] bg-[#1a1a1a] px-6 py-6 flex flex-col gap-3">
+          <div className="sticky bottom-0 z-10 shrink-0 border-t border-white/[0.06] bg-sidebar px-6 py-6 flex flex-col gap-3">
             {[
               { label: "Dashboard", icon: <LayoutDashboard className="size-5" />, href: "/dashboard" },
               { label: "Connections", icon: <Database className="size-5" />, href: "/connections" },
@@ -889,7 +887,7 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
               {/* Mobile Popover Menu */}
               {isMobileUserMenuOpen && (
                 <div className="absolute bottom-full left-0 mb-2 w-full animate-in fade-in slide-in-from-bottom-2 z-50">
-                  <div className="rounded-xl border border-white/10 bg-[#252525] p-1 shadow-2xl backdrop-blur-md">
+                <div className="rounded-xl border border-white/10 bg-card p-1 shadow-2xl backdrop-blur-md">
                     <div className="flex items-center justify-between px-2 py-2 group cursor-default">
                       <div className="flex items-center gap-2 overflow-hidden">
                         <User className="size-4 shrink-0 text-white/50" />

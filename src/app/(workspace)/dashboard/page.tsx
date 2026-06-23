@@ -2,7 +2,7 @@ import { getAllConnections } from "@/app/actions/ai-chat";
 import { ConnectedDashboard } from "@/components/dashboard/connected-dashboard";
 
 export const metadata = {
-  title: "Dashboard — BI-Lite",
+  title: "Dashboard — Reportbly",
   description: "View your database connections and status.",
 };
 

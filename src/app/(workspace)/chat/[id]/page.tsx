@@ -3,7 +3,7 @@ import { getConnections } from "@/app/actions/ai-chat";
 import { getChatMessages } from "@/app/actions/chat-history";
 
 export const metadata = {
-  title: "BI-Lite — AI Data Chat",
+  title: "Reportbly — AI Data Chat",
   description: "Ask questions about your data in plain English.",
 };
 

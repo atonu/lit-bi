@@ -2,7 +2,7 @@ import { MessageSquare, Plus, Search, LayoutDashboard, Database, Settings } from
 
 export function SidebarSkeleton() {
   return (
-    <aside className="hidden w-[280px] shrink-0 flex-col border-r border-white/[0.06] bg-[#1a1a1a] sm:flex">
+    <aside className="hidden w-[280px] shrink-0 flex-col border-r border-white/[0.06] bg-sidebar sm:flex">
       {/* Header */}
       <div className="flex h-16 shrink-0 items-center justify-between px-4">
         <div className="flex items-center gap-2 pl-4">

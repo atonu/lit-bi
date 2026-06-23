@@ -2,7 +2,7 @@ import { getAllConnections } from "@/app/actions/ai-chat";
 import { ConnectionsPageClient } from "./page-client";
 
 export const metadata = {
-  title: "Connections — BI-Lite",
+  title: "Connections — Reportbly",
   description: "Manage your database connections.",
 };
 

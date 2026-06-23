@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Roboto, Roboto_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, Roboto_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 import { Providers } from "@/components/providers";
@@ -10,12 +10,12 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#131314",
+  themeColor: "#080310",
 };
 
-const robotoSans = Roboto({
-  weight: ["400", "500", "700"],
-  variable: "--font-roboto-sans",
+const plusJakartaSans = Plus_Jakarta_Sans({
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-plus-jakarta-sans",
   subsets: ["latin"],
 });
 
@@ -27,9 +27,9 @@ const robotoMono = Roboto_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(WEBSITE_URL),
-  title: "BI-Lite — AI-Driven Business Intelligence",
+  title: "Reportbly — AI-Driven Business Intelligence",
   description:
-    "Connect your database and ask questions in plain English. BI-Lite writes the SQL, picks the chart, and delivers instant insights.",
+    "Connect your database and ask questions in plain English. Reportbly writes the SQL, picks the chart, and delivers instant insights.",
   keywords: [
     "business intelligence",
     "AI analytics",
@@ -42,18 +42,18 @@ export const metadata: Metadata = {
     apple: "/favicon.png",
   },
   openGraph: {
-    title: "BI-Lite — AI-Driven Business Intelligence",
+    title: "Reportbly — AI-Driven Business Intelligence",
     description:
-      "Connect your database and ask questions in plain English. BI-Lite writes the SQL, picks the chart, and delivers instant insights.",
+      "Connect your database and ask questions in plain English. Reportbly writes the SQL, picks the chart, and delivers instant insights.",
     url: WEBSITE_URL,
-    siteName: "BI-Lite",
+    siteName: "Reportbly",
     images: [
       {
-        url: `${WEBSITE_URL}/bilite-social.png`,
-        secureUrl: `${WEBSITE_URL}/bilite-social.png`,
+        url: `${WEBSITE_URL}/reportbly-social.png`,
+        secureUrl: `${WEBSITE_URL}/reportbly-social.png`,
         width: 1200,
         height: 630,
-        alt: "BI-Lite Preview Image",
+        alt: "Reportbly Preview Image",
         type: "image/png",
       },
     ],
@@ -62,15 +62,15 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "BI-Lite — AI-Driven Business Intelligence",
+    title: "Reportbly — AI-Driven Business Intelligence",
     description:
-      "Connect your database and ask questions in plain English. BI-Lite writes the SQL, picks the chart, and delivers instant insights.",
-    images: [`${WEBSITE_URL}/bilite-social.png`],
+      "Connect your database and ask questions in plain English. Reportbly writes the SQL, picks the chart, and delivers instant insights.",
+    images: [`${WEBSITE_URL}/reportbly-social.png`],
   },
   other: {
     "apple-mobile-web-app-capable": "yes",
     "apple-mobile-web-app-status-bar-style": "black-translucent",
-    "apple-mobile-web-app-title": "BI-Lite",
+    "apple-mobile-web-app-title": "Reportbly",
   },
 };
 
@@ -82,15 +82,15 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`dark ${robotoSans.variable} ${robotoMono.variable} h-full antialiased`}
+      className={`dark ${plusJakartaSans.variable} ${plusJakartaSans.className} ${robotoMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <head>
         {/* Meta tags */}
-        <meta name="theme-color" content="#131314" />
+        <meta name="theme-color" content="#080310" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="BI-Lite" />
+        <meta name="apple-mobile-web-app-title" content="Reportbly" />
         <link rel="apple-touch-icon" href="/favicon.png" />
         {/* Apple PWA Splash Screens */}
         <link rel="apple-touch-startup-image" href="/splash/apple-splash-1320-2868.png" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" />
@@ -105,7 +105,7 @@ export default function RootLayout({
         <link rel="apple-touch-startup-image" href="/splash/apple-splash-750-1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" />
         <link rel="apple-touch-startup-image" href="/splash/apple-splash-640-1136.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" />
       </head>
-      <body suppressHydrationWarning className="min-h-full flex flex-col bg-[#131314] text-foreground">
+      <body suppressHydrationWarning className={`${plusJakartaSans.className} min-h-full flex flex-col bg-[#080310] text-foreground font-sans`}>
         <Providers>
           {children}
         </Providers>

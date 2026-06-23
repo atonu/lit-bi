@@ -83,7 +83,7 @@ function ConnectionSelector({
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute bottom-full left-0 z-20 mb-2 min-w-[260px] overflow-hidden rounded-2xl border border-white/10 bg-[#1e1e1e] shadow-2xl shadow-black/60">
+          <div className="absolute bottom-full left-0 z-20 mb-2 min-w-[260px] overflow-hidden rounded-2xl border border-white/10 bg-[#12091d] shadow-2xl shadow-black/60">
             {connections.length === 0 ? (
               <div className="px-4 py-3 text-xs text-white/40">
                 No connected databases
@@ -149,20 +149,21 @@ function WelcomeScreen({
   return (
     <div className="flex h-full flex-col items-center justify-center gap-8 px-4 pb-32">
       <div className="flex flex-col items-center gap-4 text-center">
-        <div className="flex size-32 items-center justify-center rounded-3xl overflow-hidden">
+        <div className="flex items-center justify-center mb-2">
           <Image
             src="/bilite-ai.png"
-            alt="BI-Lite AI Logo"
-            width={128}
-            height={128}
-            className="object-cover"
+            alt="reportbly Logo"
+            width={160}
+            height={160}
+            className="rounded-3xl shadow-2xl"
+            priority
           />
         </div>
         <div>
           <h1 className="text-2xl font-semibold text-white">
             {connectionAlias
               ? `Ask about ${connectionAlias}`
-              : "BI-Lite AI Chat"}
+              : "reportbly AI Chat"}
           </h1>
           <p className="mt-2 max-w-sm text-sm text-white/40">
             Ask questions in plain English. I'll write the query, run it
@@ -170,12 +171,12 @@ function WelcomeScreen({
           </p>
           {!hasConnections && (
             <div className="mt-8 flex flex-col items-center">
-              <p className="mb-4 text-sm font-medium text-blue-300">
+              <p className="mb-4 text-sm font-medium text-primary">
                 Unlock the power of AI on your own data.
               </p>
               <button
                 onClick={onAddConnection}
-                className="flex items-center gap-2 rounded-xl bg-blue-500/80 px-6 py-3 text-sm font-medium text-white transition-all hover:bg-blue-500 hover:scale-105"
+                className="flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white transition-all hover:opacity-90 hover:scale-105 cursor-pointer"
               >
                 <Plus className="size-4" />
                 Connect to a Database
@@ -188,7 +189,7 @@ function WelcomeScreen({
               className="inline-flex items-center gap-1.5 text-xs text-white/40 hover:text-white/80 transition-colors cursor-pointer"
             >
               <HelpCircle className="size-4" />
-              <span>Learn how to use BI-Lite</span>
+              <span>Learn how to use reportbly</span>
             </Link>
           </div>
         </div>
@@ -658,7 +659,7 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
   );
 
   return (
-    <div className="relative flex h-full flex-col bg-[#131314]">
+    <div className="relative flex h-full flex-col bg-[#080310]">
       {/* Messages area */}
       <div className={cn(
         "flex-1 overflow-y-auto",
@@ -690,9 +691,9 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
 
       {/* Bottom input area — absolute/fixed on mobile, normal relative on desktop */}
       <div className={cn(
-        "shrink-0 border-t border-white/[0.06] bg-[#131314] px-4 py-4 w-full",
+        "shrink-0 border-t border-white/[0.06] bg-[#080310] px-4 py-4 w-full",
         "fixed bottom-0 left-0 right-0 z-30",
-        "md:relative md:bottom-auto md:left-auto md:right-auto md:z-auto md:border md:border-white/10 md:bg-[#1e1e20] md:rounded-2xl md:p-4 md:max-w-[850px] md:w-[calc(100%-2rem)] md:mx-auto md:mb-6 md:shadow-2xl md:shadow-black/50",
+        "md:relative md:bottom-auto md:left-auto md:right-auto md:z-auto md:border md:border-white/10 md:bg-[#12091d] md:rounded-2xl md:p-4 md:max-w-[850px] md:w-[calc(100%-2rem)] md:mx-auto md:mb-6 md:shadow-2xl md:shadow-black/50",
         isChatPanelHidden && "hidden"
       )}>
         <div className="w-full">
@@ -743,7 +744,7 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
                 {modelDropdownOpen && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setModelDropdownOpen(false)} />
-                    <div className="absolute bottom-full right-0 z-20 mb-2 min-w-[200px] overflow-hidden rounded-2xl border border-white/10 bg-[#1e1e1e] shadow-2xl shadow-black/60">
+                    <div className="absolute bottom-full right-0 z-20 mb-2 min-w-[200px] overflow-hidden rounded-2xl border border-white/10 bg-[#12091d] shadow-2xl shadow-black/60">
                       {AVAILABLE_MODELS.map((m) => (
                         <button
                           key={m.id}
@@ -804,7 +805,7 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
 
           <div className="mt-2 flex justify-center items-center text-[10px] text-white/20 hidden md:flex px-1 select-none gap-1">
             <span>Enter to send · Shift+Enter for new line.</span>
-            <span>BI-Lite can make mistakes. Verify important data.</span>
+            <span>reportbly can make mistakes. Verify important data.</span>
           </div>
         </div>
       </div>
@@ -875,7 +876,7 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
       {/* Delete Confirmation Modal (Responsive & works on mobile/desktop) */}
       {sessionToDelete && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-sm animate-in fade-in zoom-in-95 rounded-2xl border border-white/10 bg-[#1e1e1e] p-6 shadow-2xl">
+          <div className="w-full max-w-sm animate-in fade-in zoom-in-95 rounded-2xl border border-white/10 bg-[#12091d] p-6 shadow-2xl">
             <h3 className="text-base font-semibold text-white">Delete Chat?</h3>
             <p className="mt-2 text-sm text-white/50">
               Are you sure you want to delete <span className="font-medium text-white/80">"{sessionToDelete.title}"</span>? This action cannot be undone.

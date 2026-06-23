@@ -2,7 +2,7 @@ import { SidebarSkeleton } from "@/components/dashboard/sidebar-skeleton";
 
 export default function LoadingDashboard() {
   return (
-    <div className="flex h-screen overflow-hidden bg-[#131314]">
+    <div className="flex h-screen overflow-hidden bg-[#080310]">
       <SidebarSkeleton />
 
       <main className="flex min-w-0 flex-1 flex-col overflow-y-auto p-8">

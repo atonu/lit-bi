@@ -240,7 +240,7 @@ export function ChatInput({
           rows={1}
           placeholder={
             isThinking
-              ? "BI-Lite is thinking..."
+              ? "reportbly is thinking..."
               : uploadedData
                 ? `Ask a question about ${uploadedData.fileName}…`
                 : disabled

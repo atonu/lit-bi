@@ -75,37 +75,31 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#0e0e10] text-gray-100 bg-dot-pattern px-4 py-10">
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#080310] text-gray-100 bg-dot-pattern px-4 py-10">
       {/* Background radial gradient glow */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute top-1/2 left-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-500/10 blur-[120px]" />
+        <div className="absolute top-1/2 left-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-fuchsia-500/10 blur-[120px]" />
         <div className="absolute top-1/3 left-1/4 h-[300px] w-[300px] rounded-full bg-purple-500/5 blur-[100px]" />
       </div>
 
       <div className="relative z-10 flex w-full max-w-md flex-col items-center gap-6 animate-slide-up">
-        {/* Logo — in document flow, never overlaps */}
         <Link href="/" className="hover:opacity-90 transition-opacity shrink-0">
-          <div className="flex size-20 items-center justify-center overflow-hidden drop-shadow-2xl">
-            <Image
-              src="/favicon.png"
-              alt="BI-Lite Logo"
-              width={80}
-              height={80}
-              className="object-cover w-full h-full"
-            />
-          </div>
+          <Image
+            src="/favicon.png"
+            alt="reportbly Logo"
+            width={48}
+            height={48}
+            className="rounded-xl"
+          />
         </Link>
 
         {/* Brand / tagline */}
         <div className="text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-white">
-            <span className="gradient-text font-extrabold">BI</span>-Lite
-          </h1>
           <p className="mt-1 text-sm text-gray-400">Welcome back! Log in to view your dashboards</p>
         </div>
 
         {/* Card */}
-        <div className="w-full rounded-2xl border border-white/5 bg-white/5 p-8 shadow-2xl backdrop-blur-xl">
+        <div className="w-full rounded-2xl border border-white/10 bg-[#12091d]/80 p-8 shadow-2xl backdrop-blur-xl">
           <h2 className="text-xl font-semibold mb-6">Sign In</h2>
 
           {successMessage && (
@@ -126,7 +120,7 @@ export default function SignInPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none transition duration-200 focus:border-purple-500/50 focus:bg-white/10"
+                className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none transition duration-200 focus:border-primary/50 focus:bg-white/10"
               />
             </div>
 
@@ -135,7 +129,7 @@ export default function SignInPage() {
                 <label htmlFor="password" className="block text-xs font-semibold uppercase tracking-wider text-gray-400">
                   Password
                 </label>
-                <Link href="/forgot-password" className="text-xs text-purple-400 hover:text-purple-300 hover:underline">
+                <Link href="/forgot-password" className="text-xs text-primary hover:opacity-90 hover:underline">
                   Forgot Password?
                 </Link>
               </div>
@@ -146,7 +140,7 @@ export default function SignInPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none transition duration-200 focus:border-purple-500/50 focus:bg-white/10"
+                className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none transition duration-200 focus:border-primary/50 focus:bg-white/10"
               />
             </div>
 
@@ -159,7 +153,7 @@ export default function SignInPage() {
             <button
               type="submit"
               disabled={isPending}
-              className="relative w-full overflow-hidden rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition duration-300 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 cursor-pointer"
+              className="relative w-full overflow-hidden rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-md transition duration-300 hover:opacity-90 disabled:opacity-50 cursor-pointer"
             >
               {isPending ? (
                 <div className="flex items-center justify-center gap-2">
@@ -193,8 +187,8 @@ export default function SignInPage() {
         </div>
 
         <p className="text-center text-sm text-gray-400">
-          New to BI-Lite?{" "}
-          <Link href="/signup" className="font-semibold text-purple-400 hover:underline">
+          New to reportbly?{" "}
+          <Link href="/signup" className="font-semibold text-primary hover:underline">
             Create an Account
           </Link>
         </p>

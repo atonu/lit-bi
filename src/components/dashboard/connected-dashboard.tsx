@@ -30,9 +30,9 @@ export function ConnectedDashboard({ connections }: ConnectedDashboardProps) {
         </p>
         <button
           onClick={() => setAddOpen(true)}
-          className="mt-6 flex items-center gap-2 rounded-xl border border-blue-500/50 bg-transparent px-4 py-2 text-sm font-medium text-blue-400 transition-colors hover:bg-blue-500/10 cursor-pointer"
+          className="mt-6 flex items-center gap-2 rounded-xl border border-primary/50 bg-transparent px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/10 cursor-pointer"
         >
-          <Plus className="size-4 text-blue-400" />
+          <Plus className="size-4 text-primary" />
           Add Connection
         </button>
         {addOpen && (
@@ -66,10 +66,10 @@ export function ConnectedDashboard({ connections }: ConnectedDashboardProps) {
                 const found = connections.find((c) => c.id === e.target.value);
                 if (found) setActiveConn(found);
               }}
-              className="rounded-xl border border-white/[0.06] bg-white/[0.04] px-2.5 md:px-4 py-2 text-xs md:text-sm text-white/80 outline-none transition-all hover:bg-white/[0.06] focus:border-blue-500/40 focus:ring-1 focus:ring-blue-500/20 max-w-[120px] md:max-w-none"
+              className="rounded-xl border border-white/[0.06] bg-white/[0.04] px-2.5 md:px-4 py-2 text-xs md:text-sm text-white/80 outline-none transition-all hover:bg-white/[0.06] focus:border-primary/40 focus:ring-1 focus:ring-primary/20 max-w-[120px] md:max-w-none"
             >
               {connections.map((c) => (
-                <option key={c.id} value={c.id} className="bg-[#1e1e1e] text-white">
+                <option key={c.id} value={c.id} className="bg-[#12091d] text-white">
                   {c.alias}
                 </option>
               ))}
@@ -78,10 +78,10 @@ export function ConnectedDashboard({ connections }: ConnectedDashboardProps) {
 
           <button
             onClick={() => setAddOpen(true)}
-            className="flex size-10 items-center justify-center shrink-0 rounded-full border border-green-500/80 bg-transparent text-green-500 hover:bg-green-500/10 md:size-auto md:rounded-xl md:border md:border-blue-500/50 md:bg-transparent md:px-4 md:py-2 md:text-sm md:font-medium md:text-blue-400 transition-all md:hover:bg-blue-500/10 cursor-pointer"
+            className="flex size-10 items-center justify-center shrink-0 rounded-full border border-green-500/80 bg-transparent text-green-500 hover:bg-green-500/10 md:size-auto md:rounded-xl md:border md:border-primary/50 md:bg-transparent md:px-4 md:py-2 md:text-sm md:font-medium md:text-primary transition-all md:hover:bg-primary/10 cursor-pointer"
             title="Add Connection"
           >
-            <Plus className="size-4 text-green-500 md:text-blue-400" />
+            <Plus className="size-4 text-green-500 md:text-primary" />
             <span className="hidden md:inline">Add Connection</span>
           </button>
           <button
@@ -144,13 +144,13 @@ export function ConnectedDashboard({ connections }: ConnectedDashboardProps) {
 
       {/* Call-to-action panel */}
       <div className="flex flex-1 flex-col items-center justify-center gap-6 rounded-3xl border border-white/[0.06] bg-white/[0.02] py-20 text-center">
-        <div className="flex size-20 items-center justify-center rounded-3xl overflow-hidden">
-          <Image 
-            src="/favicon.png" 
-            alt="BI-Lite Logo" 
-            width={80} 
-            height={80} 
-            className="object-cover"
+        <div className="flex items-center justify-center">
+          <Image
+            src="/favicon.png"
+            alt="reportbly Logo"
+            width={48}
+            height={48}
+            className="rounded-xl"
           />
         </div>
         <div className="max-w-md">
@@ -158,7 +158,7 @@ export function ConnectedDashboard({ connections }: ConnectedDashboardProps) {
             Ready to explore {activeConn.alias}?
           </h3>
           <p className="mt-3 text-sm text-white/50">
-            Head over to the <span className="font-medium text-blue-400">Chat</span> view to ask questions about your data in plain English. The AI will write the queries and build beautiful charts for you automatically.
+            Head over to the <span className="font-medium text-primary">Chat</span> view to ask questions about your data in plain English. The AI will write the queries and build beautiful charts for you automatically.
           </p>
         </div>
       </div>
@@ -177,7 +177,7 @@ export function ConnectedDashboard({ connections }: ConnectedDashboardProps) {
       {/* Disconnect Confirmation Modal */}
       {showConfirmDisconnect && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <div className="animate-slide-up w-full max-w-sm rounded-2xl border border-white/10 bg-[#1e1e1e] p-6 shadow-2xl">
+          <div className="animate-slide-up w-full max-w-sm rounded-2xl border border-white/10 bg-[#12091d] p-6 shadow-2xl">
             <h3 className="text-base font-semibold text-white">Disconnect Database?</h3>
             <p className="mt-2 text-sm text-white/50">
               Are you sure you want to disconnect <span className="font-medium text-white/80">{activeConn.alias}</span>? This will remove all associated schema metadata. This action cannot be undone.
@@ -210,7 +210,7 @@ export function ConnectedDashboard({ connections }: ConnectedDashboardProps) {
                   }
                 }}
                 disabled={isDisconnecting}
-                className="flex items-center gap-2 rounded-xl bg-red-500/80 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-500 disabled:opacity-50"
+                className="flex items-center gap-2 rounded-xl bg-red-500/80 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-500 disabled:opacity-50"
               >
                 {isDisconnecting ? "Disconnecting..." : "Disconnect"}
               </button>

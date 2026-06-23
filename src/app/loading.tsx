@@ -3,12 +3,12 @@ import { Sparkles, Database } from "lucide-react";
 
 export default function Loading() {
   return (
-    <div className="flex h-screen overflow-hidden bg-[#131314]">
+    <div className="flex h-screen overflow-hidden bg-[#080310]">
       {/* Sidenav Placeholder */}
       <SidebarSkeleton />
 
       {/* Main Chat Skeleton */}
-      <div className="flex flex-1 flex-col bg-[#131314]">
+      <div className="flex flex-1 flex-col bg-[#080310]">
         {/* Messages area placeholder */}
         <div className="flex-1 overflow-y-auto px-4 py-8">
           <div className="mx-auto max-w-3xl space-y-8">
@@ -24,8 +24,8 @@ export default function Loading() {
 
             {/* Assistant Message Bubble Placeholder */}
             <div className="flex items-start gap-3">
-              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-blue-500/10 ring-1 ring-blue-500/20">
-                <Sparkles className="size-4 animate-pulse text-blue-400" />
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 ring-1 ring-primary/20">
+                <Sparkles className="size-4 animate-pulse text-primary" />
               </div>
               <div className="min-w-0 flex-1 space-y-3">
                 <div className="h-4 w-1/4 animate-pulse rounded bg-white/10" />
@@ -65,12 +65,12 @@ export default function Loading() {
 
             {/* Assistant Thinking/Loading Indicator Placeholder */}
             <div className="flex items-start gap-3">
-              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-blue-500/10 ring-1 ring-blue-500/20">
-                <Sparkles className="size-4 animate-pulse text-blue-400" />
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 ring-1 ring-primary/20">
+                <Sparkles className="size-4 animate-pulse text-primary" />
               </div>
               <div className="min-w-0 flex-1 pt-1">
                 <div className="flex items-center gap-2.5">
-                  <div className="size-3.5 animate-spin rounded-full border-2 border-blue-400 border-t-transparent" />
+                  <div className="size-3.5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                   <div className="h-3.5 w-48 animate-pulse rounded bg-white/5" />
                 </div>
               </div>
@@ -80,12 +80,12 @@ export default function Loading() {
         </div>
 
         {/* Bottom input area placeholder */}
-        <div className="shrink-0 border-t border-white/[0.06] bg-[#131314] px-4 py-4">
+        <div className="shrink-0 border-t border-white/[0.06] bg-[#080310] px-4 py-4">
           <div className="mx-auto max-w-3xl">
             {/* Connection Selector Pill skeleton */}
             <div className="mb-3">
               <div className="flex h-7 w-48 animate-pulse items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3">
-                <Database className="size-3.5 text-blue-400/50" />
+                <Database className="size-3.5 text-primary/50" />
                 <div className="h-2.5 w-24 rounded bg-white/10" />
               </div>
             </div>

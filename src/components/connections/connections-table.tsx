@@ -210,7 +210,7 @@ export function ConnectionsTable({
       {/* Delete confirmation modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <div className="animate-slide-up w-full max-w-sm rounded-2xl border border-white/10 bg-[#1e1e1e] p-6 shadow-2xl">
+          <div className="animate-slide-up w-full max-w-sm rounded-2xl border border-white/10 bg-[#12091d] p-6 shadow-2xl">
             <h3 className="text-base font-semibold text-white">Delete connection?</h3>
             <p className="mt-2 text-sm text-white/50">
               This will permanently remove the connection and all associated schema metadata.
