@@ -9,11 +9,12 @@ import apiClient from "@/lib/axios";
 interface ProspectInfo {
   name: string;
   email: string;
+  createdAt?: string;
 }
 
-export default function SetPasswordPage({ params }: { params: { id: string } }) {
+export default function SetPasswordPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
-  const { id: prospectId } = params;
+  const { id: prospectId } = React.use(params);
 
   const [prospect, setProspect] = useState<ProspectInfo | null>(null);
   const [notFound, setNotFound] = useState(false);
@@ -24,13 +25,24 @@ export default function SetPasswordPage({ params }: { params: { id: string } }) 
 
   // Load prospect info on mount
   useEffect(() => {
+    if (!prospectId) return;
     const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3002";
     fetch(`${BACKEND_URL}/api/onboard/prospect/${prospectId}`)
       .then((r) => {
         if (!r.ok) throw new Error("not found");
         return r.json();
       })
-      .then((data: ProspectInfo) => setProspect(data))
+      .then((data: ProspectInfo) => {
+        if (data.createdAt) {
+          const createdTime = new Date(data.createdAt).getTime();
+          const diffMs = Date.now() - createdTime;
+          if (diffMs > 10 * 60 * 1000) {
+            setNotFound(true);
+            return;
+          }
+        }
+        setProspect(data);
+      })
       .catch(() => setNotFound(true));
   }, [prospectId]);
 
@@ -56,6 +68,13 @@ export default function SetPasswordPage({ params }: { params: { id: string } }) 
           prospectId,
         });
         if (res.data.success) {
+          // Log out existing user if logged in
+          try {
+            await apiClient.post("/auth/logout");
+          } catch {}
+          const { useAuthStore } = await import("@/lib/stores/auth-store");
+          useAuthStore.getState().logout();
+
           router.push("/signin?success=registered");
         }
       } catch (err: any) {
@@ -96,31 +115,37 @@ export default function SetPasswordPage({ params }: { params: { id: string } }) 
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#0e0e10] text-gray-100 bg-dot-pattern px-4">
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#0e0e10] text-gray-100 bg-dot-pattern px-4 py-10">
       {/* Background radial gradient glow */}
-      <div className="absolute top-1/2 left-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-500/10 blur-[120px] pointer-events-none" />
-      <div className="absolute top-1/4 right-1/4 h-[300px] w-[300px] rounded-full bg-purple-500/5 blur-[100px] pointer-events-none" />
-
-      {/* Logo */}
-      <div className="absolute top-4 md:top-16 lg:top-24 left-1/2 -translate-x-1/2 z-20">
-        <Link href="/" className="hover:opacity-90 transition-opacity">
-          <div className="flex size-28 sm:size-28 items-center justify-center overflow-hidden">
-            <Image src="/favicon.png" alt="BI-Lite Logo" width={224} height={224} className="object-cover w-full h-full" />
-          </div>
-        </Link>
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute top-1/2 left-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-500/10 blur-[120px]" />
+        <div className="absolute top-1/3 left-1/4 h-[300px] w-[300px] rounded-full bg-purple-500/5 blur-[100px]" />
       </div>
 
-      <div className="relative z-10 w-full max-w-md animate-slide-up mt-12">
+      <div className="relative z-10 flex w-full max-w-md flex-col items-center gap-6 animate-slide-up">
+        {/* Logo — in document flow, never overlaps */}
+        <Link href="/" className="hover:opacity-90 transition-opacity shrink-0">
+          <div className="flex size-20 items-center justify-center overflow-hidden drop-shadow-2xl">
+            <Image
+              src="/favicon.png"
+              alt="BI-Lite Logo"
+              width={80}
+              height={80}
+              className="object-cover w-full h-full"
+            />
+          </div>
+        </Link>
+
         {/* Brand/Title */}
-        <div className="mb-6 ml-2 text-left">
-          <h1 className="text-3xl font-bold tracking-tight text-white mb-1">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold tracking-tight text-white">
             <span className="gradient-text font-extrabold">BI</span>-Lite
           </h1>
-          <p className="text-sm text-gray-400">Welcome, {prospect.name}! Set your password to get started.</p>
+          <p className="mt-1 text-sm text-gray-400">Welcome, {prospect.name}! Set your password to get started.</p>
         </div>
 
         {/* Card */}
-        <div className="rounded-2xl border border-white/5 bg-white/5 p-8 shadow-2xl backdrop-blur-xl">
+        <div className="w-full rounded-2xl border border-white/5 bg-white/5 p-8 shadow-2xl backdrop-blur-xl">
           <h2 className="text-xl font-semibold mb-2">Set Your Password</h2>
           <p className="text-xs text-gray-500 mb-6">Account: <span className="text-purple-400">{prospect.email}</span></p>
 

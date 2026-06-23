@@ -320,6 +320,8 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isChatPanelHidden, setIsChatPanelHidden] = useState(false);
   const [selectedModel, setSelectedModel] = useState(AVAILABLE_MODELS[0].id);
+  const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
+  const activeModel = AVAILABLE_MODELS.find((m) => m.id === selectedModel) || AVAILABLE_MODELS[0];
   const [uploadedData, setUploadedData] = useState<UploadedData | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isEmpty = activeMessages.length === 0;
@@ -467,7 +469,7 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
 
   // ── Main chat handler ──────────────────────────────────────────────────
 
-    const handleQuestion = useCallback(
+  const handleQuestion = useCallback(
     (question: string) => {
       if (!activeSessionId || isCurrentSessionThinking) return;
 
@@ -727,6 +729,46 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
             </div>
 
             <div className="flex items-center gap-2">
+              {/* Model selector dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setModelDropdownOpen((o) => !o)}
+                  className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs text-white/40 transition-all hover:border-white/20 hover:text-white/70 cursor-pointer"
+                >
+                  <span className="size-1.5 rounded-full bg-emerald-400" />
+                  <span>{activeModel.label}</span>
+                  <ChevronDown className={cn("size-3 transition-transform", modelDropdownOpen && "rotate-180")} />
+                </button>
+
+                {modelDropdownOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setModelDropdownOpen(false)} />
+                    <div className="absolute bottom-full right-0 z-20 mb-2 min-w-[200px] overflow-hidden rounded-2xl border border-white/10 bg-[#1e1e1e] shadow-2xl shadow-black/60">
+                      {AVAILABLE_MODELS.map((m) => (
+                        <button
+                          key={m.id}
+                          onClick={() => {
+                            setSelectedModel(m.id);
+                            setModelDropdownOpen(false);
+                          }}
+                          className={cn(
+                            "flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-xs transition-colors hover:bg-white/[0.06] cursor-pointer",
+                            m.id === selectedModel ? "text-emerald-300" : "text-white/60"
+                          )}
+                        >
+                          {m.id === selectedModel && <span className="size-1.5 rounded-full bg-emerald-400 shrink-0" />}
+                          {m.id !== selectedModel && <span className="size-1.5 shrink-0" />}
+                          <span>{m.label}</span>
+                          {m.isDefault && (
+                            <span className="ml-auto text-[10px] text-white/20 font-medium">default</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+
               <Link
                 href="/help"
                 className="flex items-center gap-1 text-xs text-white/40 hover:text-white/80 transition-colors cursor-pointer mr-1"
@@ -755,8 +797,6 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
             onStop={handleStop}
             showSuggestions={showSuggestions}
             isTestUser={isTestUser}
-            selectedModel={selectedModel}
-            onModelChange={setSelectedModel}
             uploadedData={uploadedData}
             onUpload={(data) => setUploadedData(data)}
             onClearUpload={() => setUploadedData(null)}
