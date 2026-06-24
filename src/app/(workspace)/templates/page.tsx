@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useEffect, useTransition } from "react";
-import { Plus, Pencil, Trash2, Check, X, Sparkles, MessageSquareText } from "lucide-react";
+import { Plus, Pencil, Trash2, Check, X, Sparkles, Form } from "lucide-react";
 import { useAuthStore } from "@/lib/stores/auth-store";
-import { cn } from "@/lib/utils";
 
 const TEST_USER_EMAIL = "test@yopmail.com";
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3002";
@@ -130,7 +129,7 @@ export default function TemplatesPage() {
       {/* Header */}
       <div className="border-b border-white/[0.06] px-6 py-5 flex items-center gap-3">
         <div className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500/20 to-indigo-500/20 border border-violet-500/20">
-          <MessageSquareText className="size-4 text-violet-400" />
+          <Form className="size-4 text-violet-400" />
         </div>
         <div>
           <h1 className="text-sm font-semibold text-white">Prompt Templates</h1>
@@ -199,7 +198,7 @@ export default function TemplatesPage() {
             ) : templates.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
                 <div className="flex size-12 items-center justify-center rounded-2xl bg-white/[0.04] border border-white/[0.06]">
-                  <MessageSquareText className="size-5 text-white/20" />
+                  <Form className="size-5 text-white/20" />
                 </div>
                 <p className="text-sm text-white/30">No templates yet. Add one above to get started.</p>
               </div>
