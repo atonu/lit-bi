@@ -85,10 +85,10 @@ export default function SignInPage() {
       <div className="relative z-10 flex w-full max-w-md flex-col items-center gap-6 animate-slide-up">
         <Link href="/" className="hover:opacity-90 transition-opacity shrink-0">
           <Image
-            src="/favicon.png"
+            src="/logo.png"
             alt="reportbly Logo"
-            width={48}
-            height={48}
+            width={200}
+            height={200}
             className="rounded-xl"
           />
         </Link>

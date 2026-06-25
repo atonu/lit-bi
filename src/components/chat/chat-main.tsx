@@ -151,10 +151,10 @@ function WelcomeScreen({
       <div className="flex flex-col items-center gap-4 text-center">
         <div className="flex items-center justify-center mb-2">
           <Image
-            src="/bilite-ai.png"
+            src="/banner.png"
             alt="reportbly Logo"
-            width={160}
-            height={160}
+            width={450}
+            height={450}
             className="rounded-3xl shadow-2xl"
             priority
           />
@@ -814,15 +814,15 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
       {isChatPanelHidden && (
         <button
           onClick={() => setIsChatPanelHidden(false)}
-          className="fixed bottom-6 right-6 md:bottom-12 md:right-12 z-40 flex size-[68px] items-center justify-center rounded-full shadow-2xl cursor-pointer hover:scale-105 active:scale-95 transition-all bg-transparent border-none"
+          className="fixed bottom-6 right-6 md:bottom-12 md:right-12 z-40 flex items-center justify-center rounded-full shadow-2xl cursor-pointer hover:scale-105 active:scale-95 transition-all bg-transparent border-none"
           title="Restore chat panel"
         >
-          <div className="size-[68px] rounded-full overflow-hidden">
+          <div className="overflow-hidden">
             <Image
-              src="/bilite-ai.png"
+              src="/reportbly-ai.png"
               alt="Restore Panel"
-              width={68}
-              height={68}
+              width={120}
+              height={120}
               className="object-cover"
             />
           </div>

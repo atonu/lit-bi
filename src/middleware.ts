@@ -9,7 +9,7 @@ export async function middleware(request: NextRequest) {
   const isBypassRoute =
     pathname.startsWith("/api") ||
     pathname.startsWith("/_next") ||
-    pathname.includes(".") || // files like favicon.png
+    pathname.includes(".") || // files like logo.png
     pathname.startsWith("/static");
 
   if (isBypassRoute) {
@@ -41,8 +41,8 @@ export const config = {
      * - api/auth (NextAuth endpoints)
      * - _next/static (static files)
      * - _next/image (image optimization files)
-     * - favicon.ico, favicon.png, etc.
+     * - favicon.ico, logo.png, etc.
      */
-    "/((?!api/auth|_next/static|_next/image|favicon.ico|favicon.png).*)",
+    "/((?!api/auth|_next/static|_next/image|favicon.ico|logo.png).*)",
   ],
 };

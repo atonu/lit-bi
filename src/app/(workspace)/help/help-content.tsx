@@ -108,6 +108,10 @@ export function HelpContent() {
               className="object-cover object-center"
               priority
             />
+            {/* Fuchsia glare overlays */}
+            <div className="absolute inset-0 bg-[#D436D9]/10 mix-blend-color" />
+            <div className="absolute -top-24 -left-24 size-96 rounded-full bg-[#D436D9]/20 blur-3xl opacity-70 pointer-events-none" />
+            <div className="absolute bottom-0 right-0 size-72 rounded-full bg-purple-600/10 blur-3xl pointer-events-none" />
             {/* dark overlay so text stays readable */}
             <div className="absolute inset-0 bg-gradient-to-t from-[#080310] via-[#080310]/70 to-[#080310]/0" />
             <div className="relative z-10 space-y-3">
@@ -138,6 +142,9 @@ export function HelpContent() {
               fill
               className="object-cover object-center"
             />
+            {/* Fuchsia glare overlays */}
+            <div className="absolute inset-0 bg-[#D436D9]/10 mix-blend-color" />
+            <div className="absolute -top-20 -right-20 size-80 rounded-full bg-[#D436D9]/20 blur-3xl opacity-60 pointer-events-none" />
             <div className="absolute inset-0 bg-gradient-to-t from-[#080310] via-[#080310]/50 to-[#080310]/0" />
             <div className="relative z-10 space-y-5">
               <h2 className="text-2xl font-bold text-white flex items-center gap-3">
@@ -173,10 +180,14 @@ export function HelpContent() {
               fill
               className="object-cover object-center "
             />
-            <div className="absolute inset-0 bg-[#080310]/50" />
+            {/* Fuchsia glare overlays */}
+            <div className="absolute inset-0 bg-[#D436D9]/10 mix-blend-color" />
+            <div className="absolute -bottom-20 -left-20 size-80 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
+            <div className="absolute -top-20 -right-20 size-80 rounded-full bg-[#D436D9]/15 blur-3xl pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#080310] via-[#080310]/60 to-[#080310]/10" />
             <div className="relative z-10 space-y-5">
               <h3 className="text-xl font-semibold text-white flex items-center gap-3">
-                <span className="flex size-7 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400 text-xs font-bold border border-emerald-500/20">
+                <span className="flex size-7 items-center justify-center rounded-lg bg-[#D436D9]/20 text-[#D436D9] text-xs font-bold border border-[#D436D9]/20">
                   1
                 </span>
                 Connecting a Database
@@ -207,7 +218,7 @@ export function HelpContent() {
                     key={idx}
                     className="flex gap-4 rounded-xl border border-white/[0.06] bg-white/[0.03] p-4 hover:border-white/[0.12] hover:bg-white/[0.05] transition-all"
                   >
-                    <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 font-bold">
+                    <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[#D436D9]/10 border border-[#D436D9]/20 text-xs text-[#D436D9] font-bold">
                       {idx + 1}
                     </div>
                     <div>
@@ -230,10 +241,13 @@ export function HelpContent() {
               fill
               className="object-cover object-center "
             />
-            <div className="absolute inset-0 bg-[#080310]/70" />
+            {/* Fuchsia glare overlays */}
+            <div className="absolute inset-0 bg-[#D436D9]/10 mix-blend-color" />
+            <div className="absolute -top-20 -left-20 size-80 rounded-full bg-[#D436D9]/20 blur-3xl opacity-60 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#080310] via-[#080310]/75 to-[#080310]/30" />
             <div className="relative z-10 space-y-5">
               <h3 className="text-xl font-semibold text-white flex items-center gap-3">
-                <span className="flex size-7 items-center justify-center rounded-lg bg-primary/20 text-primary text-xs font-bold border border-primary/20">
+                <span className="flex size-7 items-center justify-center rounded-lg bg-[#D436D9]/20 text-[#D436D9] text-xs font-bold border border-[#D436D9]/20">
                   2
                 </span>
                 Talking to Your Data
@@ -266,7 +280,7 @@ export function HelpContent() {
                     },
                   ].map((tip, i) => (
                     <li key={i} className="flex items-start gap-2.5">
-                      <CheckCircle2 className="size-4 shrink-0 text-emerald-400 mt-0.5" />
+                      <CheckCircle2 className="size-4 shrink-0 text-[#D436D9] mt-0.5" />
                       <span>
                         <strong className="text-white/70">{tip.label}:</strong> {tip.desc}
                       </span>
@@ -287,10 +301,13 @@ export function HelpContent() {
               fill
               className="object-cover object-center "
             />
-            <div className="absolute inset-0 bg-[#080310]/67" />
+            {/* Fuchsia glare overlays */}
+            <div className="absolute inset-0 bg-[#D436D9]/10 mix-blend-color" />
+            <div className="absolute -bottom-20 -right-20 size-80 rounded-full bg-[#D436D9]/15 blur-3xl pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#080310] via-[#080310]/70 to-[#080310]/20" />
             <div className="relative z-10 space-y-5">
               <h3 className="text-xl font-semibold text-white flex items-center gap-3">
-                <span className="flex size-7 items-center justify-center rounded-lg bg-pink-500/20 text-pink-400 text-xs font-bold border border-pink-500/20">
+                <span className="flex size-7 items-center justify-center rounded-lg bg-[#D436D9]/20 text-[#D436D9] text-xs font-bold border border-[#D436D9]/20">
                   3
                 </span>
                 Interactive Dashboards
@@ -316,10 +333,13 @@ export function HelpContent() {
               fill
               className="object-cover object-center "
             />
-            <div className="absolute inset-0 bg-[#080310]/80" />
+            {/* Fuchsia glare overlays */}
+            <div className="absolute inset-0 bg-[#D436D9]/10 mix-blend-color" />
+            <div className="absolute -top-20 -right-20 size-80 rounded-full bg-[#D436D9]/15 blur-3xl pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#080310] via-[#080310]/80 to-[#080310]/40" />
             <div className="relative z-10 space-y-5">
               <h3 className="text-xl font-semibold text-white flex items-center gap-3">
-                <span className="flex size-7 items-center justify-center rounded-lg bg-violet-500/20 text-violet-400 text-xs font-bold border border-violet-500/20">
+                <span className="flex size-7 items-center justify-center rounded-lg bg-[#D436D9]/20 text-[#D436D9] text-xs font-bold border border-[#D436D9]/20">
                   4
                 </span>
                 Managing History & Sessions
@@ -345,10 +365,13 @@ export function HelpContent() {
               fill
               className="object-cover object-center "
             />
-            <div className="absolute inset-0 bg-[#080310]/80" />
+            {/* Fuchsia glare overlays */}
+            <div className="absolute inset-0 bg-[#D436D9]/10 mix-blend-color" />
+            <div className="absolute -bottom-20 -left-20 size-80 rounded-full bg-[#D436D9]/15 blur-3xl pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#080310] via-[#080310]/85 to-[#080310]/40" />
             <div className="relative z-10 space-y-5">
               <h3 className="text-xl font-semibold text-white flex items-center gap-3">
-                <span className="flex size-7 items-center justify-center rounded-lg bg-teal-500/20 text-teal-400 text-xs font-bold border border-teal-500/20">
+                <span className="flex size-7 items-center justify-center rounded-lg bg-[#D436D9]/20 text-[#D436D9] text-xs font-bold border border-[#D436D9]/20">
                   5
                 </span>
                 Security & Privacy
@@ -357,7 +380,7 @@ export function HelpContent() {
                 <p>
                   We treat your data with the highest level of security. Here is what you need to know about our data handling measures:
                 </p>
-                <ul className="space-y-3 mt-4 ml-2 border-l-2 border-teal-500/30 pl-4">
+                <ul className="space-y-3 mt-4 ml-2 border-l-2 border-[#D436D9]/30 pl-4">
                   <li>
                      <strong className="text-white">What we see:</strong> Database structure/metadata (table names, column headers, and types).
                   </li>
@@ -385,7 +408,9 @@ export function HelpContent() {
               fill
               className="object-cover object-center "
             />
-            <div className="absolute inset-0 bg-[#080310]/70" />
+            {/* Fuchsia glare overlays */}
+            <div className="absolute inset-0 bg-[#D436D9]/10 mix-blend-color" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#080310] via-[#080310]/75 to-[#080310]/20" />
             <div className="relative z-10 space-y-6">
               <h3 className="text-xl font-semibold text-white flex items-center gap-3">
                 <User className="size-5 text-primary" />

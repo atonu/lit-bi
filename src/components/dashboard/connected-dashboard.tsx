@@ -122,8 +122,8 @@ export function ConnectedDashboard({ connections }: ConnectedDashboardProps) {
               Engine
             </p>
             <p className="mt-0.5 text-lg font-semibold text-white/90">
-              {activeConn.engine === "POSTGRESQL" ? "PostgreSQL" : 
-               activeConn.engine === "MYSQL" ? "MySQL" : "MongoDB"}
+              {activeConn.engine === "POSTGRESQL" ? "PostgreSQL" :
+                activeConn.engine === "MYSQL" ? "MySQL" : "MongoDB"}
             </p>
           </div>
         </div>
@@ -146,10 +146,10 @@ export function ConnectedDashboard({ connections }: ConnectedDashboardProps) {
       <div className="flex flex-1 flex-col items-center justify-center gap-6 rounded-3xl border border-white/[0.06] bg-white/[0.02] py-20 text-center">
         <div className="flex items-center justify-center">
           <Image
-            src="/favicon.png"
+            src="/logo.png"
             alt="reportbly Logo"
-            width={48}
-            height={48}
+            width={200}
+            height={200}
             className="rounded-xl"
           />
         </div>

@@ -71,7 +71,7 @@ export default function SetPasswordPage({ params }: { params: Promise<{ id: stri
           // Log out existing user if logged in
           try {
             await apiClient.post("/auth/logout");
-          } catch {}
+          } catch { }
           const { useAuthStore } = await import("@/lib/stores/auth-store");
           useAuthStore.getState().logout();
 
@@ -125,10 +125,10 @@ export default function SetPasswordPage({ params }: { params: Promise<{ id: stri
       <div className="relative z-10 flex w-full max-w-md flex-col items-center gap-6 animate-slide-up">
         <Link href="/" className="hover:opacity-90 transition-opacity shrink-0">
           <Image
-            src="/favicon.png"
+            src="/logo.png"
             alt="reportbly Logo"
-            width={48}
-            height={48}
+            width={200}
+            height={200}
             className="rounded-xl"
           />
         </Link>

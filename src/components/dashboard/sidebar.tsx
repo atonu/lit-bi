@@ -240,12 +240,12 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
         <div className={cn("flex h-16 shrink-0 items-center px-3", expanded ? "justify-between" : "justify-center")}>
           {expanded && (
             <div className="flex items-center pl-3 overflow-hidden">
-              <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl overflow-hidden">
+              <div className="flex shrink-0 items-center justify-center overflow-hidden">
                 <Image
-                  src="/favicon.png"
+                  src="/logo.png"
                   alt="Reportbly Logo"
-                  width={48}
-                  height={48}
+                  width={120}
+                  height={120}
                   className="object-cover"
                 />
               </div>
@@ -653,12 +653,12 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
           {/* Sticky Header */}
           <div className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between px-6 border-b border-white/[0.06] bg-sidebar">
             <div className="flex items-center">
-              <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl overflow-hidden">
+              <div className="flex shrink-0 items-center justify-center overflow-hidden">
                 <Image
-                  src="/favicon.png"
+                  src="/logo.png"
                   alt="Reportbly Logo"
-                  width={48}
-                  height={48}
+                  width={120}
+                  height={120}
                   className="object-cover"
                 />
               </div>
@@ -886,7 +886,7 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
               {/* Mobile Popover Menu */}
               {isMobileUserMenuOpen && (
                 <div className="absolute bottom-full left-0 mb-2 w-full animate-in fade-in slide-in-from-bottom-2 z-50">
-                <div className="rounded-xl border border-white/10 bg-card p-1 shadow-2xl backdrop-blur-md">
+                  <div className="rounded-xl border border-white/10 bg-card p-1 shadow-2xl backdrop-blur-md">
                     <div className="flex items-center justify-between px-2 py-2 group cursor-default">
                       <div className="flex items-center gap-2 overflow-hidden">
                         <User className="size-4 shrink-0 text-white/50" />

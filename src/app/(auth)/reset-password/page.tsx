@@ -121,10 +121,10 @@ export default function ResetPasswordPage() {
         <div className="mb-8 text-center flex flex-col items-center gap-4">
           <Link href="/" className="hover:opacity-90 transition-opacity shrink-0">
             <Image
-              src="/favicon.png"
+              src="/logo.png"
               alt="reportbly Logo"
-              width={48}
-              height={48}
+              width={200}
+              height={200}
               className="rounded-xl"
             />
           </Link>

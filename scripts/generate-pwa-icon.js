@@ -2,8 +2,8 @@ const sharp = require('sharp');
 const path = require('path');
 
 async function generateIcon() {
-  const inputPath = path.join(__dirname, 'public', 'favicon.png');
-  const outputPath = path.join(__dirname, 'public', 'favicon.png');
+  const inputPath = path.join(__dirname, 'public', 'logo.png');
+  const outputPath = path.join(__dirname, 'public', 'logo.png');
   const applePath = path.join(__dirname, 'public', 'apple-icon.png');
 
   try {
@@ -34,7 +34,7 @@ async function generateIcon() {
     // Also copy to apple-icon
     await sharp(outputPath).resize(180, 180).toFile(applePath);
 
-    console.log('Successfully generated favicon.png and apple-icon.png');
+    console.log('Successfully generated logo.png and apple-icon.png');
   } catch (err) {
     console.error('Error generating icons:', err);
   }
