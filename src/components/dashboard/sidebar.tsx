@@ -7,8 +7,6 @@ import {
   Plus,
   Search,
   MessageSquare,
-  MessageSquarePlus,
-  MessageSquareText,
   Trash2,
   Menu,
   PanelLeftClose,
@@ -21,6 +19,7 @@ import {
   Loader2,
   X,
   HelpCircle,
+  Form,
 } from "lucide-react";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
@@ -446,7 +445,7 @@ export function AppSidebar({ initialSessions = [] }: AppSidebarProps) {
           {[
             { label: "Dashboard", icon: <LayoutDashboard className="size-5" />, href: "/dashboard" },
             { label: "Connections", icon: <Database className="size-5" />, href: "/connections" },
-            { label: "Templates", icon: <MessageSquareText className="size-5" />, href: "/templates" },
+            { label: "Templates", icon: <Form className="size-5" />, href: "/templates" },
             { label: "Help & Docs", icon: <HelpCircle className="size-5" />, href: "/help" },
           ].map((item) => {
             const isActive = pathname === item.href;
