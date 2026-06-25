@@ -1,0 +1,35 @@
+{
+  "cookies": [
+    {
+      "name": "refreshToken",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjkyNGI5MDkwLTY4N2ItNDk0Zi1hNjBlLTkwMDc4MzZiNjIxNiIsInJvbGUiOiJNRU1CRVIiLCJvcmdhbml6YXRpb25JZCI6IjViMDIyZmIwLWI3NDQtNGZiYi04NmJhLWQ5N2NhYzMwYmQ5MCIsImlhdCI6MTc4MjI4OTc4OCwiZXhwIjoxNzgyODk0NTg4fQ.jpSO-ouopymQCFNLEHEkITNR_kHzigQNhv4cvmF8oBk",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1782894588.434267,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Strict"
+    },
+    {
+      "name": "isAuthenticated",
+      "value": "true",
+      "domain": "localhost",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "http://localhost:3001",
+      "localStorage": [
+        {
+          "name": "auth-storage",
+          "value": "{\"state\":{\"isAuthenticated\":true,\"user\":{\"id\":\"924b9090-687b-494f-a60e-9007836b6216\",\"name\":\"Test User\",\"email\":\"test@yopmail.com\",\"role\":\"MEMBER\"},\"accessToken\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjkyNGI5MDkwLTY4N2ItNDk0Zi1hNjBlLTkwMDc4MzZiNjIxNiIsInJvbGUiOiJNRU1CRVIiLCJvcmdhbml6YXRpb25JZCI6IjViMDIyZmIwLWI3NDQtNGZiYi04NmJhLWQ5N2NhYzMwYmQ5MCIsImlhdCI6MTc4MjI4OTc4OCwiZXhwIjoxNzgyMzExMzg4fQ.MlabjQDJYGKsrG3MEfsgon4KvuG7Ls3dBmO0hmHHzGk\"},\"version\":0}"
+        }
+      ]
+    }
+  ]
+}
