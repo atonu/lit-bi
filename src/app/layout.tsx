@@ -38,8 +38,8 @@ export const metadata: Metadata = {
   ],
   manifest: "/manifest.json",
   icons: {
-    icon: "/logo.png",
-    apple: "/logo.png",
+    icon: "/favicon.png",
+    apple: "/favicon.png",
   },
   openGraph: {
     title: "Reportbly — AI-Driven Business Intelligence",
@@ -91,7 +91,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Reportbly" />
-        <link rel="apple-touch-icon" href="/logo.png" />
+        <link rel="apple-touch-icon" href="/favicon.png" />
         {/* Apple PWA Splash Screens */}
         <link rel="apple-touch-startup-image" href="/splash/apple-splash-1320-2868.png" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" />
         <link rel="apple-touch-startup-image" href="/splash/apple-splash-1206-2622.png" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" />

@@ -271,4 +271,30 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* Custom Global Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #080310; /* Match main dark background */
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(212, 54, 217, 0.15); /* Fuchsia theme color `#D436D9` with opacity */
+  border-radius: 9999px;
+  border: 2px solid #080310; /* Create a padded/inset look */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 54, 217, 0.4); /* Highlight fuchsia on hover */
+}
+
+/* Firefox scrollbar compatibility */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 54, 217, 0.15) #080310;
 }

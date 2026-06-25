@@ -151,7 +151,7 @@ function WelcomeScreen({
       <div className="flex flex-col items-center gap-4 text-center">
         <div className="flex items-center justify-center mb-2">
           <Image
-            src="/banner.png"
+            src="/logo.png"
             alt="reportbly Logo"
             width={450}
             height={450}
