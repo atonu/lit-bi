@@ -147,7 +147,7 @@ function WelcomeScreen({
   onAddConnection: () => void;
 }) {
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-8 px-4 pb-32">
+    <div className="flex h-full flex-col items-center justify-center gap-8 px-4">
       <div className="flex flex-col items-center gap-4 text-center">
         <div className="flex items-center justify-center mb-2">
           <Image
