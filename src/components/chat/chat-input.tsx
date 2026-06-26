@@ -2,7 +2,7 @@
 
 import { useRef, useState, useCallback, useEffect } from "react";
 import Link from "next/link";
-import { Send, Sparkles, Paperclip, X, ChevronDown } from "lucide-react";
+import { Send, Sparkles, Paperclip, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
