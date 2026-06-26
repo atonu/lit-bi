@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 export const AVAILABLE_MODELS = [
   { id: "deepseek/deepseek-chat-v3-0324", label: "DeepSeek V3", isDefault: true },
-  { id: "google/gemini-2.5-flash-preview-05-20", label: "Gemini 2.5 Flash" },
+  { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash" },
   { id: "openai/gpt-4o", label: "GPT-4o" },
   { id: "anthropic/claude-sonnet-4-5", label: "Claude Sonnet 4.5" },
   { id: "meta-llama/llama-4-scout", label: "Llama 4 Scout" },
