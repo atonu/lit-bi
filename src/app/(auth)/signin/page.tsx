@@ -7,6 +7,8 @@ import apiClient from "@/lib/axios";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import Image from "next/image";
 
+import { getErrorMessage } from "@/lib/utils";
+
 export default function SignInPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -50,7 +52,7 @@ export default function SignInPage() {
         }
       } catch (err: any) {
         console.error("Sign-in error:", err);
-        setError(err.response?.data?.error || "Invalid email or password.");
+        setError(getErrorMessage(err, "Invalid email or password."));
       }
     });
   };
@@ -69,7 +71,7 @@ export default function SignInPage() {
         }
       } catch (err: any) {
         console.error("Sign-in error:", err);
-        setError(err.response?.data?.error || "Invalid email or password.");
+        setError(getErrorMessage(err, "Invalid email or password."));
       }
     });
   };

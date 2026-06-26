@@ -5,6 +5,8 @@ import Link from "next/link";
 import apiClient from "@/lib/axios";
 import Image from "next/image";
 
+import { getErrorMessage } from "@/lib/utils";
+
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -29,7 +31,7 @@ export default function ForgotPasswordPage() {
         }
       } catch (err: any) {
         console.error("Forgot password error:", err);
-        setError(err.response?.data?.error || "An unexpected error occurred.");
+        setError(getErrorMessage(err, "An unexpected error occurred."));
       }
     });
   };

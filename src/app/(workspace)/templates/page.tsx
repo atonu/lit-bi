@@ -4,6 +4,7 @@ import { useState, useEffect, useTransition } from "react";
 import { Plus, Pencil, Trash2, Check, X, Sparkles, Form } from "lucide-react";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import apiClient from "@/lib/axios";
+import { getErrorMessage } from "@/lib/utils";
 
 const TEST_USER_EMAIL = "test@yopmail.com";
 
@@ -33,7 +34,7 @@ export default function TemplatesPage() {
       const res = await apiClient.get("/templates");
       setTemplates(res.data || []);
     } catch (e: any) {
-      setError(e.response?.data?.error || e.message || "Failed to load templates.");
+      setError(getErrorMessage(e, "Failed to load templates."));
     } finally {
       setLoading(false);
     }
@@ -56,7 +57,7 @@ export default function TemplatesPage() {
         setNewText("");
         await loadTemplates();
       } catch (e: any) {
-        setError(e.response?.data?.error || e.message || "Failed to create template.");
+        setError(getErrorMessage(e, "Failed to create template."));
       }
     });
   };
@@ -70,7 +71,7 @@ export default function TemplatesPage() {
         setEditingId(null);
         await loadTemplates();
       } catch (e: any) {
-        setError(e.response?.data?.error || e.message || "Failed to update template.");
+        setError(getErrorMessage(e, "Failed to update template."));
       }
     });
   };
@@ -83,7 +84,7 @@ export default function TemplatesPage() {
         setDeletingId(null);
         await loadTemplates();
       } catch (e: any) {
-        setError(e.response?.data?.error || e.message || "Failed to delete template.");
+        setError(getErrorMessage(e, "Failed to delete template."));
         setDeletingId(null);
       }
     });
