@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import apiClient from "@/lib/axios";
 
+import { getErrorMessage } from "@/lib/utils";
+
 interface ProspectInfo {
   name: string;
   email: string;
@@ -78,7 +80,7 @@ export default function SetPasswordPage({ params }: { params: Promise<{ id: stri
           router.push("/signin?success=registered");
         }
       } catch (err: any) {
-        setError(err.response?.data?.error || "Registration failed. Please try again.");
+        setError(getErrorMessage(err, "Registration failed. Please try again."));
       }
     });
   };

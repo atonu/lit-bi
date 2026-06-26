@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import apiClient from "@/lib/axios";
 import Image from "next/image";
 
+import { getErrorMessage } from "@/lib/utils";
+
 export default function SignUpPage() {
   const router = useRouter();
 
@@ -32,7 +34,7 @@ export default function SignUpPage() {
         }
       } catch (err: any) {
         console.error("Signup error:", err);
-        setError(err.response?.data?.error || "An unexpected error occurred.");
+        setError(getErrorMessage(err, "An unexpected error occurred."));
       }
     });
   };

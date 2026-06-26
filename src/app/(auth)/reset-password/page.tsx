@@ -6,6 +6,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import apiClient from "@/lib/axios";
 import Image from "next/image";
 
+import { getErrorMessage } from "@/lib/utils";
+
 function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -43,7 +45,7 @@ function ResetPasswordForm() {
         }
       } catch (err: any) {
         console.error("Reset password error:", err);
-        setError(err.response?.data?.error || "An unexpected error occurred.");
+        setError(getErrorMessage(err, "An unexpected error occurred."));
       }
     });
   };

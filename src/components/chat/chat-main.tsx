@@ -699,7 +699,7 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
         <div className="w-full">
           {/* Connection selector row */}
           <div className="mb-3 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-row flex-wrap items-center gap-2 gap-y-4">
               <ConnectionSelector
                 connections={connections}
                 activeId={activeConnectionId}
@@ -709,27 +709,6 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
                 }}
                 onAddNew={() => setShowAddConnection(true)}
               />
-              {activeConnectionId && (
-                <button
-                  type="button"
-                  onClick={() => setShowSuggestions((s) => !s)}
-                  className="text-xs text-white/40 underline hover:text-white/80 transition-colors ml-2 cursor-pointer"
-                >
-                  {showSuggestions ? "Hide Suggestions" : "Suggestions"}
-                </button>
-              )}
-              {!activeConnectionId && connections.length === 0 && (
-                <button
-                  onClick={() => setShowAddConnection(true)}
-                  className="flex items-center gap-1.5 rounded-full bg-blue-500/20 px-3 py-1.5 text-xs font-medium text-blue-300 transition-colors hover:bg-blue-500/30"
-                >
-                  <Plus className="size-3.5" />
-                  Connect a database
-                </button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2">
               {/* Model selector dropdown */}
               <div className="relative">
                 <button
@@ -769,13 +748,33 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
                   </>
                 )}
               </div>
+              {activeConnectionId && (
+                <button
+                  type="button"
+                  onClick={() => setShowSuggestions((s) => !s)}
+                  className="text-xs text-white/40 underline hover:text-white/80 transition-colors ml-2 cursor-pointer"
+                >
+                  {showSuggestions ? "Hide Suggestions" : "Suggestions"}
+                </button>
+              )}
+              {!activeConnectionId && connections.length === 0 && (
+                <button
+                  onClick={() => setShowAddConnection(true)}
+                  className="flex items-center gap-1.5 rounded-full bg-blue-500/20 px-3 py-1.5 text-xs font-medium text-blue-300 transition-colors hover:bg-blue-500/30"
+                >
+                  <Plus className="size-3.5" />
+                  Connect a database
+                </button>
+              )}
+            </div>
 
+            <div className="flex items-center gap-2">
               <Link
                 href="/help"
                 className="flex items-center gap-1 text-xs text-white/40 hover:text-white/80 transition-colors cursor-pointer mr-1"
                 title="Need Help?"
               >
-                <HelpCircle className="size-3.5" />
+                <HelpCircle className="size-5 sm:size-3.5" />
                 <span className="hidden sm:inline">Need help?</span>
               </Link>
               {/* Down arrow to minimize panel */}
@@ -785,7 +784,7 @@ export function ChatMain({ initialConnections = [], chatId, initialMessages = []
                 className="flex size-7 items-center justify-center rounded-lg text-white/40 hover:bg-white/[0.06] hover:text-white cursor-pointer"
                 title="Minimize chat panel"
               >
-                <ChevronDown className="size-4" />
+                <ChevronDown className="size-5" />
               </button>
             </div>
           </div>
