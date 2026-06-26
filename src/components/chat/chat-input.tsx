@@ -4,6 +4,7 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { Send, Sparkles, Paperclip, X, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import apiClient from "@/lib/axios";
 
 // ---------------------------------------------------------------------------
 // Available OpenRouter models
@@ -72,25 +73,12 @@ export function ChatInput({
   // Load user templates (skip for test user)
   useEffect(() => {
     if (isTestUser) return;
-    const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3002";
-
-    // We need the token from localStorage (auth-storage)
-    try {
-      const authRaw = localStorage.getItem("auth-storage");
-      if (!authRaw) return;
-      const authData = JSON.parse(authRaw);
-      const token = authData?.state?.accessToken;
-      if (!token) return;
-
-      fetch(`${BACKEND_URL}/api/templates`, {
-        headers: { Authorization: `Bearer ${token}` },
+    apiClient.get("/templates")
+      .then((res) => {
+        const templates = res.data || [];
+        setUserTemplates(templates.map((t: any) => t.text));
       })
-        .then((r) => (r.ok ? r.json() : []))
-        .then((templates: any[]) => {
-          setUserTemplates(templates.map((t) => t.text));
-        })
-        .catch(() => { });
-    } catch { }
+      .catch(() => { });
   }, [isTestUser]);
 
   // Combine suggestions: user templates first, then defaults

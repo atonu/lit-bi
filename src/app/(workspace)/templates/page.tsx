@@ -3,38 +3,14 @@
 import { useState, useEffect, useTransition } from "react";
 import { Plus, Pencil, Trash2, Check, X, Sparkles, Form } from "lucide-react";
 import { useAuthStore } from "@/lib/stores/auth-store";
+import apiClient from "@/lib/axios";
 
 const TEST_USER_EMAIL = "test@yopmail.com";
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3002";
 
 interface Template {
   id: string;
   text: string;
   createdAt: string;
-}
-
-function getToken(): string | null {
-  try {
-    const authRaw = localStorage.getItem("auth-storage");
-    if (!authRaw) return null;
-    const authData = JSON.parse(authRaw);
-    return authData?.state?.accessToken || null;
-  } catch {
-    return null;
-  }
-}
-
-async function apiFetch(path: string, options?: RequestInit) {
-  const token = getToken();
-  const res = await fetch(`${BACKEND_URL}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(options?.headers || {}),
-    },
-  });
-  return res;
 }
 
 export default function TemplatesPage() {
@@ -54,12 +30,10 @@ export default function TemplatesPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await apiFetch("/api/templates");
-      if (!res.ok) throw new Error("Failed to load templates.");
-      const data: Template[] = await res.json();
-      setTemplates(data);
+      const res = await apiClient.get("/templates");
+      setTemplates(res.data || []);
     } catch (e: any) {
-      setError(e.message || "Failed to load templates.");
+      setError(e.response?.data?.error || e.message || "Failed to load templates.");
     } finally {
       setLoading(false);
     }
@@ -78,15 +52,11 @@ export default function TemplatesPage() {
     if (!text) return;
     startTransition(async () => {
       try {
-        const res = await apiFetch("/api/templates", {
-          method: "POST",
-          body: JSON.stringify({ text }),
-        });
-        if (!res.ok) throw new Error("Failed to create template.");
+        await apiClient.post("/templates", { text });
         setNewText("");
         await loadTemplates();
       } catch (e: any) {
-        setError(e.message || "Failed to create template.");
+        setError(e.response?.data?.error || e.message || "Failed to create template.");
       }
     });
   };
@@ -96,15 +66,11 @@ export default function TemplatesPage() {
     if (!text) return;
     startTransition(async () => {
       try {
-        const res = await apiFetch(`/api/templates/${id}`, {
-          method: "PUT",
-          body: JSON.stringify({ text }),
-        });
-        if (!res.ok) throw new Error("Failed to update template.");
+        await apiClient.put(`/templates/${id}`, { text });
         setEditingId(null);
         await loadTemplates();
       } catch (e: any) {
-        setError(e.message || "Failed to update template.");
+        setError(e.response?.data?.error || e.message || "Failed to update template.");
       }
     });
   };
@@ -113,12 +79,11 @@ export default function TemplatesPage() {
     setDeletingId(id);
     startTransition(async () => {
       try {
-        const res = await apiFetch(`/api/templates/${id}`, { method: "DELETE" });
-        if (!res.ok) throw new Error("Failed to delete template.");
+        await apiClient.delete(`/templates/${id}`);
         setDeletingId(null);
         await loadTemplates();
       } catch (e: any) {
-        setError(e.message || "Failed to delete template.");
+        setError(e.response?.data?.error || e.message || "Failed to delete template.");
         setDeletingId(null);
       }
     });
