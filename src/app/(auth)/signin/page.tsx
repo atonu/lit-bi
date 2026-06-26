@@ -131,14 +131,9 @@ export default function SignInPage() {
             </div>
 
             <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label htmlFor="password" className="block text-xs font-semibold uppercase tracking-wider text-gray-400">
-                  Password
-                </label>
-                <Link href="/forgot-password" className="text-xs text-purple-400 hover:text-purple-300 hover:underline">
-                  Forgot Password?
-                </Link>
-              </div>
+              <label htmlFor="password" className="block text-xs mb-1.5 font-semibold uppercase tracking-wider text-gray-400">
+                Password
+              </label>
               <input
                 id="password"
                 type="password"
@@ -148,6 +143,11 @@ export default function SignInPage() {
                 placeholder="••••••••"
                 className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none transition duration-200 focus:border-purple-500/50 focus:bg-white/10"
               />
+              <div className="flex items-center justify-end mt-2">
+                <Link href="/forgot-password" className="text-xs text-primary hover:opacity-90 hover:underline">
+                  Forgot Password?
+                </Link>
+              </div>
             </div>
 
             {error && (
