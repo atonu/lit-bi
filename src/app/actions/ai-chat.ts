@@ -52,6 +52,7 @@ export interface ConnectionDetail {
   createdAt: Date;
   updatedAt: Date;
   lastTestedAt: Date | null;
+  connectionString?: string;
 }
 
 // ---------------------------------------------------------------------------
