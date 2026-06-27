@@ -23,6 +23,7 @@ const SECTIONS = [
   { id: "dashboards", label: "3. Interactive Dashboards" },
   { id: "chat-history", label: "4. Managing History" },
   { id: "security", label: "5. Security & Privacy" },
+  { id: "external-api", label: "6. External API" },
   { id: "contact", label: "Contact & Support" },
 ];
 
@@ -394,6 +395,186 @@ export function HelpContent() {
                     <strong className="text-white">Protection measures:</strong> All AI-generated SQL is parsed into an AST and strictly blocked if it contains destructive operations (e.g. DROP, DELETE). We also enforce hard statement timeouts and execute pre-flight checks (EXPLAIN PLAN) to stop full table scans.
                   </li>
                 </ul>
+              </div>
+            </div>
+          </section>
+
+          <hr className="border-white/[0.06] mb-12" />
+
+          {/* ── SECTION: External API ────────────────────────────────────── */}
+          <section id="external-api" className="relative overflow-hidden rounded-2xl mb-12 p-8 md:p-10">
+            <Image
+              src="/about-bg-8.png"
+              alt="API Background"
+              fill
+              className="object-cover object-center scale-x-[-1]"
+            />
+            <div className="absolute inset-0 bg-[#131314]/85" />
+            <div className="relative z-10 space-y-6">
+              <h3 className="text-xl font-semibold text-white flex items-center gap-3">
+                <span className="flex size-7 items-center justify-center rounded-lg bg-blue-500/20 text-blue-400 text-xs font-bold border border-blue-500/20">
+                  6
+                </span>
+                External Onboarding API
+              </h3>
+              <p className="text-white/70 text-sm md:text-base">
+                BI-Lite exposes a secure, public HTTP API allowing external systems (e.g., custom admin dashboards or CRM platforms) to programmatically register prospect users and provision database connections upon account setup.
+              </p>
+
+              {/* Endpoint Details */}
+              <div className="flex flex-col sm:flex-row gap-3 rounded-xl border border-white/[0.06] bg-white/[0.04] p-4">
+                <div className="flex items-center gap-2">
+                  <span className="rounded bg-emerald-500/20 px-2 py-0.5 text-xs font-bold text-emerald-400 uppercase tracking-wide">
+                    POST
+                  </span>
+                  <code className="text-sm text-white/80 font-mono">/api/onboard</code>
+                </div>
+                <div className="hidden sm:block text-white/20">|</div>
+                <div className="text-xs text-white/55 flex items-center">
+                  Public Endpoint · Content-Type: application/json
+                </div>
+              </div>
+
+              {/* Responsive Parameters Table */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-white/80">Request Body Parameters</h4>
+                <div className="overflow-x-auto rounded-xl border border-white/15 bg-black/[0.7]">
+                  <table className="w-full min-w-[500px] text-left border-collapse text-xs md:text-sm">
+                    <thead>
+                      <tr className="border-b border-white/10 bg-[#252528] text-white/40 uppercase tracking-wider font-semibold text-[10px]">
+                        <th className="px-4 py-3">Parameter</th>
+                        <th className="px-4 py-3">Type</th>
+                        <th className="px-4 py-3">Required</th>
+                        <th className="px-4 py-3">Description</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/10 text-white/70">
+                      <tr>
+                        <td className="px-4 py-3 font-semibold font-mono text-white">name</td>
+                        <td className="px-4 py-3 text-white/40">string</td>
+                        <td className="px-4 py-3 text-red-400 font-medium">Yes</td>
+                        <td className="px-4 py-3 text-white/60">The user's display name.</td>
+                      </tr>
+                      <tr>
+                        <td className="px-4 py-3 font-semibold font-mono text-white">email</td>
+                        <td className="px-4 py-3 text-white/40">string</td>
+                        <td className="px-4 py-3 text-red-400 font-medium">Yes</td>
+                        <td className="px-4 py-3 text-white/60">Unique email address of the onboarded user.</td>
+                      </tr>
+                      <tr>
+                        <td className="px-4 py-3 font-semibold font-mono text-white">siteUrl</td>
+                        <td className="px-4 py-3 text-white/40">string</td>
+                        <td className="px-4 py-3 text-white/40">No</td>
+                        <td className="px-4 py-3 text-white/60">Custom site URL origin where the redirectionUrl will point to (must match allowed CORS origins).</td>
+                      </tr>
+                      <tr>
+                        <td className="px-4 py-3 font-semibold font-mono text-white">database</td>
+                        <td className="px-4 py-3 text-white/40">array</td>
+                        <td className="px-4 py-3 text-white/40">No</td>
+                        <td className="px-4 py-3 text-white/60">Array of database connection objects to auto-provision during registration.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Response Section */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-white/80">Success Response (200 OK)</h4>
+                <div className="rounded-xl border border-white/15 bg-black/[0.7] p-4 text-xs md:text-sm text-white/65 space-y-2">
+                  <div className="flex justify-between items-center pb-2 border-b border-white/10">
+                    <span className="font-semibold text-white/70">Field</span>
+                    <span className="font-semibold text-white/70">Description</span>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <span className="font-mono text-white/90">existingUser</span>
+                    <span className="text-white/50">boolean · true if email exists in database.</span>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <span className="font-mono text-white/90">redirectionUrl</span>
+                    <span className="text-white/50">string · sign-in or set-password URL path.</span>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <span className="font-mono text-white/90">message</span>
+                    <span className="text-white/50">string · human-readable result message.</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Example Expansion Panel */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-white/80">Examples</h4>
+                <details className="group rounded-xl border border-white/10 bg-[#1b1b1d] overflow-hidden transition-all duration-200">
+                  <summary className="flex items-center justify-between px-4 py-3 text-sm font-semibold text-white cursor-pointer select-none hover:bg-white/[0.04]">
+                    <span>Payload & curl Examples</span>
+                    <ChevronRight className="size-4 text-white/55 transition-transform duration-200 group-open:rotate-90" />
+                  </summary>
+                  <div className="px-4 pb-4 pt-4 border-t border-white/10 bg-[#09050d]/80 space-y-4">
+                    <div>
+                      <h5 className="text-xs font-semibold text-white/40 mb-1.5 uppercase tracking-wide text-left">1. MongoDB Payload Example</h5>
+                      <pre className="p-3 rounded-lg bg-black/[0.3] border border-white/[0.04] overflow-x-auto font-mono text-xs text-white/70 text-left">
+                        {`{
+  "name": "Alice Smith",
+  "email": "alice@email.com",
+  "siteUrl": "https://myapp.com",
+  "database": [
+    {
+      "name": "Mongo Database",
+      "engine": 0,
+      "connectionString": "mongodb+srv://user:pass@cluster.mongodb.net/dbname",
+      "tables": ["users", "orders"]
+    }
+  ]
+}`}
+                      </pre>
+                    </div>
+
+                    <div>
+                      <h5 className="text-xs font-semibold text-white/40 mb-1.5 uppercase tracking-wide text-left">2. PostgreSQL Payload Example</h5>
+                      <pre className="p-3 rounded-lg bg-black/[0.3] border border-white/[0.04] overflow-x-auto font-mono text-xs text-white/70 text-left">
+                        {`{
+  "name": "Bob Jones",
+  "email": "bob@email.com",
+  "siteUrl": "https://myapp.com",
+  "database": [
+    {
+      "name": "Postgres Database",
+      "engine": 1,
+      "host": "postgres.example.com",
+      "port": 5432,
+      "dbName": "prod_db",
+      "dbUser": "db_user",
+      "password": "securepassword",
+      "sslEnabled": true,
+      "tables": ["products", "customers"]
+    }
+  ]
+}`}
+                      </pre>
+                    </div>
+
+                    <div>
+                      <h5 className="text-xs font-semibold text-white/40 mb-1.5 uppercase tracking-wide text-left">3. Example Curl (MongoDB)</h5>
+                      <pre className="p-3 rounded-lg bg-black/[0.3] border border-white/[0.04] overflow-x-auto font-mono text-xs text-emerald-400 text-left">
+                        {`curl -X POST "https://api.bi-lite.com/api/onboard" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "name": "Alice Smith",
+    "email": "alice@email.com",
+    "siteUrl": "https://myapp.com",
+    "database": [
+      {
+        "name": "Mongo Database",
+        "engine": 0,
+        "connectionString": "mongodb+srv://user:pass@cluster.mongodb.net/dbname",
+        "tables": ["users", "orders"]
+      }
+    ]
+  }'`}
+                      </pre>
+                    </div>
+                  </div>
+                </details>
               </div>
             </div>
           </section>
