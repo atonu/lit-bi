@@ -28,13 +28,9 @@ export default function SetPasswordPage({ params }: { params: Promise<{ id: stri
   // Load prospect info on mount
   useEffect(() => {
     if (!prospectId) return;
-    const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3002";
-    fetch(`${BACKEND_URL}/api/onboard/prospect/${prospectId}`)
-      .then((r) => {
-        if (!r.ok) throw new Error("not found");
-        return r.json();
-      })
-      .then((data: ProspectInfo) => {
+    apiClient.get(`/onboard/prospect/${prospectId}`)
+      .then((res) => {
+        const data = res.data;
         if (data.createdAt) {
           const createdTime = new Date(data.createdAt).getTime();
           const diffMs = Date.now() - createdTime;
