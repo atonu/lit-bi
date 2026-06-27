@@ -76,7 +76,7 @@ export function StepCredentials({
               onClick={() => onChange({
                 engine: "MONGODB",
                 alias: "Sample Dataset",
-                connectionUri: "mongodb+srv://********************************************************"
+                connectionUri: "mongodb+srv://atonuzahin_db_user:2wsxXSW@dataview.fdlu509.mongodb.net/bilite-test"
               })}
               className="mt-0.5 text-[11px] hover:text-blue-300 transition-colors underline underline-offset-2 text-muted-foreground"
             >

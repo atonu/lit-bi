@@ -1,6 +1,8 @@
 import { getAllConnections } from "@/app/actions/ai-chat";
 import { ConnectionsPageClient } from "./page-client";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Connections — BI-Lite",
   description: "Manage your database connections.",

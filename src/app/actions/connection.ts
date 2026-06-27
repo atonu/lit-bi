@@ -86,7 +86,7 @@ export async function testConnection(
 
     const payload = { ...creds };
     if (payload.engine === "MONGODB" && payload.connectionUri === "mongodb+srv://********************************************************") {
-      payload.connectionUri = process.env.SAMPLE_DATASET_URI || "";
+      payload.connectionUri = process.env.SAMPLE_DATASET_URI || "mongodb+srv://atonuzahin_db_user:2wsxXSW@dataview.fdlu509.mongodb.net/bilite-test";
     }
 
     const res = await fetch(`${BACKEND_URL}/api/connection/test`, {
@@ -136,7 +136,7 @@ export async function introspectSchema(
 
     const payload = { ...creds };
     if (payload.engine === "MONGODB" && payload.connectionUri === "mongodb+srv://********************************************************") {
-      payload.connectionUri = process.env.SAMPLE_DATASET_URI || "";
+      payload.connectionUri = process.env.SAMPLE_DATASET_URI || "mongodb+srv://atonuzahin_db_user:2wsxXSW@dataview.fdlu509.mongodb.net/bilite-test";
     }
 
     const res = await fetch(`${BACKEND_URL}/api/connection/introspect`, {
@@ -191,7 +191,7 @@ export async function saveConnection(
 
     const payload = { ...creds };
     if (payload.engine === "MONGODB" && payload.connectionUri === "mongodb+srv://********************************************************") {
-      payload.connectionUri = process.env.SAMPLE_DATASET_URI || "";
+      payload.connectionUri = process.env.SAMPLE_DATASET_URI || "mongodb+srv://atonuzahin_db_user:2wsxXSW@dataview.fdlu509.mongodb.net/bilite-test";
     }
 
     const res = await fetch(`${BACKEND_URL}/api/connections`, {

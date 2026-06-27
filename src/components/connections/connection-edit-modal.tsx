@@ -73,6 +73,12 @@ export function ConnectionEditModal({
     }
   };
 
+  const connectionString =
+    connection.connectionString ||
+    (connection.engine === "MONGODB"
+      ? `mongodb+srv://****@${connection.host || "..."}/${connection.dbName || ""}`
+      : `${connection.engine === "MYSQL" ? "mysql" : "postgresql"}://${connection.dbUser ? `${connection.dbUser}:****@` : ""}${connection.host || "localhost"}${connection.port ? `:${connection.port}` : ""}/${connection.dbName || ""}`);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
       <div className="animate-slide-up w-full max-w-md rounded-2xl border border-white/10 bg-[#1e1e1e] p-6 shadow-2xl">
@@ -137,6 +143,15 @@ export function ConnectionEditModal({
                 </div>
               </div>
             )}
+            <div className="col-span-2 min-w-0">
+              <p className="text-white/30">Connection String</p>
+              <div className="mt-0.5 flex items-center gap-1.5">
+                <span className="font-medium text-white/70 truncate flex-1 block font-mono text-[10px]">
+                  {connectionString}
+                </span>
+                <CopyButton text={connectionString} />
+              </div>
+            </div>
           </div>
         </div>
 
