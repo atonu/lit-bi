@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { devtools, persist } from "zustand/middleware";
 
 interface SidebarState {
   isPinned: boolean; // true = always expanded (user pinned it)
@@ -20,25 +20,30 @@ type SidebarStore = SidebarState & SidebarActions & {
 };
 
 export const useSidebarStore = create<SidebarStore>()(
-  persist(
-    (set, get) => ({
-      isPinned: false,
-      isHovered: false,
-      isMobileOpen: false,
+  devtools(
+    persist(
+      (set, get) => ({
+        isPinned: false,
+        isHovered: false,
+        isMobileOpen: false,
 
-      isExpanded: () => get().isPinned || get().isHovered,
+        isExpanded: () => get().isPinned || get().isHovered,
 
-      togglePin: () => set((s) => ({ isPinned: !s.isPinned, isHovered: false })),
+        togglePin: () => set((s) => ({ isPinned: !s.isPinned, isHovered: false }), false, "sidebar/togglePin"),
 
-      setHovered: (hovered) => set({ isHovered: hovered }),
+        setHovered: (hovered) => set({ isHovered: hovered }, false, "sidebar/setHovered"),
 
-      setExpanded: (expanded) => set({ isPinned: expanded, isHovered: false }),
+        setExpanded: (expanded) => set({ isPinned: expanded, isHovered: false }, false, "sidebar/setExpanded"),
 
-      setMobileOpen: (open) => set({ isMobileOpen: open }),
-    }),
+        setMobileOpen: (open) => set({ isMobileOpen: open }, false, "sidebar/setMobileOpen"),
+      }),
+      {
+        name: "litebi-sidebar",
+        partialize: (state) => ({ isPinned: state.isPinned }),
+      }
+    ),
     {
-      name: "litebi-sidebar",
-      partialize: (state) => ({ isPinned: state.isPinned }),
+      name: "sidebar-store",
     }
   )
 );
