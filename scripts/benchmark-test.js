@@ -19,7 +19,7 @@ function generateTestToken(orgId) {
 }
 
 async function runBenchmark() {
-  console.log("=== BI-Lite Scale Benchmark ===");
+  console.log("=== Reportbly Scale Benchmark ===");
   console.log(`Connecting to backend: ${BACKEND_URL}`);
 
   // 1. Check health

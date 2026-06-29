@@ -383,7 +383,7 @@ export function HelpContent() {
                 </p>
                 <ul className="space-y-3 mt-4 ml-2 border-l-2 border-[#D436D9]/30 pl-4">
                   <li>
-                     <strong className="text-white">What we see:</strong> Database structure/metadata (table names, column headers, and types).
+                    <strong className="text-white">What we see:</strong> Database structure/metadata (table names, column headers, and types).
                   </li>
                   <li>
                     <strong className="text-white">What we never see, save, or track:</strong> User data, login info, database connection strings, user behavior analytics, raw row data, personal identifiers, or sensitive credentials.
@@ -418,7 +418,7 @@ export function HelpContent() {
                 External Onboarding API
               </h3>
               <p className="text-white/70 text-sm md:text-base">
-                BI-Lite exposes a secure, public HTTP API allowing external systems (e.g., custom admin dashboards or CRM platforms) to programmatically register prospect users and provision database connections upon account setup.
+                Reportbly exposes a secure, public HTTP API allowing external systems (e.g., custom admin dashboards or CRM platforms) to programmatically register prospect users and provision database connections upon account setup.
               </p>
 
               {/* Endpoint Details */}
@@ -556,7 +556,7 @@ export function HelpContent() {
                     <div>
                       <h5 className="text-xs font-semibold text-white/40 mb-1.5 uppercase tracking-wide text-left">3. Example Curl (MongoDB)</h5>
                       <pre className="p-3 rounded-lg bg-black/[0.3] border border-white/[0.04] overflow-x-auto font-mono text-xs text-emerald-400 text-left">
-                        {`curl -X POST "https://api.bi-lite.com/api/onboard" \\
+                        {`curl -X POST "https://api.Reportbly.com/api/onboard" \\
   -H "Content-Type: application/json" \\
   -d '{
     "name": "Alice Smith",

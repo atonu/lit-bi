@@ -104,11 +104,16 @@
   --input: oklch(1 0 0 / 10%);
   --ring: oklch(0.60 0.28 320 / 50%);
   /* Chart colors — vibrant for data viz */
-  --chart-1: oklch(0.60 0.28 320);   /* magenta */
-  --chart-2: oklch(0.65 0.19 265);   /* blue */
-  --chart-3: oklch(0.70 0.18 160);   /* teal */
-  --chart-4: oklch(0.75 0.17 80);    /* amber */
-  --chart-5: oklch(0.65 0.20 350);   /* pink */
+  --chart-1: oklch(0.60 0.28 320);
+  /* magenta */
+  --chart-2: oklch(0.65 0.19 265);
+  /* blue */
+  --chart-3: oklch(0.70 0.18 160);
+  /* teal */
+  --chart-4: oklch(0.75 0.17 80);
+  /* amber */
+  --chart-5: oklch(0.65 0.20 350);
+  /* pink */
   /* Sidebar — slightly lighter than background */
   --sidebar: oklch(0.08 0.03 310);
   --sidebar-foreground: oklch(0.93 0.01 310);
@@ -124,16 +129,18 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
   html {
     @apply font-sans;
   }
 }
 
 /* =========================================================================
-   BI-Lite — Custom Animations & Utilities
+   Reportbly — Custom Animations & Utilities
    ========================================================================= */
 
 @keyframes fade-in {
@@ -141,6 +148,7 @@
     opacity: 0;
     transform: translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -152,6 +160,7 @@
     opacity: 0;
     transform: translateY(24px) scale(0.98);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -159,11 +168,14 @@
 }
 
 @keyframes pulse-glow {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow:
       0 0 20px oklch(0.7 0.18 250 / 0.3),
       0 0 60px oklch(0.7 0.18 250 / 0.1);
   }
+
   50% {
     box-shadow:
       0 0 30px oklch(0.7 0.18 250 / 0.5),
@@ -175,18 +187,23 @@
   0% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
+
   100% {
     background-position: 0% 50%;
   }
 }
 
 @keyframes float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-6px);
   }
@@ -196,6 +213,7 @@
   0% {
     background-position: -200% 0;
   }
+
   100% {
     background-position: 200% 0;
   }
@@ -228,21 +246,42 @@
 }
 
 /* Stagger delays for fade-in children */
-.stagger-1 { animation-delay: 0.05s; }
-.stagger-2 { animation-delay: 0.1s; }
-.stagger-3 { animation-delay: 0.15s; }
-.stagger-4 { animation-delay: 0.2s; }
-.stagger-5 { animation-delay: 0.25s; }
-.stagger-6 { animation-delay: 0.3s; }
-.stagger-7 { animation-delay: 0.35s; }
-.stagger-8 { animation-delay: 0.4s; }
+.stagger-1 {
+  animation-delay: 0.05s;
+}
+
+.stagger-2 {
+  animation-delay: 0.1s;
+}
+
+.stagger-3 {
+  animation-delay: 0.15s;
+}
+
+.stagger-4 {
+  animation-delay: 0.2s;
+}
+
+.stagger-5 {
+  animation-delay: 0.25s;
+}
+
+.stagger-6 {
+  animation-delay: 0.3s;
+}
+
+.stagger-7 {
+  animation-delay: 0.35s;
+}
+
+.stagger-8 {
+  animation-delay: 0.4s;
+}
 
 /* Dot-grid background pattern */
 .bg-dot-pattern {
-  background-image: radial-gradient(
-    oklch(1 0 0 / 6%) 1px,
-    transparent 1px
-  );
+  background-image: radial-gradient(oklch(1 0 0 / 6%) 1px,
+      transparent 1px);
   background-size: 24px 24px;
 }
 
@@ -251,16 +290,20 @@
   scrollbar-width: thin;
   scrollbar-color: oklch(1 0 0 / 10%) transparent;
 }
+
 .scrollbar-thin::-webkit-scrollbar {
   width: 4px;
 }
+
 .scrollbar-thin::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .scrollbar-thin::-webkit-scrollbar-thumb {
   background: oklch(1 0 0 / 10%);
   border-radius: 2px;
 }
+
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
   background: oklch(1 0 0 / 20%);
 }
@@ -280,21 +323,25 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #080310; /* Match main dark background */
+  background: #080310;
+  /* Match main dark background */
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(212, 54, 217, 0.15); /* Fuchsia theme color `#D436D9` with opacity */
+  background: rgba(212, 54, 217, 0.15);
+  /* Fuchsia theme color `#D436D9` with opacity */
   border-radius: 9999px;
-  border: 2px solid #080310; /* Create a padded/inset look */
+  border: 2px solid #080310;
+  /* Create a padded/inset look */
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(212, 54, 217, 0.4); /* Highlight fuchsia on hover */
+  background: rgba(212, 54, 217, 0.4);
+  /* Highlight fuchsia on hover */
 }
 
 /* Firefox scrollbar compatibility */
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(212, 54, 217, 0.15) #080310;
-}
+}
