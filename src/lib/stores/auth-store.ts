@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { devtools, persist } from "zustand/middleware";
 import jsCookie from "js-cookie";
 
 interface User {
@@ -20,31 +20,36 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      isAuthenticated: false,
-      user: null,
-      accessToken: null,
-      setAuth: (user, accessToken) => {
-        jsCookie.set("isAuthenticated", "true"); // Used by middleware to check if logged in loosely
-        set({ isAuthenticated: true, user, accessToken });
-      },
-      setAccessToken: (accessToken) => set({ accessToken }),
-      logout: () => {
-        jsCookie.remove("isAuthenticated");
-        set({ isAuthenticated: false, user: null, accessToken: null });
-        
-        // Clear chat store state to prevent user data leakage on logout
-        try {
-          const { useChatStore } = require("./chat-store");
-          useChatStore.getState().reset();
-        } catch (err) {
-          console.error("Failed to reset chat store on logout:", err);
-        }
-      },
-    }),
+  devtools(
+    persist(
+      (set) => ({
+        isAuthenticated: false,
+        user: null,
+        accessToken: null,
+        setAuth: (user, accessToken) => {
+          jsCookie.set("isAuthenticated", "true"); // Used by middleware to check if logged in loosely
+          set({ isAuthenticated: true, user, accessToken }, false, "auth/setAuth");
+        },
+        setAccessToken: (accessToken) => set({ accessToken }, false, "auth/setAccessToken"),
+        logout: () => {
+          jsCookie.remove("isAuthenticated");
+          set({ isAuthenticated: false, user: null, accessToken: null }, false, "auth/logout");
+
+          // Clear chat store state to prevent user data leakage on logout
+          try {
+            const { useChatStore } = require("./chat-store");
+            useChatStore.getState().reset();
+          } catch (err) {
+            console.error("Failed to reset chat store on logout:", err);
+          }
+        },
+      }),
+      {
+        name: "auth-storage", // stores the user data in localStorage
+      }
+    ),
     {
-      name: "auth-storage", // stores the user data in localStorage
+      name: "auth-store",
     }
   )
-);
+);  

@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { devtools } from "zustand/middleware";
 import type { AiQueryResponse } from "@/app/actions/ai-chat";
 import type { QueryRow } from "@/app/actions/execute-query";
 import type { ChatSessionSummary } from "@/app/actions/chat-history";
@@ -141,9 +142,11 @@ function getMessages(state: ChatState, sessionId: string): ChatMessage[] {
 // Store
 // ---------------------------------------------------------------------------
 
-export const useChatStore = create<ChatStore>((set, get) => ({
-  // ── Initial state ──────────────────────────────────────────────────────
-  activeConnectionId: null,
+export const useChatStore = create<ChatStore>()(
+  devtools(
+    (set, get) => ({
+      // ── Initial state ──────────────────────────────────────────────────────
+      activeConnectionId: null,
   activeConnectionAlias: null,
   activeSessionId: null,
   messagesBySession: {},
@@ -557,4 +560,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       syncTimerId: null,
     });
   },
-}));
+    }),
+    {
+      name: "chat-store",
+    }
+  )
+);
